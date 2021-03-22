@@ -462,8 +462,6 @@ class Root implements IList {
 }
 
 export default class ObsidianOutlinerPlugin extends Plugin {
-  private dispose: () => void | undefined;
-
   parseList(editor: CodeMirror.Editor, cursor = editor.getCursor()): Root {
     const cursorLine = cursor.line;
     const cursorCh = cursor.ch;
@@ -761,7 +759,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     console.log(`Loading obsidian-outliner`);
 
     this.registerCodeMirror((cm) => {
-      this.dispose = () => cm.off("keydown", this.handleKeydown);
       cm.on("keydown", this.handleKeydown);
     });
   }
@@ -769,9 +766,8 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   async onunload() {
     console.log(`Unloading obsidian-outliner`);
 
-    if (this.dispose) {
-      this.dispose();
-      this.dispose = undefined;
-    }
+    this.app.workspace.iterateCodeMirrors(cm => {
+      cm.off("keydown", this.handleKeydown);
+    });
   }
 }
