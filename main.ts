@@ -1,4 +1,5 @@
 import { Plugin } from "obsidian";
+import { diffLines } from 'diff';
 
 const LIST_LINE_TABS_RE = /^\t*/;
 const LIST_LINE_PREFIX_RE = /^\t*- /;
@@ -643,8 +644,20 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     const oldString = editor.getRange(root.getStart(), root.getEnd());
     const newString = root.print();
 
-    if (force || oldString !== newString) {
-      editor.replaceRange(root.print(), root.getStart(), root.getEnd());
+    const diff = diffLines(oldString, newString);
+    let l = root.getStart().line;
+    for (const change of diff) {
+      if (change.added) {
+        editor.replaceRange(change.value, {line: l, ch: 0});
+        l += change.count;
+      } else if (change.removed) {
+        const withNewline = /\n$/.test(change.value);
+        const tillLine = withNewline ? l + change.count : l + change.count - 1;
+        const tillCh = withNewline ? 0 : editor.getLine(tillLine).length;
+        editor.replaceRange('', {line: l, ch: 0}, {line: tillLine, ch: tillCh})
+      } else {
+        l += change.count;
+      }
     }
 
     const oldCursor = editor.getCursor();
