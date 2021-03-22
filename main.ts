@@ -420,45 +420,6 @@ class Root implements IList {
 
     return true;
   }
-
-  checkCursorAfterPrefix() {
-    const list = this.getCursorOnList();
-
-    const startCh = list.getContentStartCh();
-
-    if (this.cursor.ch < startCh) {
-      this.cursor.ch = startCh;
-    }
-
-    return true;
-  }
-
-  cursorLeft() {
-    const list = this.getCursorOnList();
-
-    if (this.cursor.ch <= list.getContentStartCh()) {
-      this.cursor.line--;
-      this.cursor.ch = 999; // TODO: remove hack
-    } else {
-      this.cursor.ch--;
-    }
-
-    return true;
-  }
-
-  cursorRight() {
-    const list = this.getCursorOnList();
-
-    if (this.cursor.ch >= list.getContentEndCh()) {
-      const next = this.getListUnderLine(this.cursor.line + 1);
-      this.cursor.line++;
-      this.cursor.ch = next ? next.getContentStartCh() : 0;
-    } else {
-      this.cursor.ch = Math.max(this.cursor.ch + 1, list.getContentStartCh());
-    }
-
-    return true;
-  }
 }
 
 export default class ObsidianOutlinerPlugin extends Plugin {
@@ -525,6 +486,118 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     return root;
   }
 
+  iterateWhileFolded(
+    editor: CodeMirror.Editor,
+    pos: CodeMirror.Position,
+    inc: (pos: CodeMirror.Position) => void
+  ) {
+    let folded = false;
+    do {
+      inc(pos);
+      folded = (editor as any).isFolded(pos);
+    } while (folded);
+    return pos;
+  }
+
+  getLinePrefixLength(line: string) {
+    return line.length - line.replace(LIST_LINE_PREFIX_RE, "").length;
+  }
+
+  evalCursorToNextChar(editor: CodeMirror.Editor) {
+    const cursor = editor.getCursor();
+    const line = editor.getLine(cursor.line);
+    if (cursor.ch < line.length) {
+      editor.setCursor({
+        line: editor.getCursor().line,
+        ch: editor.getCursor().ch + 1,
+      });
+    } else {
+      editor.setCursor(
+        this.iterateWhileFolded(
+          editor,
+          {
+            line: cursor.line,
+            ch: 0,
+          },
+          (pos) => {
+            pos.line++;
+          }
+        )
+      );
+    }
+  }
+
+  evalCursorToPrevLine(editor: CodeMirror.Editor) {
+    const cursor = editor.getCursor();
+
+    editor.setCursor(
+      this.iterateWhileFolded(
+        editor,
+        {
+          line: cursor.line,
+          ch: cursor.ch,
+        },
+        (pos) => {
+          pos.line--;
+        }
+      )
+    );
+  }
+
+  evalEnsureCursorInContent(editor: CodeMirror.Editor) {
+    const cursor = editor.getCursor();
+    const line = editor.getLine(cursor.line);
+    const linePrefix = this.getLinePrefixLength(line);
+    if (cursor.ch < linePrefix) {
+      cursor.ch = linePrefix;
+    }
+    editor.setCursor(cursor);
+  }
+
+  evalCursorToNextLine(editor: CodeMirror.Editor) {
+    const cursor = editor.getCursor();
+
+    editor.setCursor(
+      this.iterateWhileFolded(
+        editor,
+        {
+          line: cursor.line,
+          ch: cursor.ch,
+        },
+        (pos) => {
+          pos.line++;
+        }
+      )
+    );
+  }
+
+  evalCursorToPrevChar(editor: CodeMirror.Editor) {
+    const cursor = editor.getCursor();
+    const line = editor.getLine(cursor.line);
+    const linePrefix = this.getLinePrefixLength(line);
+
+    if (cursor.ch > linePrefix) {
+      editor.setCursor({
+        line: cursor.line,
+        ch: cursor.ch - 1,
+      });
+    } else {
+      const newCursor = this.iterateWhileFolded(
+        editor,
+        {
+          line: cursor.line,
+          ch: 0,
+        },
+        (pos) => {
+          pos.line--;
+          pos.ch = editor.getLine(pos.line).length - 1;
+        }
+      );
+      newCursor.ch++;
+      editor.setCursor(newCursor);
+    }
+  }
+
   execute(
     editor: CodeMirror.Editor,
     cb: (root: Root) => boolean,
@@ -586,6 +659,10 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     }
   }
 
+  isCursorInList(editor: CodeMirror.Editor) {
+    return this.isListLine(editor.getLine(editor.getCursor().line));
+  }
+
   isListLine(line: string) {
     return LIST_LINE_PREFIX_RE.test(line);
   }
@@ -641,9 +718,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   }
 
   setFold(editor: CodeMirror.Editor, type: "fold" | "unfold") {
-    const line = editor.getLine(editor.getCursor().line);
-
-    if (!this.isListLine(line)) {
+    if (!this.isCursorInList(editor)) {
       return false;
     }
 
@@ -661,11 +736,24 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   }
 
   cursorLeft(editor: CodeMirror.Editor) {
-    return this.execute(editor, (root) => root.cursorLeft());
+    if (!this.isCursorInList(editor)) {
+      return false;
+    }
+
+    this.evalCursorToPrevChar(editor);
+
+    return true;
   }
 
   cursorRight(editor: CodeMirror.Editor) {
-    return this.execute(editor, (root) => root.cursorRight());
+    if (!this.isCursorInList(editor)) {
+      return false;
+    }
+
+    this.evalCursorToNextChar(editor);
+    this.evalEnsureCursorInContent(editor);
+
+    return true;
   }
 
   cursorFullLeft(editor: CodeMirror.Editor) {
@@ -694,24 +782,18 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     return true;
   }
 
-  moveLine(editor: CodeMirror.Editor, diff: number) {
-    const cursor = editor.getCursor();
-    const newCursor = {
-      line: cursor.line + diff,
-      ch: cursor.ch,
-    };
-
-    return this.execute(editor, (root) => root.checkCursorAfterPrefix(), {
-      cursor: newCursor,
-    });
-  }
-
   cursorUp(editor: CodeMirror.Editor) {
-    return this.moveLine(editor, -1);
+    this.evalCursorToPrevLine(editor);
+    this.evalEnsureCursorInContent(editor);
+
+    return true;
   }
 
   cursorDown(editor: CodeMirror.Editor) {
-    return this.moveLine(editor, +1);
+    this.evalCursorToNextLine(editor);
+    this.evalEnsureCursorInContent(editor);
+
+    return true;
   }
 
   handleKeydown = (cm: CodeMirror.Editor, e: KeyboardEvent) => {
@@ -766,7 +848,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   async onunload() {
     console.log(`Unloading obsidian-outliner`);
 
-    this.app.workspace.iterateCodeMirrors(cm => {
+    this.app.workspace.iterateCodeMirrors((cm) => {
       cm.off("keydown", this.handleKeydown);
     });
   }
