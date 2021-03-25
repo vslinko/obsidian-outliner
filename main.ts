@@ -377,45 +377,13 @@ class Root implements IList {
 
     return true;
   }
-
-  enter(
-    options: {
-      checkEmptyContent?: boolean;
-    } | void
-  ) {
-    const { checkEmptyContent } = {
-      checkEmptyContent: true,
-      ...options,
-    };
-
-    const list = this.getCursorOnList();
-
-    if (checkEmptyContent && list.getContent() === "") {
-      return false;
-    }
-
-    const diff = this.cursor.ch - list.getContentStartCh();
-    const oldListContent =
-      diff > 0 ? list.getContent().slice(0, diff) : list.getContent();
-    const newListContent = diff > 0 ? list.getContent().slice(diff) : "";
-    const newList = new List(newListContent);
-
-    if (list.isEmpty()) {
-      list.getParent().addAfter(list, newList);
-    } else {
-      list.addAtBeginning(newList);
-    }
-
-    list.setContent(oldListContent);
-
-    this.cursor.line = this.getLineNumber(newList);
-    this.cursor.ch = newList.getContentStartCh();
-
-    return true;
-  }
 }
 
 export default class ObsidianOutlinerPlugin extends Plugin {
+  getLineLevel(line: string) {
+    return line.length - line.replace(LIST_LINE_TABS_RE, "").length;
+  }
+
   parseList(editor: CodeMirror.Editor, cursor = editor.getCursor()): Root {
     const cursorLine = cursor.line;
     const cursorCh = cursor.ch;
@@ -457,8 +425,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
     for (let l = listStartLine; l <= listEndLine; l++) {
       const line = editor.getLine(l);
-      const lineLevel =
-        line.length - line.replace(LIST_LINE_TABS_RE, "").length;
+      const lineLevel = this.getLineLevel(line);
 
       if (lineLevel === currentLevel.getLevel() + 1) {
         currentLevel = lastList;
@@ -621,18 +588,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     return this.execute(editor, (root) => root.delete());
   }
 
-  enter(editor: CodeMirror.Editor) {
-    const selection = editor.listSelections()[0];
-    let checkEmptyContent = true;
-
-    if (!rangeIsCursor(selection)) {
-      editor.replaceRange("", selection.from(), selection.to());
-      checkEmptyContent = false;
-    }
-
-    return this.execute(editor, (root) => root.enter({ checkEmptyContent }));
-  }
-
   deleteFullLeft(editor: CodeMirror.Editor) {
     const selection = editor.listSelections()[0];
 
@@ -733,8 +688,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       worked = this.deleteFullLeft(cm);
     } else if (testKeydown(e, "Backspace")) {
       worked = this.delete(cm);
-    } else if (testKeydown(e, "Enter")) {
-      worked = this.enter(cm);
     } else if (testKeydown(e, "ArrowLeft", ["cmd", "shift"])) {
       worked = this.selectFullLeft(cm);
     }
@@ -749,11 +702,32 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     console.log(`Loading obsidian-outliner`);
 
     this.registerCodeMirror((cm) => {
+      cm.on("beforeChange", (cm, changeObj) => {
+        const currentLine = cm.getLine(changeObj.from.line);
+        const nextLine = cm.getLine(changeObj.from.line + 1);
+
+        if (!currentLine || !nextLine) {
+          return;
+        }
+        
+        const bothLines = this.isListLine(currentLine) && this.isListLine(nextLine);
+        const changeIsNewline = changeObj.text.length === 2 && changeObj.text[0] === "" && /^\t*- /.test(changeObj.text[1]);
+        const nexlineLevelIsBigger = this.getLineLevel(currentLine) + 1 == this.getLineLevel(nextLine);
+
+        if (bothLines && changeIsNewline && nexlineLevelIsBigger) {
+          changeObj.text[1] = '\t' + changeObj.text[1];
+          changeObj.update(
+            changeObj.from, changeObj.to, changeObj.text
+          );
+        }
+      });
+
       cm.on("cursorActivity", (cm) => {
         if (this.isJustCursor(cm) && this.isCursorInList(cm)) {
           this.evalEnsureCursorInContent(cm);
         }
       });
+
       cm.on("keydown", this.handleKeydown);
     });
   }
