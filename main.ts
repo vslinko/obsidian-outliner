@@ -578,11 +578,15 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   }
 
   delete(editor: CodeMirror.Editor) {
-    const selection = editor.listSelections()[0];
+    if (!this.isJustCursor(editor)) {
+      return false;
+    }
 
-    if (!rangeIsCursor(selection)) {
-      editor.replaceRange("", selection.from(), selection.to());
-      return true;
+    // TODO: remove hack
+    const cursor = editor.getCursor();
+    const line = editor.getLine(cursor.line);
+    if (cursor.line === 0 && cursor.ch == 2 && this.isListLine(line) && this.getLineLevel(line) === 0) {
+      return false;
     }
 
     return this.execute(editor, (root) => root.delete());
