@@ -413,14 +413,6 @@ class Root implements IList {
 
     return true;
   }
-
-  cursorFullLeft() {
-    const list = this.getCursorOnList();
-
-    this.cursor.ch = list.getContentStartCh();
-
-    return true;
-  }
 }
 
 export default class ObsidianOutlinerPlugin extends Plugin {
@@ -504,98 +496,20 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     return line.length - line.replace(LIST_LINE_PREFIX_RE, "").length;
   }
 
-  evalCursorToNextChar(editor: CodeMirror.Editor) {
-    const cursor = editor.getCursor();
-    const line = editor.getLine(cursor.line);
-    if (cursor.ch < line.length) {
-      editor.setCursor({
-        line: editor.getCursor().line,
-        ch: editor.getCursor().ch + 1,
-      });
-    } else {
-      editor.setCursor(
-        this.iterateWhileFolded(
-          editor,
-          {
-            line: cursor.line,
-            ch: 0,
-          },
-          (pos) => {
-            pos.line++;
-          }
-        )
-      );
-    }
-  }
+  isJustCursor(editor: CodeMirror.Editor) {
+    const selections = editor.listSelections();
 
-  evalCursorToPrevLine(editor: CodeMirror.Editor) {
-    const cursor = editor.getCursor();
-
-    editor.setCursor(
-      this.iterateWhileFolded(
-        editor,
-        {
-          line: cursor.line,
-          ch: cursor.ch,
-        },
-        (pos) => {
-          pos.line--;
-        }
-      )
-    );
+    return selections.length === 1 && rangeIsCursor(selections[0]);
   }
 
   evalEnsureCursorInContent(editor: CodeMirror.Editor) {
     const cursor = editor.getCursor();
     const line = editor.getLine(cursor.line);
     const linePrefix = this.getLinePrefixLength(line);
+
     if (cursor.ch < linePrefix) {
       cursor.ch = linePrefix;
-    }
-    editor.setCursor(cursor);
-  }
-
-  evalCursorToNextLine(editor: CodeMirror.Editor) {
-    const cursor = editor.getCursor();
-
-    editor.setCursor(
-      this.iterateWhileFolded(
-        editor,
-        {
-          line: cursor.line,
-          ch: cursor.ch,
-        },
-        (pos) => {
-          pos.line++;
-        }
-      )
-    );
-  }
-
-  evalCursorToPrevChar(editor: CodeMirror.Editor) {
-    const cursor = editor.getCursor();
-    const line = editor.getLine(cursor.line);
-    const linePrefix = this.getLinePrefixLength(line);
-
-    if (cursor.ch > linePrefix) {
-      editor.setCursor({
-        line: cursor.line,
-        ch: cursor.ch - 1,
-      });
-    } else {
-      const newCursor = this.iterateWhileFolded(
-        editor,
-        {
-          line: cursor.line,
-          ch: 0,
-        },
-        (pos) => {
-          pos.line--;
-          pos.ch = editor.getLine(pos.line).length - 1;
-        }
-      );
-      newCursor.ch++;
-      editor.setCursor(newCursor);
+      editor.setCursor(cursor);
     }
   }
 
@@ -753,26 +667,29 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       return false;
     }
 
-    this.evalCursorToPrevChar(editor);
+    const cursor = editor.getCursor();
+    const line = editor.getLine(cursor.line);
+    const linePrefix = this.getLinePrefixLength(line);
 
-    return true;
-  }
-
-  cursorRight(editor: CodeMirror.Editor) {
-    if (!this.isCursorInList(editor)) {
+    if (cursor.ch > linePrefix) {
       return false;
     }
 
-    this.evalCursorToNextChar(editor);
-    this.evalEnsureCursorInContent(editor);
+    const newCursor = this.iterateWhileFolded(
+      editor,
+      {
+        line: cursor.line,
+        ch: 0,
+      },
+      (pos) => {
+        pos.line--;
+        pos.ch = editor.getLine(pos.line).length - 1;
+      }
+    );
+    newCursor.ch++;
+    editor.setCursor(newCursor);
 
     return true;
-  }
-
-  cursorFullLeft(editor: CodeMirror.Editor) {
-    return this.execute(editor, (root) => root.cursorFullLeft(), {
-      force: true,
-    });
   }
 
   selectFullLeft(editor: CodeMirror.Editor) {
@@ -795,20 +712,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     return true;
   }
 
-  cursorUp(editor: CodeMirror.Editor) {
-    this.evalCursorToPrevLine(editor);
-    this.evalEnsureCursorInContent(editor);
-
-    return true;
-  }
-
-  cursorDown(editor: CodeMirror.Editor) {
-    this.evalCursorToNextLine(editor);
-    this.evalEnsureCursorInContent(editor);
-
-    return true;
-  }
-
   handleKeydown = (cm: CodeMirror.Editor, e: KeyboardEvent) => {
     let worked = false;
 
@@ -824,16 +727,8 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       worked = this.fold(cm);
     } else if (testKeydown(e, "ArrowDown", ["cmd"])) {
       worked = this.unfold(cm);
-    } else if (testKeydown(e, "ArrowDown")) {
-      worked = this.cursorDown(cm);
-    } else if (testKeydown(e, "ArrowUp")) {
-      worked = this.cursorUp(cm);
     } else if (testKeydown(e, "ArrowLeft")) {
       worked = this.cursorLeft(cm);
-    } else if (testKeydown(e, "ArrowRight")) {
-      worked = this.cursorRight(cm);
-    } else if (testKeydown(e, "ArrowLeft", ["cmd"])) {
-      worked = this.cursorFullLeft(cm);
     } else if (testKeydown(e, "Backspace", ["cmd"])) {
       worked = this.deleteFullLeft(cm);
     } else if (testKeydown(e, "Backspace")) {
@@ -854,6 +749,11 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     console.log(`Loading obsidian-outliner`);
 
     this.registerCodeMirror((cm) => {
+      cm.on("cursorActivity", (cm) => {
+        if (this.isJustCursor(cm) && this.isCursorInList(cm)) {
+          this.evalEnsureCursorInContent(cm);
+        }
+      });
       cm.on("keydown", this.handleKeydown);
     });
   }
