@@ -673,26 +673,27 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
   handleKeydown = (cm: CodeMirror.Editor, e: KeyboardEvent) => {
     let worked = false;
+    const metaKey = process.platform === 'darwin' ? 'cmd' : 'ctrl';
 
     if (testKeydown(e, "Tab", ["shift"])) {
       worked = this.moveListElementLeft(cm);
     } else if (testKeydown(e, "Tab")) {
       worked = this.moveListElementRight(cm);
-    } else if (testKeydown(e, "ArrowUp", ["shift", "cmd"])) {
+    } else if (testKeydown(e, "ArrowUp", ["shift", metaKey])) {
       worked = this.moveListElementUp(cm);
-    } else if (testKeydown(e, "ArrowDown", ["shift", "cmd"])) {
+    } else if (testKeydown(e, "ArrowDown", ["shift", metaKey])) {
       worked = this.moveListElementDown(cm);
-    } else if (testKeydown(e, "ArrowUp", ["cmd"])) {
+    } else if (testKeydown(e, "ArrowUp", [metaKey])) {
       worked = this.fold(cm);
-    } else if (testKeydown(e, "ArrowDown", ["cmd"])) {
+    } else if (testKeydown(e, "ArrowDown", [metaKey])) {
       worked = this.unfold(cm);
     } else if (testKeydown(e, "ArrowLeft")) {
       worked = this.cursorLeft(cm);
-    } else if (testKeydown(e, "Backspace", ["cmd"])) {
+    } else if (testKeydown(e, "Backspace", [metaKey])) {
       worked = this.deleteFullLeft(cm);
     } else if (testKeydown(e, "Backspace")) {
       worked = this.delete(cm);
-    } else if (testKeydown(e, "ArrowLeft", ["cmd", "shift"])) {
+    } else if (testKeydown(e, "ArrowLeft", [metaKey, "shift"])) {
       worked = this.selectFullLeft(cm);
     }
 
