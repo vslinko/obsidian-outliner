@@ -52,9 +52,3 @@ If you liked lists styles from the demo you can use my snippet. [How to use snip
   visibility: visible !important; 
 }
 ```
-
-## Todo
-
-- Multi-item workflow.
-- Support other types of lists (currenly supported only `\t*- `).
-- Tests.
