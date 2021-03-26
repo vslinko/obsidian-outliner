@@ -8,6 +8,8 @@ Work with your lists like in Workflowy or RoamResearch.
 
 ## Supported hotkeys
 
+On Windows/Linux instead of using `Cmd` key use `Ctrl` key.
+
 - `Tab`, `Shift-Tab` - Change item and subitems indent.
 - `Cmd-ArrowUp`, `Cmd-ArrowDown` - Expand / collapse.
 - `Cmd-Shift-ArrowUp`, `Cmd-Shift-ArrowDown`, - Move item and subitems.
@@ -15,6 +17,7 @@ Work with your lists like in Workflowy or RoamResearch.
 - `Cmd-Backspace` - Delete item content without deleting item.
 - `Backspace` - Delete item.
 - `Enter` - Create new item down below.
+- `Cmd-A` — Select item or whole list.
 
 ## Better lists styles
 

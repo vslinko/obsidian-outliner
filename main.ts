@@ -671,6 +671,46 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     return true;
   }
 
+  selectAll(editor: CodeMirror.Editor) {
+    const selections = editor.listSelections();
+    
+    if (selections.length !== 1) {
+      return false;
+    }
+
+    const selection = selections[0];
+
+    if (selection.anchor.line !== selection.head.line) {
+      return false;
+    }
+
+    const root = this.parseList(editor, selection.anchor);
+
+    if (!root) {
+      return false;
+    }
+
+    const list = root.getCursorOnList();
+    const startCh = list.getContentStartCh();
+    const endCh = list.getContentEndCh();
+
+    if (selection.from().ch === startCh && selection.to().ch === endCh) {
+      // select all list
+      editor.setSelection(root.getStart(), root.getEnd());
+    } else {
+      // select all line
+      editor.setSelection({
+        line: selection.anchor.line,
+        ch: startCh,
+      }, {
+        line: selection.anchor.line,
+        ch: endCh,
+      });
+    }
+
+    return true;
+  }
+
   handleKeydown = (cm: CodeMirror.Editor, e: KeyboardEvent) => {
     let worked = false;
     const metaKey = process.platform === 'darwin' ? 'cmd' : 'ctrl';
@@ -695,6 +735,8 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       worked = this.delete(cm);
     } else if (testKeydown(e, "ArrowLeft", [metaKey, "shift"])) {
       worked = this.selectFullLeft(cm);
+    } else if (testKeydown(e, "KeyA", [metaKey])) {
+      worked = this.selectAll(cm);
     }
 
     if (worked) {
