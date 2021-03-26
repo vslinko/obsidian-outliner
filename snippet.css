@@ -1,0 +1,30 @@
+.cm-hmd-list-indent .cm-tab {
+  position: relative;
+}
+
+.cm-hmd-list-indent .cm-tab::before {
+  content: '';
+  border-left: 1px solid var(--text-faint);
+  position: absolute;
+  left: 3px;
+  top: -8px;
+  bottom: -3px;
+}
+
+.cm-s-obsidian .HyperMD-list-line {
+  padding-top: 0.4em;
+}
+
+.cm-formatting-list-ul {
+  letter-spacing: 3px;
+}
+
+.cm-formatting-list-ul:before {
+  content: '•';
+  position: absolute;
+  margin-left: -3px;
+  margin-top: -5px;
+  font-size: 24px;
+  color: var(--accent);
+  visibility: visible !important; 
+}
