@@ -4,7 +4,7 @@ Work with your lists like in Workflowy or RoamResearch.
 
 ## Demo
 
-![Demo](demo.gif)
+![Demo](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/demo.gif)
 
 ## Supported hotkeys
 
