@@ -18,7 +18,11 @@ Work with your lists like in Workflowy or RoamResearch.
 
 ## Better lists styles
 
-If you liked lists styles from the demo you can use my snippet. [How to use snippets](https://publish.obsidian.md/help/How+to/Add+custom+styles).
+If you liked lists styles from the demo you can use my snippet.
+
+**Disclaimer:** This snippet is only compatible with the built-in Obsidian themes and may not be compatible with other themes.
+
+[How to use snippets](https://publish.obsidian.md/help/How+to/Add+custom+styles).
 
 ```css
 .cm-hmd-list-indent .cm-tab {
