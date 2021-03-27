@@ -7,12 +7,14 @@
   border-left: 1px solid var(--text-faint);
   position: absolute;
   left: 3px;
-  top: -8px;
-  bottom: -3px;
+  top: -9px;
+  bottom: -9999px;
 }
 
 .cm-s-obsidian .HyperMD-list-line {
   padding-top: 0.4em;
+  position: relative;
+  overflow: hidden;
 }
 
 .cm-s-obsidian span.cm-formatting-list {
