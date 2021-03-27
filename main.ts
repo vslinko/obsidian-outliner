@@ -1,5 +1,5 @@
 import { Plugin } from "obsidian";
-import { diffLines } from 'diff';
+import { diffLines } from "diff";
 
 const LIST_LINE_TABS_RE = /^\t*/;
 const LIST_LINE_PREFIX_RE = /^\t*- /;
@@ -532,13 +532,17 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     let l = root.getStart().line;
     for (const change of diff) {
       if (change.added) {
-        editor.replaceRange(change.value, {line: l, ch: 0});
+        editor.replaceRange(change.value, { line: l, ch: 0 });
         l += change.count;
       } else if (change.removed) {
         const withNewline = /\n$/.test(change.value);
         const tillLine = withNewline ? l + change.count : l + change.count - 1;
         const tillCh = withNewline ? 0 : editor.getLine(tillLine).length;
-        editor.replaceRange('', {line: l, ch: 0}, {line: tillLine, ch: tillCh})
+        editor.replaceRange(
+          "",
+          { line: l, ch: 0 },
+          { line: tillLine, ch: tillCh }
+        );
       } else {
         l += change.count;
       }
@@ -588,7 +592,12 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     // TODO: remove hack
     const cursor = editor.getCursor();
     const line = editor.getLine(cursor.line);
-    if (cursor.line === 0 && cursor.ch == 2 && this.isListLine(line) && this.getLineLevel(line) === 0) {
+    if (
+      cursor.line === 0 &&
+      cursor.ch == 2 &&
+      this.isListLine(line) &&
+      this.getLineLevel(line) === 0
+    ) {
       return false;
     }
 
@@ -772,7 +781,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
   selectAll(editor: CodeMirror.Editor) {
     const selections = editor.listSelections();
-    
+
     if (selections.length !== 1) {
       return false;
     }
@@ -798,13 +807,16 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       editor.setSelection(root.getStart(), root.getEnd());
     } else {
       // select all line
-      editor.setSelection({
-        line: selection.anchor.line,
-        ch: startCh,
-      }, {
-        line: selection.anchor.line,
-        ch: endCh,
-      });
+      editor.setSelection(
+        {
+          line: selection.anchor.line,
+          ch: startCh,
+        },
+        {
+          line: selection.anchor.line,
+          ch: endCh,
+        }
+      );
     }
 
     return true;
@@ -812,7 +824,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
   handleKeydown = (cm: CodeMirror.Editor, e: KeyboardEvent) => {
     let worked = false;
-    const metaKey = process.platform === 'darwin' ? 'cmd' : 'ctrl';
+    const metaKey = process.platform === "darwin" ? "cmd" : "ctrl";
 
     if (testKeydown(e, "Tab", ["shift"])) {
       worked = this.moveListElementLeft(cm);
@@ -859,16 +871,19 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         if (!currentLine || !nextLine) {
           return;
         }
-        
-        const bothLines = this.isListLine(currentLine) && this.isListLine(nextLine);
-        const changeIsNewline = changeObj.text.length === 2 && changeObj.text[0] === "" && /^\t*- /.test(changeObj.text[1]);
-        const nexlineLevelIsBigger = this.getLineLevel(currentLine) + 1 == this.getLineLevel(nextLine);
+
+        const bothLines =
+          this.isListLine(currentLine) && this.isListLine(nextLine);
+        const changeIsNewline =
+          changeObj.text.length === 2 &&
+          changeObj.text[0] === "" &&
+          /^\t*- /.test(changeObj.text[1]);
+        const nexlineLevelIsBigger =
+          this.getLineLevel(currentLine) + 1 == this.getLineLevel(nextLine);
 
         if (bothLines && changeIsNewline && nexlineLevelIsBigger) {
-          changeObj.text[1] = '\t' + changeObj.text[1];
-          changeObj.update(
-            changeObj.from, changeObj.to, changeObj.text
-          );
+          changeObj.text[1] = "\t" + changeObj.text[1];
+          changeObj.update(changeObj.from, changeObj.to, changeObj.text);
         }
       });
 

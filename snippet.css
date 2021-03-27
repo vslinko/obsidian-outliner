@@ -3,7 +3,7 @@
 }
 
 .cm-hmd-list-indent .cm-tab::before {
-  content: '';
+  content: "";
   border-left: 1px solid var(--text-faint);
   position: absolute;
   left: 3px;
@@ -23,11 +23,11 @@
 }
 
 .cm-s-obsidian span.cm-formatting-list-ul:before {
-  content: '•';
+  content: "•";
   position: absolute;
   margin-left: -3px;
   margin-top: -5px;
   font-size: 24px;
   color: var(--text-muted);
-  visibility: visible !important; 
+  visibility: visible !important;
 }
