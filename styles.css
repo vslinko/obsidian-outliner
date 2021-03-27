@@ -1,1 +1,12 @@
-/* */
+.outliner-plugin-hidden-row {
+  display: none;
+}
+
+.outliner-plugin-zoom-header {
+  padding: 20px 0 0 20px;
+}
+
+.outliner-plugin-zoom-title {
+  text-decoration: underline;
+  cursor: pointer;
+}

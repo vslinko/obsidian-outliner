@@ -18,6 +18,7 @@ On Windows/Linux instead of using `Cmd` key use `Ctrl` key.
 - `Backspace` - Delete item.
 - `Enter` - Create new item down below.
 - `Cmd-A` — Select item or whole list.
+- `Cmd-.`, `Cmd-Shift-.` — Zoom-in and zoom-out.
 
 ## Better lists styles
 

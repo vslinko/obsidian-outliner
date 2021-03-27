@@ -380,6 +380,9 @@ class Root implements IList {
 }
 
 export default class ObsidianOutlinerPlugin extends Plugin {
+  private zoomedLevel: number | null = null;
+  private zoomHeader: HTMLElement | null = null;
+
   getLineLevel(line: string) {
     return line.length - line.replace(LIST_LINE_TABS_RE, "").length;
   }
@@ -671,6 +674,102 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     return true;
   }
 
+  zoomOut(editor: CodeMirror.Editor) {
+    if (this.zoomedLevel === null) {
+      return false;
+    }
+
+    for (let i = editor.firstLine(), l = editor.lastLine(); i <= l; i++) {
+      editor.removeLineClass(i, "wrap", "outliner-plugin-hidden-row");
+    }
+
+    this.zoomHeader.parentElement.removeChild(this.zoomHeader);
+
+    this.zoomedLevel = null;
+    this.zoomHeader = null;
+
+    return true;
+  }
+
+  zoomIn(editor: CodeMirror.Editor, lineNo: number = editor.getCursor().line) {
+    if (!this.isCursorInList(editor)) {
+      return false;
+    }
+
+    const root = this.parseList(editor);
+
+    if (!root) {
+      return false;
+    }
+
+    this.zoomOut(editor);
+
+    const lineLevel = this.getLineLevel(editor.getLine(lineNo));
+
+    let after = false;
+    for (let i = editor.firstLine(), l = editor.lastLine(); i <= l; i++) {
+      if (i < lineNo) {
+        editor.addLineClass(i, "wrap", "outliner-plugin-hidden-row");
+      } else if (i > lineNo && !after) {
+        after = this.getLineLevel(editor.getLine(i)) <= lineLevel;
+      }
+
+      if (after) {
+        editor.addLineClass(i, "wrap", "outliner-plugin-hidden-row");
+      }
+    }
+
+    const createSeparator = () => {
+      const span = document.createElement("span");
+      span.textContent = " > ";
+      return span;
+    };
+
+    const createTitle = (content: string, cb: () => void) => {
+      const a = document.createElement("a");
+      a.className = "outliner-plugin-zoom-title";
+      if (content) {
+        a.textContent = content;
+      } else {
+        a.innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+      }
+      a.onclick = (e) => {
+        e.preventDefault();
+        cb();
+      };
+      return a;
+    };
+
+    const createHeader = () => {
+      const div = document.createElement("div");
+      div.className = "outliner-plugin-zoom-header";
+
+      let list = root.getListUnderLine(lineNo).getParent();
+      while (list && list.getParent()) {
+        const lineNo = root.getLineNumber(list);
+        div.prepend(
+          createTitle(list.getContent(), () => this.zoomIn(editor, lineNo))
+        );
+        div.prepend(createSeparator());
+        list = list.getParent();
+      }
+
+      div.prepend(
+        createTitle(this.app.workspace.activeLeaf.getDisplayText(), () =>
+          this.zoomOut(editor)
+        )
+      );
+
+      return div;
+    };
+
+    this.zoomHeader = createHeader();
+    editor.getWrapperElement().prepend(this.zoomHeader);
+    this.zoomedLevel = lineLevel;
+
+    return true;
+  }
+
   selectAll(editor: CodeMirror.Editor) {
     const selections = editor.listSelections();
     
@@ -729,6 +828,10 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       worked = this.unfold(cm);
     } else if (testKeydown(e, "ArrowLeft")) {
       worked = this.cursorLeft(cm);
+    } else if (testKeydown(e, "Period", [metaKey])) {
+      worked = this.zoomIn(cm);
+    } else if (testKeydown(e, "Period", [metaKey, "shift"])) {
+      worked = this.zoomOut(cm);
     } else if (testKeydown(e, "Backspace", [metaKey])) {
       worked = this.deleteFullLeft(cm);
     } else if (testKeydown(e, "Backspace")) {
