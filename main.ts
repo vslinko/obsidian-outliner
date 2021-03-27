@@ -1,4 +1,4 @@
-import { Plugin } from "obsidian";
+import { MarkdownView, Plugin } from "obsidian";
 import { diffLines } from "diff";
 
 const LIST_LINE_TABS_RE = /^\t*/;
@@ -840,10 +840,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       worked = this.unfold(cm);
     } else if (testKeydown(e, "ArrowLeft")) {
       worked = this.cursorLeft(cm);
-    } else if (testKeydown(e, "Period", [metaKey])) {
-      worked = this.zoomIn(cm);
-    } else if (testKeydown(e, "Period", [metaKey, "shift"])) {
-      worked = this.zoomOut(cm);
     } else if (testKeydown(e, "Backspace", [metaKey])) {
       worked = this.deleteFullLeft(cm);
     } else if (testKeydown(e, "Backspace")) {
@@ -862,6 +858,46 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
   async onload() {
     console.log(`Loading obsidian-outliner`);
+
+    this.addCommand({
+      id: "zoom-in",
+      name: "Zoom In",
+      callback: () => {
+        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+
+        if (!view) {
+          return;
+        }
+
+        this.zoomIn(view.sourceMode.cmEditor);
+      },
+      hotkeys: [
+        {
+          modifiers: ["Mod"],
+          key: ".",
+        },
+      ],
+    });
+
+    this.addCommand({
+      id: "zoom-out",
+      name: "Zoom Out",
+      callback: () => {
+        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+
+        if (!view) {
+          return;
+        }
+
+        this.zoomOut(view.sourceMode.cmEditor);
+      },
+      hotkeys: [
+        {
+          modifiers: ["Mod", "Shift"],
+          key: ".",
+        },
+      ],
+    });
 
     this.registerCodeMirror((cm) => {
       cm.on("beforeChange", (cm, changeObj) => {
