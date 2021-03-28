@@ -1,6 +1,6 @@
 {
   "name": "obsidian-outliner",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "Accelerate your lists.",
   "main": "main.js",
   "scripts": {
