@@ -1058,6 +1058,56 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         }
       });
 
+      cm.on("beforeSelectionChange", (cm, changeObj) => {
+        if (!this.zoomStates.has(cm)) {
+          return;
+        }
+
+        let visibleFrom: CodeMirror.Position | null = null;
+        let visibleTill: CodeMirror.Position | null = null;
+
+        for (let i = cm.firstLine(); i <= cm.lastLine(); i++) {
+          const wrapClass = cm.lineInfo(i).wrapClass || "";
+          const isHidden = wrapClass.includes("outliner-plugin-hidden-row");
+          if (visibleFrom === null && !isHidden) {
+            visibleFrom = { line: i, ch: 0 };
+          }
+          if (visibleFrom !== null && visibleTill === null && isHidden) {
+            visibleTill = { line: i - 1, ch: cm.getLine(i - 1).length };
+            break;
+          }
+        }
+
+        let changed = false;
+
+        for (const range of changeObj.ranges) {
+          if (range.anchor.line < visibleFrom.line) {
+            changed = true;
+            range.anchor.line = visibleFrom.line;
+            range.anchor.ch = visibleFrom.ch;
+          }
+          if (range.anchor.line > visibleTill.line) {
+            changed = true;
+            range.anchor.line = visibleTill.line;
+            range.anchor.ch = visibleTill.ch;
+          }
+          if (range.head.line < visibleFrom.line) {
+            changed = true;
+            range.head.line = visibleFrom.line;
+            range.head.ch = visibleFrom.ch;
+          }
+          if (range.head.line > visibleTill.line) {
+            changed = true;
+            range.head.line = visibleTill.line;
+            range.head.ch = visibleTill.ch;
+          }
+        }
+
+        if (changed) {
+          changeObj.update(changeObj.ranges);
+        }
+      });
+
       cm.on("cursorActivity", (cm) => {
         if (this.isJustCursor(cm) && this.isCursorInList(cm)) {
           this.evalEnsureCursorInContent(cm);
