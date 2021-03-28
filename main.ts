@@ -2,7 +2,7 @@ import { MarkdownView, Plugin } from "obsidian";
 import { diffLines } from "diff";
 
 const LIST_LINE_TABS_RE = /^\t*/;
-const LIST_LINE_PREFIX_RE = /^\t*- /;
+const LIST_LINE_PREFIX_RE = /^\t*([-*]) /;
 
 type Mod = "shift" | "ctrl" | "cmd" | "alt";
 
@@ -35,11 +35,13 @@ interface IList {
 }
 
 class List implements IList {
+  private bullet: string;
   private content: string;
   private children: List[];
   private parent: List;
 
-  constructor(content: string) {
+  constructor(bullet: string, content: string) {
+    this.bullet = bullet;
     this.content = content;
     this.children = [];
     this.parent = null;
@@ -51,7 +53,10 @@ class List implements IList {
 
   getFullContent() {
     return (
-      new Array(this.getTabsLength()).fill("\t").join("") + "- " + this.content
+      new Array(this.getTabsLength()).fill("\t").join("") +
+      this.bullet +
+      " " +
+      this.content
     );
   }
 
@@ -160,7 +165,7 @@ class Root implements IList {
     this.start = start;
     this.end = end;
     this.cursor = cursor;
-    this.rootList = new List("");
+    this.rootList = new List("", "");
   }
 
   getLevel() {
@@ -441,7 +446,9 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         return null;
       }
 
-      const list = new List(line.replace(LIST_LINE_PREFIX_RE, ""));
+      const bullet = LIST_LINE_PREFIX_RE.exec(line)[1];
+      const content = line.replace(LIST_LINE_PREFIX_RE, "");
+      const list = new List(bullet, content);
       currentLevel.add(list);
       lastList = list;
     }
@@ -919,7 +926,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         const changeIsNewline =
           changeObj.text.length === 2 &&
           changeObj.text[0] === "" &&
-          /^\t*- /.test(changeObj.text[1]);
+          LIST_LINE_PREFIX_RE.test(changeObj.text[1]);
         const nexlineLevelIsBigger =
           this.getLineLevel(currentLine) + 1 == this.getLineLevel(nextLine);
         const nextLineIsEmpty =
