@@ -4,7 +4,7 @@
   "description": "Accelerate your lists.",
   "main": "main.js",
   "scripts": {
-    "dev": "rollup --config rollup.config.js -w",
+    "dev": "rollup --config rollup.config.js -w --configWithTests",
     "build": "rollup --config rollup.config.js"
   },
   "author": "Viacheslav Slinko",
