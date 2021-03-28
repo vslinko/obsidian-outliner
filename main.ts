@@ -167,6 +167,14 @@ class Root implements IList {
     this.rootList = new List("", "", "");
   }
 
+  getTotalLines() {
+    return this.end.line - this.start.line + 1;
+  }
+
+  getChildren() {
+    return this.rootList.getChildren();
+  }
+
   getIndentSign() {
     return this.indentSign;
   }
@@ -686,22 +694,24 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       return false;
     }
 
-    // TODO: remove hack
-    const cursor = editor.getCursor();
-    const indentSign = this.detectListIndentSign(editor, cursor);
-    if (indentSign === null) {
-      return false;
-    }
-    const line = editor.getLine(cursor.line);
-    if (
-      cursor.line === 0 &&
-      cursor.ch == 2 &&
-      this.getListLineInfo(line, indentSign).indentLevel === 0
-    ) {
+    const root = this.parseList(editor);
+
+    if (!root) {
       return false;
     }
 
-    return this.execute(editor, (root) => root.delete());
+    if (
+      root.getTotalLines() === 1 &&
+      root.getChildren()[0].getContent().length === 0
+    ) {
+      editor.replaceRange("", root.getStart(), root.getEnd());
+      return true;
+    }
+
+    root.delete();
+    this.applyChanges(editor, root);
+
+    return true;
   }
 
   deleteFullLeft(editor: CodeMirror.Editor) {

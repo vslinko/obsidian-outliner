@@ -1,6 +1,7 @@
 import { MarkdownView } from "obsidian";
 import * as assert from "assert";
 import ObsidianOutlinerPlugin from "./main";
+import deleteTests from "./tests/delete";
 import enterTests from "./tests/enter";
 import outdentTests from "./tests/outdent";
 
@@ -10,6 +11,7 @@ interface IState {
 }
 
 const tests = {
+  ...deleteTests,
   ...enterTests,
   ...outdentTests,
 };
