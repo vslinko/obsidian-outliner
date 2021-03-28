@@ -901,6 +901,12 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
     this.registerCodeMirror((cm) => {
       cm.on("beforeChange", (cm, changeObj) => {
+        if (changeObj.origin === "setValue") {
+          this.zoomOut(cm);
+        }
+      });
+
+      cm.on("beforeChange", (cm, changeObj) => {
         const currentLine = cm.getLine(changeObj.from.line);
         const nextLine = cm.getLine(changeObj.from.line + 1);
 
