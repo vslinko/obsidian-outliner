@@ -1,9 +1,6 @@
 import { MarkdownView, Plugin } from "obsidian";
 import { diffLines } from "diff";
 
-const LIST_LINE_TABS_RE = /^\t*/;
-const LIST_LINE_PREFIX_RE = /^\t*([-*]) /;
-
 type Mod = "shift" | "ctrl" | "cmd" | "alt";
 
 function rangeIsCursor(selection: CodeMirror.Range) {
@@ -35,12 +32,14 @@ interface IList {
 }
 
 class List implements IList {
+  private indentSign: string;
   private bullet: string;
   private content: string;
   private children: List[];
   private parent: List;
 
-  constructor(bullet: string, content: string) {
+  constructor(indentSign: string, bullet: string, content: string) {
+    this.indentSign = indentSign;
     this.bullet = bullet;
     this.content = content;
     this.children = [];
@@ -53,7 +52,7 @@ class List implements IList {
 
   getFullContent() {
     return (
-      new Array(this.getTabsLength()).fill("\t").join("") +
+      new Array(this.getLevel() - 1).fill(this.indentSign).join("") +
       this.bullet +
       " " +
       this.content
@@ -76,12 +75,9 @@ class List implements IList {
     return this.children.length === 0;
   }
 
-  getTabsLength() {
-    return this.getLevel() - 1;
-  }
-
   getContentStartCh() {
-    return this.getTabsLength() + 2;
+    const indentLength = (this.getLevel() - 1) * this.indentSign.length;
+    return indentLength + 2;
   }
 
   getContentEndCh() {
@@ -152,20 +148,27 @@ class List implements IList {
 }
 
 class Root implements IList {
+  private indentSign: string;
   private rootList: List;
   private start: CodeMirror.Position;
   private end: CodeMirror.Position;
   private cursor: CodeMirror.Position;
 
   constructor(
+    indentSign: string,
     start: CodeMirror.Position,
     end: CodeMirror.Position,
     cursor: CodeMirror.Position
   ) {
+    this.indentSign = indentSign;
     this.start = start;
     this.end = end;
     this.cursor = cursor;
-    this.rootList = new List("", "");
+    this.rootList = new List("", "", "");
+  }
+
+  getIndentSign() {
+    return this.indentSign;
   }
 
   getLevel() {
@@ -388,8 +391,67 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   private zoomedLevel: number | null = null;
   private zoomHeader: HTMLElement | null = null;
 
-  getLineLevel(line: string) {
-    return line.length - line.replace(LIST_LINE_TABS_RE, "").length;
+  detectListIndentSign(editor: CodeMirror.Editor, cursor: CodeMirror.Position) {
+    const { useTab, tabSize } = (this.app.vault as any).config;
+    const defaultIndentSign = useTab
+      ? "\t"
+      : new Array(tabSize).fill(" ").join("");
+
+    const line = editor.getLine(cursor.line);
+
+    const withTabsRe = /^\t+[-*] /;
+    const withSpacesRe = /^[ ]+[-*] /;
+    const mayBeWithSpacesRe = /^[ ]*[-*] /;
+
+    if (withTabsRe.test(line)) {
+      return "\t";
+    }
+
+    if (withSpacesRe.test(line)) {
+      const spacesA = line.length - line.trimLeft().length;
+
+      let lineNo = cursor.line - 1;
+      let indentSign: string | null = null;
+      while (lineNo >= editor.firstLine()) {
+        const line = editor.getLine(lineNo);
+        if (!mayBeWithSpacesRe.test(line)) {
+          break;
+        }
+        const spacesB = line.length - line.trimLeft().length;
+        if (spacesB < spacesA) {
+          indentSign = new Array(spacesA - spacesB).fill(" ").join("");
+          break;
+        }
+
+        lineNo--;
+      }
+
+      return indentSign;
+    }
+
+    if (mayBeWithSpacesRe.test(line)) {
+      const spacesA = line.length - line.trimLeft().length;
+
+      let lineNo = cursor.line + 1;
+      let indentSign = defaultIndentSign;
+      while (lineNo <= editor.lastLine()) {
+        const line = editor.getLine(lineNo);
+        if (!mayBeWithSpacesRe.test(line)) {
+          break;
+        }
+        const spacesB = line.length - line.trimLeft().length;
+        if (spacesB > spacesA) {
+          indentSign = new Array(spacesB - spacesA).fill(" ").join("");
+          break;
+        }
+
+        lineNo++;
+      }
+
+      return indentSign;
+    }
+
+    return null;
   }
 
   parseList(editor: CodeMirror.Editor, cursor = editor.getCursor()): Root {
@@ -397,7 +459,9 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     const cursorCh = cursor.ch;
     const line = editor.getLine(cursorLine);
 
-    if (!this.isListLine(line)) {
+    const indentSign = this.detectListIndentSign(editor, cursor);
+
+    if (indentSign === null) {
       return null;
     }
 
@@ -405,7 +469,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     const listStartCh = 0;
     while (listStartLine >= 1) {
       const line = editor.getLine(listStartLine - 1);
-      if (!this.isListLine(line)) {
+      if (!this.getListLineInfo(line, indentSign)) {
         break;
       }
       listStartLine--;
@@ -415,7 +479,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     let listEndCh = line.length;
     while (listEndLine < editor.lineCount()) {
       const line = editor.getLine(listEndLine + 1);
-      if (!this.isListLine(line)) {
+      if (!this.getListLineInfo(line, indentSign)) {
         break;
       }
       listEndCh = line.length;
@@ -423,6 +487,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     }
 
     const root = new Root(
+      indentSign,
       { line: listStartLine, ch: listStartCh },
       { line: listEndLine, ch: listEndCh },
       { line: cursorLine, ch: cursorCh }
@@ -433,22 +498,23 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
     for (let l = listStartLine; l <= listEndLine; l++) {
       const line = editor.getLine(l);
-      const lineLevel = this.getLineLevel(line);
+      const { bullet, content, indentLevel } = this.getListLineInfo(
+        line,
+        indentSign
+      );
 
-      if (lineLevel === currentLevel.getLevel() + 1) {
+      if (indentLevel === currentLevel.getLevel() + 1) {
         currentLevel = lastList;
-      } else if (lineLevel < currentLevel.getLevel()) {
-        while (lineLevel < currentLevel.getLevel()) {
+      } else if (indentLevel < currentLevel.getLevel()) {
+        while (indentLevel < currentLevel.getLevel()) {
           currentLevel = currentLevel.getParent();
         }
-      } else if (lineLevel != currentLevel.getLevel()) {
+      } else if (indentLevel != currentLevel.getLevel()) {
         console.error(`Unable to parse list`);
         return null;
       }
 
-      const bullet = LIST_LINE_PREFIX_RE.exec(line)[1];
-      const content = line.replace(LIST_LINE_PREFIX_RE, "");
-      const list = new List(bullet, content);
+      const list = new List(indentSign, bullet, content);
       currentLevel.add(list);
       lastList = list;
     }
@@ -469,8 +535,25 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     return pos;
   }
 
-  getLinePrefixLength(line: string) {
-    return line.length - line.replace(LIST_LINE_PREFIX_RE, "").length;
+  getListLineInfo(line: string, indentSign: string) {
+    const prefixRe = new RegExp(`^(?:${indentSign})*([-*]) `);
+    const matches = prefixRe.exec(line);
+
+    if (!matches) {
+      return null;
+    }
+
+    const prefixLength = matches[0].length;
+    const bullet = matches[1];
+    const content = line.slice(prefixLength);
+    const indentLevel = (prefixLength - 2) / indentSign.length;
+
+    return {
+      bullet,
+      content,
+      prefixLength,
+      indentLevel,
+    };
   }
 
   isJustCursor(editor: CodeMirror.Editor) {
@@ -481,8 +564,14 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
   evalEnsureCursorInContent(editor: CodeMirror.Editor) {
     const cursor = editor.getCursor();
+    const indentSign = this.detectListIndentSign(editor, cursor);
+
+    if (indentSign === null) {
+      return;
+    }
+
     const line = editor.getLine(cursor.line);
-    const linePrefix = this.getLinePrefixLength(line);
+    const linePrefix = this.getListLineInfo(line, indentSign).prefixLength;
 
     if (cursor.ch < linePrefix) {
       cursor.ch = linePrefix;
@@ -568,11 +657,9 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   }
 
   isCursorInList(editor: CodeMirror.Editor) {
-    return this.isListLine(editor.getLine(editor.getCursor().line));
-  }
-
-  isListLine(line: string) {
-    return LIST_LINE_PREFIX_RE.test(line);
+    const cursor = editor.getCursor();
+    const indentSign = this.detectListIndentSign(editor, cursor);
+    return indentSign !== null;
   }
 
   moveListElementDown(editor: CodeMirror.Editor) {
@@ -598,12 +685,15 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
     // TODO: remove hack
     const cursor = editor.getCursor();
+    const indentSign = this.detectListIndentSign(editor, cursor);
+    if (indentSign === null) {
+      return false;
+    }
     const line = editor.getLine(cursor.line);
     if (
       cursor.line === 0 &&
       cursor.ch == 2 &&
-      this.isListLine(line) &&
-      this.getLineLevel(line) === 0
+      this.getListLineInfo(line, indentSign).indentLevel === 0
     ) {
       return false;
     }
@@ -641,13 +731,15 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   }
 
   cursorLeft(editor: CodeMirror.Editor) {
-    if (!this.isCursorInList(editor)) {
+    const cursor = editor.getCursor();
+    const indentSign = this.detectListIndentSign(editor, cursor);
+
+    if (indentSign === null) {
       return false;
     }
 
-    const cursor = editor.getCursor();
     const line = editor.getLine(cursor.line);
-    const linePrefix = this.getLinePrefixLength(line);
+    const linePrefix = this.getListLineInfo(line, indentSign).prefixLength;
 
     if (cursor.ch > linePrefix) {
       return false;
@@ -708,10 +800,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   }
 
   zoomIn(editor: CodeMirror.Editor, lineNo: number = editor.getCursor().line) {
-    if (!this.isCursorInList(editor)) {
-      return false;
-    }
-
     const root = this.parseList(editor);
 
     if (!root) {
@@ -720,14 +808,19 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
     this.zoomOut(editor);
 
-    const lineLevel = this.getLineLevel(editor.getLine(lineNo));
+    const { indentLevel } = this.getListLineInfo(
+      editor.getLine(lineNo),
+      root.getIndentSign()
+    );
 
     let after = false;
     for (let i = editor.firstLine(), l = editor.lastLine(); i <= l; i++) {
       if (i < lineNo) {
         editor.addLineClass(i, "wrap", "outliner-plugin-hidden-row");
       } else if (i > lineNo && !after) {
-        after = this.getLineLevel(editor.getLine(i)) <= lineLevel;
+        after =
+          this.getListLineInfo(editor.getLine(i), root.getIndentSign())
+            .indentLevel <= indentLevel;
       }
 
       if (after) {
@@ -781,7 +874,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
     this.zoomHeader = createHeader();
     editor.getWrapperElement().prepend(this.zoomHeader);
-    this.zoomedLevel = lineLevel;
+    this.zoomedLevel = indentLevel;
 
     return true;
   }
@@ -921,27 +1014,33 @@ export default class ObsidianOutlinerPlugin extends Plugin {
           return;
         }
 
-        const bothLines =
-          this.isListLine(currentLine) && this.isListLine(nextLine);
+        const indentSign = this.detectListIndentSign(cm, changeObj.from);
+
+        if (indentSign === null) {
+          return;
+        }
+
+        const currentLineInfo = this.getListLineInfo(currentLine, indentSign);
+        const nextLineInfo = this.getListLineInfo(nextLine, indentSign);
+
+        if (!currentLineInfo || !nextLineInfo) {
+          return;
+        }
+
         const changeIsNewline =
           changeObj.text.length === 2 &&
           changeObj.text[0] === "" &&
-          LIST_LINE_PREFIX_RE.test(changeObj.text[1]);
+          !!this.getListLineInfo(changeObj.text[1], indentSign);
         const nexlineLevelIsBigger =
-          this.getLineLevel(currentLine) + 1 == this.getLineLevel(nextLine);
+          currentLineInfo.indentLevel + 1 == nextLineInfo.indentLevel;
         const nextLineIsEmpty =
           cm.getRange(changeObj.from, {
             line: changeObj.from.line,
             ch: changeObj.from.ch + 1,
           }).length === 0;
 
-        if (
-          bothLines &&
-          changeIsNewline &&
-          nexlineLevelIsBigger &&
-          nextLineIsEmpty
-        ) {
-          changeObj.text[1] = "\t" + changeObj.text[1];
+        if (changeIsNewline && nexlineLevelIsBigger && nextLineIsEmpty) {
+          changeObj.text[1] = indentSign + changeObj.text[1];
           changeObj.update(changeObj.from, changeObj.to, changeObj.text);
         }
       });
