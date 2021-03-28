@@ -916,8 +916,18 @@ export default class ObsidianOutlinerPlugin extends Plugin {
           /^\t*- /.test(changeObj.text[1]);
         const nexlineLevelIsBigger =
           this.getLineLevel(currentLine) + 1 == this.getLineLevel(nextLine);
+        const nextLineIsEmpty =
+          cm.getRange(changeObj.from, {
+            line: changeObj.from.line,
+            ch: changeObj.from.ch + 1,
+          }).length === 0;
 
-        if (bothLines && changeIsNewline && nexlineLevelIsBigger) {
+        if (
+          bothLines &&
+          changeIsNewline &&
+          nexlineLevelIsBigger &&
+          nextLineIsEmpty
+        ) {
           changeObj.text[1] = "\t" + changeObj.text[1];
           changeObj.update(changeObj.from, changeObj.to, changeObj.text);
         }
