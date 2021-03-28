@@ -387,9 +387,12 @@ class Root implements IList {
   }
 }
 
+class ZoomState {
+  constructor(public level: number, public header: HTMLElement) {}
+}
+
 export default class ObsidianOutlinerPlugin extends Plugin {
-  private zoomedLevel: number | null = null;
-  private zoomHeader: HTMLElement | null = null;
+  private zoomStates: WeakMap<CodeMirror.Editor, ZoomState> = new WeakMap();
 
   detectListIndentSign(editor: CodeMirror.Editor, cursor: CodeMirror.Position) {
     const { useTab, tabSize } = (this.app.vault as any).config;
@@ -783,7 +786,9 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   }
 
   zoomOut(editor: CodeMirror.Editor) {
-    if (this.zoomedLevel === null) {
+    const zoomState = this.zoomStates.get(editor);
+
+    if (!zoomState) {
       return false;
     }
 
@@ -791,16 +796,19 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       editor.removeLineClass(i, "wrap", "outliner-plugin-hidden-row");
     }
 
-    this.zoomHeader.parentElement.removeChild(this.zoomHeader);
+    zoomState.header.parentElement.removeChild(zoomState.header);
 
-    this.zoomedLevel = null;
-    this.zoomHeader = null;
+    this.zoomStates.delete(editor);
 
     return true;
   }
 
-  zoomIn(editor: CodeMirror.Editor, lineNo: number = editor.getCursor().line) {
-    const root = this.parseList(editor);
+  zoomIn(
+    editor: CodeMirror.Editor,
+    cursor: CodeMirror.Position = editor.getCursor()
+  ) {
+    const lineNo = cursor.line;
+    const root = this.parseList(editor, cursor);
 
     if (!root) {
       return false;
@@ -818,9 +826,11 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       if (i < lineNo) {
         editor.addLineClass(i, "wrap", "outliner-plugin-hidden-row");
       } else if (i > lineNo && !after) {
-        after =
-          this.getListLineInfo(editor.getLine(i), root.getIndentSign())
-            .indentLevel <= indentLevel;
+        const afterLineInfo = this.getListLineInfo(
+          editor.getLine(i),
+          root.getIndentSign()
+        );
+        after = !afterLineInfo || afterLineInfo.indentLevel <= indentLevel;
       }
 
       if (after) {
@@ -857,7 +867,9 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       while (list && list.getParent()) {
         const lineNo = root.getLineNumber(list);
         div.prepend(
-          createTitle(list.getContent(), () => this.zoomIn(editor, lineNo))
+          createTitle(list.getContent(), () =>
+            this.zoomIn(editor, { line: lineNo, ch: 0 })
+          )
         );
         div.prepend(createSeparator());
         list = list.getParent();
@@ -872,9 +884,10 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       return div;
     };
 
-    this.zoomHeader = createHeader();
-    editor.getWrapperElement().prepend(this.zoomHeader);
-    this.zoomedLevel = indentLevel;
+    const zoomHeader = createHeader();
+    editor.getWrapperElement().prepend(zoomHeader);
+
+    this.zoomStates.set(editor, new ZoomState(indentLevel, zoomHeader));
 
     return true;
   }
