@@ -935,6 +935,30 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     return true;
   }
 
+  outdentIfLineIsEmpty(editor: CodeMirror.Editor) {
+    if (!this.isJustCursor(editor)) {
+      return false;
+    }
+
+    const root = this.parseList(editor);
+
+    if (!root) {
+      return false;
+    }
+
+    const list = root.getCursorOnList();
+
+    if (list.getContent().length > 0 || list.getLevel() === 1) {
+      return false;
+    }
+
+    root.moveLeft();
+
+    this.applyChanges(editor, root);
+
+    return true;
+  }
+
   handleKeydown = (cm: CodeMirror.Editor, e: KeyboardEvent) => {
     let worked = false;
     const metaKey = process.platform === "darwin" ? "cmd" : "ctrl";
@@ -961,6 +985,8 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       worked = this.selectFullLeft(cm);
     } else if (testKeydown(e, "KeyA", [metaKey])) {
       worked = this.selectAll(cm);
+    } else if (testKeydown(e, "Enter")) {
+      worked = this.outdentIfLineIsEmpty(cm);
     }
 
     if (worked) {

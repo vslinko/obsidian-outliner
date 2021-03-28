@@ -1,6 +1,7 @@
 import { MarkdownView } from "obsidian";
 import * as assert from "assert";
 import ObsidianOutlinerPlugin from "./main";
+import enterTests from "./tests/enter";
 import outdentTests from "./tests/outdent";
 
 interface IState {
@@ -9,6 +10,7 @@ interface IState {
 }
 
 const tests = {
+  ...enterTests,
   ...outdentTests,
 };
 
@@ -22,8 +24,6 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       metaKey: false,
       altKey: false,
       ctrlKey: false,
-      preventDefault: () => {},
-      stopPropagation: () => {},
     };
 
     for (const key of keys.split("-")) {
@@ -46,7 +46,13 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       }
     }
 
-    this.handleKeydown(this.editor, e as KeyboardEvent);
+    const keyboardEvent = new KeyboardEvent("keydown", e);
+    window.CodeMirror.signal(
+      this.editor,
+      "keydown",
+      this.editor,
+      keyboardEvent
+    );
   }
 
   async load() {
