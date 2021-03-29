@@ -1076,11 +1076,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     let worked = false;
     const metaKey = process.platform === "darwin" ? "cmd" : "ctrl";
 
-    if (testKeydown(e, "Tab", ["shift"])) {
-      worked = this.moveListElementLeft(cm);
-    } else if (testKeydown(e, "Tab")) {
-      worked = this.moveListElementRight(cm);
-    } else if (testKeydown(e, "ArrowUp", ["shift", metaKey])) {
+    if (testKeydown(e, "ArrowUp", ["shift", metaKey])) {
       worked = this.moveListElementUp(cm);
     } else if (testKeydown(e, "ArrowDown", ["shift", metaKey])) {
       worked = this.moveListElementDown(cm);
@@ -1162,6 +1158,81 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     if (this.settings.styleLists) {
       this.addListsStyles();
     }
+
+    this.addCommand({
+      id: "indent-list",
+      name: "Indent list",
+      callback: () => {
+        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+
+        if (!view) {
+          return;
+        }
+
+        const editor = view.sourceMode.cmEditor;
+
+        const worked = this.moveListElementRight(editor);
+
+        const isOverrides =
+          (this.app as any).hotkeyManager.printHotkeyForCommand(
+            "obsidian-outliner:indent-list"
+          ) === "Tab";
+
+        if (!worked && isOverrides) {
+          (editor as any).triggerOnKeyDown(
+            fakeEvent({
+              type: "keydown",
+              code: "Tab",
+              keyCode: 9,
+            })
+          );
+        }
+      },
+      hotkeys: [
+        {
+          modifiers: [],
+          key: "Tab",
+        },
+      ],
+    });
+
+    this.addCommand({
+      id: "outdent-list",
+      name: "Outdent list",
+      callback: () => {
+        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+
+        if (!view) {
+          return;
+        }
+
+        const editor = view.sourceMode.cmEditor;
+
+        const worked = this.moveListElementLeft(editor);
+
+        const isOverrides =
+          (this.app as any).hotkeyManager.printHotkeyForCommand(
+            "obsidian-outliner:outdent-list"
+          ) === "⇧ Tab";
+
+        if (!worked && isOverrides) {
+          (editor as any).triggerOnKeyDown(
+            fakeEvent({
+              type: "keydown",
+              code: "Tab",
+              keyCode: 9,
+              shiftKey: true,
+            })
+          );
+        }
+      },
+      hotkeys: [
+        {
+          modifiers: ["Shift"],
+          key: "Tab",
+        },
+      ],
+    });
 
     this.addCommand({
       id: "zoom-in",
@@ -1390,4 +1461,25 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
       });
     });
   }
+}
+
+function fakeEvent(base: Object) {
+  return {
+    type: "keydown",
+    shiftKey: false,
+    metaKey: false,
+    altKey: false,
+    ctrlKey: false,
+    defaultPrevented: false,
+    returnValue: true,
+    cancelBubble: false,
+    preventDefault() {
+      this.defaultPrevented = true;
+      this.returnValue = true;
+    },
+    stopPropagation() {
+      this.cancelBubble = true;
+    },
+    ...base,
+  };
 }
