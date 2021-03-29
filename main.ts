@@ -1111,9 +1111,11 @@ export default class ObsidianOutlinerPlugin extends Plugin {
           if (visibleFrom === null && !isHidden) {
             visibleFrom = { line: i, ch: 0 };
           }
-          if (visibleFrom !== null && visibleTill === null && isHidden) {
-            visibleTill = { line: i - 1, ch: cm.getLine(i - 1).length };
+          if (visibleFrom !== null && visibleTill !== null && isHidden) {
             break;
+          }
+          if (visibleFrom !== null) {
+            visibleTill = { line: i, ch: cm.getLine(i).length };
           }
         }
 
