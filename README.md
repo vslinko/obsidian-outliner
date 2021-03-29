@@ -6,6 +6,14 @@ Work with your lists like in Workflowy or RoamResearch.
 
 ![Demo](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/demo.gif)
 
+## Configuration
+
+### Style lists
+
+If you liked lists styles from the demo above you can enable it in a plugin settings tab.
+
+**Disclaimer:** Lists styles are only compatible with the built-in Obsidian themes and may not be compatible with other themes.
+
 ## Supported hotkeys
 
 On Windows/Linux instead of using `Cmd` key use `Ctrl` key.
@@ -19,11 +27,3 @@ On Windows/Linux instead of using `Cmd` key use `Ctrl` key.
 - `Enter` - Create new item down below.
 - `Cmd-A` — Select item or whole list.
 - `Cmd-.`, `Cmd-Shift-.` — Zoom-in and zoom-out.
-
-## Better lists styles
-
-If you liked lists styles from the demo you can use [my snippet](snippet.css).
-
-**Disclaimer:** This snippet is only compatible with the built-in Obsidian themes and may not be compatible with other themes.
-
-[How to use snippets](https://publish.obsidian.md/help/How+to/Add+custom+styles).

@@ -1,5 +1,51 @@
-import { MarkdownView, Plugin } from "obsidian";
+import { App, MarkdownView, Plugin, PluginSettingTab, Setting } from "obsidian";
 import { diffLines } from "diff";
+
+const snippet = `.cm-hmd-list-indent .cm-tab {
+  position: relative;
+}
+
+.cm-hmd-list-indent .cm-tab::before {
+  content: "";
+  border-left: 1px solid var(--text-faint);
+  position: absolute;
+  left: 3px;
+  top: -9px;
+  bottom: -9999px;
+}
+
+.cm-s-obsidian .HyperMD-list-line {
+  padding-top: 0.4em;
+}
+
+.cm-s-obsidian .CodeMirror-line {
+  position: relative;
+  overflow: hidden;
+}
+
+.cm-s-obsidian span.cm-formatting-list {
+  letter-spacing: 3px;
+  color: var(--background-primary);
+}
+
+.cm-s-obsidian span.cm-formatting-list-ul:before {
+  content: "•";
+  position: absolute;
+  margin-left: -3px;
+  margin-top: -5px;
+  font-size: 24px;
+  color: var(--text-muted);
+  visibility: visible !important;
+}
+`;
+
+interface ObsidianOutlinerPluginSettings {
+  styleLists: boolean;
+}
+
+const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
+  styleLists: false,
+};
 
 type Mod = "shift" | "ctrl" | "cmd" | "alt";
 
@@ -404,6 +450,7 @@ class ZoomState {
 }
 
 export default class ObsidianOutlinerPlugin extends Plugin {
+  settings: ObsidianOutlinerPluginSettings;
   private zoomStates: WeakMap<CodeMirror.Editor, ZoomState> = new WeakMap();
 
   detectListIndentSign(editor: CodeMirror.Editor, cursor: CodeMirror.Position) {
@@ -1048,8 +1095,38 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     }
   };
 
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
+
+  async saveSettings() {
+    await this.saveData(this.settings);
+  }
+
+  addListsStyles() {
+    const style = document.createElement("style");
+    style.id = "obsidian-outliner-lists-style";
+    style.innerHTML = snippet;
+    document.body.appendChild(style);
+  }
+
+  removeListsStyles() {
+    const style = document.querySelector("#obsidian-outliner-lists-style");
+    if (style) {
+      style.parentElement.removeChild(style);
+    }
+  }
+
   async onload() {
     console.log(`Loading obsidian-outliner`);
+
+    await this.loadSettings();
+
+    this.addSettingTab(new ObsidianOutlinerPluginSettingTab(this.app, this));
+
+    if (this.settings.styleLists) {
+      this.addListsStyles();
+    }
 
     this.addCommand({
       id: "zoom-in",
@@ -1202,8 +1279,42 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   async onunload() {
     console.log(`Unloading obsidian-outliner`);
 
+    this.removeListsStyles();
+
     this.app.workspace.iterateCodeMirrors((cm) => {
       cm.off("keydown", this.handleKeydown);
     });
+  }
+}
+
+class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
+  plugin: ObsidianOutlinerPlugin;
+
+  constructor(app: App, plugin: ObsidianOutlinerPlugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+
+  display(): void {
+    let { containerEl } = this;
+
+    containerEl.empty();
+
+    new Setting(containerEl)
+      .setName("Style lists")
+      .setDesc("Enable better lists styles")
+      .addToggle((toggle) => {
+        toggle
+          .setValue(this.plugin.settings.styleLists)
+          .onChange(async (value) => {
+            this.plugin.settings.styleLists = value;
+            await this.plugin.saveSettings();
+            if (value) {
+              this.plugin.addListsStyles();
+            } else {
+              this.plugin.removeListsStyles();
+            }
+          });
+      });
   }
 }
