@@ -21,11 +21,23 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
 
   simulateKeydown(keys: string) {
     const e = {
+      type: "keydown",
       code: "",
+      keyCode: 0,
       shiftKey: false,
       metaKey: false,
       altKey: false,
       ctrlKey: false,
+      defaultPrevented: false,
+      returnValue: true,
+      cancelBubble: false,
+      preventDefault: function () {
+        e.defaultPrevented = true;
+        e.returnValue = true;
+      },
+      stopPropagation: function () {
+        e.cancelBubble = true;
+      },
     };
 
     for (const key of keys.split("-")) {
@@ -48,13 +60,18 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       }
     }
 
-    const keyboardEvent = new KeyboardEvent("keydown", e);
-    window.CodeMirror.signal(
-      this.editor,
-      "keydown",
-      this.editor,
-      keyboardEvent
-    );
+    for (const c in (window.CodeMirror as any).keyNames) {
+      if ((window.CodeMirror as any).keyNames[c] == e.code) {
+        e.keyCode = Number(c);
+        break;
+      }
+    }
+
+    if (e.keyCode == 0) {
+      throw new Error("Unknown key: " + e.code);
+    }
+
+    (this.editor as any).triggerOnKeyDown(e);
   }
 
   async load() {

@@ -708,7 +708,10 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       return true;
     }
 
-    root.delete();
+    if (!root.delete()) {
+      return false;
+    }
+
     this.applyChanges(editor, root);
 
     return true;
