@@ -167,6 +167,10 @@ class Root implements IList {
     this.rootList = new List("", "", "");
   }
 
+  replaceCursor(cursor: CodeMirror.Position) {
+    this.cursor = cursor;
+  }
+
   getTotalLines() {
     return this.end.line - this.start.line + 1;
   }
@@ -708,13 +712,47 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       return true;
     }
 
-    if (!root.delete()) {
+    const res = root.delete();
+
+    if (res) {
+      this.applyChanges(editor, root);
+    }
+
+    return res;
+  }
+
+  deleteNext(editor: CodeMirror.Editor) {
+    if (!this.isJustCursor(editor)) {
       return false;
     }
 
-    this.applyChanges(editor, root);
+    const root = this.parseList(editor);
 
-    return true;
+    if (!root) {
+      return false;
+    }
+
+    const list = root.getCursorOnList();
+    const nextLineNo = root.getCursor().line + 1;
+    const nextList = root.getListUnderLine(nextLineNo);
+
+    if (!nextList || root.getCursor().ch !== list.getContentEndCh()) {
+      return false;
+    }
+
+    root.replaceCursor({
+      line: nextLineNo,
+      ch: nextList.getContentStartCh(),
+    });
+
+    const res = root.delete();
+    const reallyChanged = root.getCursor().line !== nextLineNo;
+
+    if (reallyChanged) {
+      this.applyChanges(editor, root);
+    }
+
+    return res;
   }
 
   deleteFullLeft(editor: CodeMirror.Editor) {
@@ -994,6 +1032,8 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       worked = this.deleteFullLeft(cm);
     } else if (testKeydown(e, "Backspace")) {
       worked = this.delete(cm);
+    } else if (testKeydown(e, "Delete")) {
+      worked = this.deleteNext(cm);
     } else if (testKeydown(e, "ArrowLeft", [metaKey, "shift"])) {
       worked = this.selectFullLeft(cm);
     } else if (testKeydown(e, "KeyA", [metaKey])) {

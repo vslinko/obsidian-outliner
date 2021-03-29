@@ -21,6 +21,16 @@ export default {
     // assert
     plugin.assertCurrentState(["- qw|"]);
   },
+  "delete should remove next item if cursor is on the end": (plugin) => {
+    // arrange
+    plugin.applyState(["- qwe|", "\t- ee"]);
+
+    // act
+    plugin.simulateKeydown("Delete");
+
+    // assert
+    plugin.assertCurrentState(["- qwe|ee"]);
+  },
 } as {
   [key: string]: (plugin: ObsidianOutlinerPluginWithTests) => void;
 };
