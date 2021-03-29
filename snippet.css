@@ -13,6 +13,9 @@
 
 .cm-s-obsidian .HyperMD-list-line {
   padding-top: 0.4em;
+}
+
+.cm-s-obsidian .CodeMirror-line {
   position: relative;
   overflow: hidden;
 }
