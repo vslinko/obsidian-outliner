@@ -41,10 +41,12 @@ const snippet = `.cm-hmd-list-indent .cm-tab {
 
 interface ObsidianOutlinerPluginSettings {
   styleLists: boolean;
+  debug: boolean;
 }
 
 const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
   styleLists: false,
+  debug: false,
 };
 
 type Mod = "shift" | "ctrl" | "cmd" | "alt";
@@ -449,11 +451,23 @@ class ZoomState {
   constructor(public level: number, public header: HTMLElement) {}
 }
 
+const voidFn = () => {};
+
 export default class ObsidianOutlinerPlugin extends Plugin {
   settings: ObsidianOutlinerPluginSettings;
   private zoomStates: WeakMap<CodeMirror.Editor, ZoomState> = new WeakMap();
 
+  debug(method: string) {
+    if (!this.settings.debug) {
+      return voidFn;
+    }
+
+    return (...args: any[]) => console.info(method, ...args);
+  }
+
   detectListIndentSign(editor: CodeMirror.Editor, cursor: CodeMirror.Position) {
+    const d = this.debug("ObsidianOutlinerPlugin::detectListIndentSign");
+
     const { useTab, tabSize } = (this.app.vault as any).config;
     const defaultIndentSign = useTab
       ? "\t"
@@ -466,14 +480,15 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     const mayBeWithSpacesRe = /^[ ]*[-*] /;
 
     if (withTabsRe.test(line)) {
+      d("detected tab on current line");
       return "\t";
     }
 
     if (withSpacesRe.test(line)) {
+      d("detected whitespaces on current line, trying to count");
       const spacesA = line.length - line.trimLeft().length;
 
       let lineNo = cursor.line - 1;
-      let indentSign: string | null = null;
       while (lineNo >= editor.firstLine()) {
         const line = editor.getLine(lineNo);
         if (!mayBeWithSpacesRe.test(line)) {
@@ -481,38 +496,47 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         }
         const spacesB = line.length - line.trimLeft().length;
         if (spacesB < spacesA) {
-          indentSign = new Array(spacesA - spacesB).fill(" ").join("");
-          break;
+          const l = spacesA - spacesB;
+          d(`detected ${l} whitespaces`);
+          return new Array(l).fill(" ").join("");
         }
 
         lineNo--;
       }
 
-      return indentSign;
+      d("unable to detect");
+      return null;
     }
 
     if (mayBeWithSpacesRe.test(line)) {
+      d("detected nothing on current line, looking forward");
       const spacesA = line.length - line.trimLeft().length;
 
       let lineNo = cursor.line + 1;
-      let indentSign = defaultIndentSign;
       while (lineNo <= editor.lastLine()) {
         const line = editor.getLine(lineNo);
+        if (withTabsRe.test(line)) {
+          d("detected tab");
+          return "\t";
+        }
         if (!mayBeWithSpacesRe.test(line)) {
           break;
         }
         const spacesB = line.length - line.trimLeft().length;
         if (spacesB > spacesA) {
-          indentSign = new Array(spacesB - spacesA).fill(" ").join("");
-          break;
+          const l = spacesB - spacesA;
+          d(`detected ${l} whitespaces`);
+          return new Array(l).fill(" ").join("");
         }
 
         lineNo++;
       }
 
-      return indentSign;
+      d(`detected nothing, using default useTab=${useTab} tabSize=${tabSize}`);
+      return defaultIndentSign;
     }
 
+    d("unable to detect");
     return null;
   }
 
@@ -1316,5 +1340,12 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
             }
           });
       });
+
+    new Setting(containerEl).setName("Debug mode").addToggle((toggle) => {
+      toggle.setValue(this.plugin.settings.debug).onChange(async (value) => {
+        this.plugin.settings.debug = value;
+        await this.plugin.saveSettings();
+      });
+    });
   }
 }
