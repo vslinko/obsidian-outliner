@@ -1,7 +1,7 @@
 {
   "id": "obsidian-outliner",
   "name": "Obsidian Outliner Plugin",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "minAppVersion": "0.11.5",
   "description": "Accelerate your lists.",
   "author": "Viacheslav Slinko",
