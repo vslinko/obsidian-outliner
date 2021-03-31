@@ -448,7 +448,7 @@ class Root implements IList {
 }
 
 class ZoomState {
-  constructor(public level: number, public header: HTMLElement) {}
+  constructor(public line: CodeMirror.LineHandle, public header: HTMLElement) {}
 }
 
 const voidFn = () => {};
@@ -1009,7 +1009,10 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     const zoomHeader = createHeader();
     editor.getWrapperElement().prepend(zoomHeader);
 
-    this.zoomStates.set(editor, new ZoomState(indentLevel, zoomHeader));
+    this.zoomStates.set(
+      editor,
+      new ZoomState(editor.getLineHandle(lineNo), zoomHeader)
+    );
 
     return true;
   }
@@ -1194,9 +1197,38 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
     this.registerCodeMirror((cm) => {
       cm.on("beforeChange", (cm, changeObj) => {
-        if (changeObj.origin === "setValue") {
-          this.zoomOut(cm);
+        const zoomState = this.zoomStates.get(cm);
+
+        if (
+          !zoomState ||
+          changeObj.origin !== "setValue" ||
+          changeObj.from.line !== 0 ||
+          changeObj.from.ch !== 0
+        ) {
+          return;
         }
+
+        const tillLine = cm.lastLine();
+        const tillCh = cm.getLine(tillLine).length;
+
+        if (changeObj.to.line !== tillLine || changeObj.to.ch !== tillCh) {
+          return;
+        }
+
+        this.zoomOut(cm);
+      });
+
+      cm.on("change", (cm, changeObj) => {
+        const zoomState = this.zoomStates.get(cm);
+
+        if (!zoomState || changeObj.origin !== "setValue") {
+          return;
+        }
+
+        this.zoomIn(cm, {
+          line: cm.getLineNumber(zoomState.line),
+          ch: 0,
+        });
       });
 
       cm.on("beforeChange", (cm, changeObj) => {
