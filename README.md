@@ -1,6 +1,10 @@
 # Obsidian Outliner
 
-Work with your lists like in Workflowy or RoamResearch.
+**Work with your lists like in Workflowy or RoamResearch.**
+
+⁉️ Discuss ideas or ask a question in [discussions](https://github.com/vslinko/obsidian-outliner/discussions).<br>
+⚙️ Follow the development process on the [board](https://github.com/vslinko/obsidian-outliner/projects/1).<br>
+🐛 Report bugs in [issues](https://github.com/vslinko/obsidian-outliner/issues).
 
 ## Demo
 
