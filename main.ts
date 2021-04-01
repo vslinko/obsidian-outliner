@@ -659,6 +659,19 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       return;
     }
 
+    const lineStartCursor = editor.coordsChar({
+      ...editor.cursorCoords(),
+      left: 0,
+    });
+
+    if (lineStartCursor.line !== cursor.line) {
+      editor.setCursor({
+        line: lineStartCursor.line,
+        ch: editor.getLine(lineStartCursor.line).length,
+      });
+      return;
+    }
+
     const line = editor.getLine(cursor.line);
     const linePrefix = this.getListLineInfo(line, indentSign).prefixLength;
 
