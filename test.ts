@@ -10,6 +10,18 @@ interface IState {
   value: string;
 }
 
+interface ITestResult {
+  name: string;
+  passed: boolean;
+}
+
+interface ITestResults {
+  passed: number;
+  failed: number;
+  total: number;
+  tests: ITestResult[];
+}
+
 const tests = {
   ...deleteTests,
   ...enterTests,
@@ -78,44 +90,73 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     await super.load();
 
     (window as any).ObsidianOutlinerPlugin = {
-      runTests: async () => {
-        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-
-        if (!view) {
-          return;
-        }
-
-        this.editor = view.sourceMode.cmEditor;
-
-        const prevState = this.getCurrentState();
-
-        for (const [key, testFn] of Object.entries(tests)) {
-          const groupLabel = `> ${key}`;
-          mockConsole((invokeOriginal) => {
-            unmockConsole();
-            console.log(groupLabel);
-            invokeOriginal();
-          });
-          let failed = false;
-          try {
-            this.applyState("|");
-            await testFn(this);
-          } catch (e) {
-            console.error(e);
-            failed = true;
-          }
-          unmockConsole();
-          console.log(`${groupLabel} ${failed ? "FAIL" : "SUCCESS"}`);
-        }
-
-        this.applyState(prevState);
-      },
+      runTests: this.runTests.bind(this),
     };
+
+    if (process.env.RUN_OUTLINER_TESTS) {
+      setTimeout(async () => {
+        const results = await this.runTests();
+        this.app.vault.create("results.json", JSON.stringify(results, null, 2));
+      }, 500);
+    }
   }
 
   async onunload() {
     await super.onunload();
     delete (window as any).ObsidianOutlinerPlugin;
+  }
+
+  async runTests(): Promise<ITestResults> {
+    const results: ITestResults = {
+      passed: 0,
+      failed: 0,
+      total: 0,
+      tests: [],
+    };
+
+    for (const [key, testFn] of Object.entries(tests)) {
+      const testResult: ITestResult = {
+        name: key,
+        passed: true,
+      };
+      const filePath = `tests/${key}.md`;
+      let file = this.app.vault
+        .getMarkdownFiles()
+        .find((f) => f.path === filePath);
+      if (!file) {
+        file = await this.app.vault.create(filePath, "");
+      }
+      this.app.workspace.activeLeaf.openFile(file);
+      this.editor = this.app.workspace.getActiveViewOfType(
+        MarkdownView
+      ).sourceMode.cmEditor;
+
+      const groupLabel = `> ${key}`;
+      mockConsole((invokeOriginal) => {
+        unmockConsole();
+        console.log(groupLabel);
+        invokeOriginal();
+      });
+      try {
+        this.applyState("|");
+        await testFn(this);
+      } catch (e) {
+        console.error(e);
+        testResult.passed = false;
+      }
+      unmockConsole();
+      console.log(`${groupLabel} ${testResult.passed ? "SUCCESS" : "FAIL"}`);
+
+      results.tests.push(testResult);
+      if (testResult.passed) {
+        results.passed++;
+      } else {
+        results.failed++;
+      }
+      results.total++;
+    }
+
+    return results;
   }
 
   applyState(state: string[]): void;
