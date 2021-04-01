@@ -25,6 +25,9 @@ const snippet = `.cm-hmd-list-indent .cm-tab {
 
 .cm-s-obsidian span.cm-formatting-list {
   letter-spacing: 3px;
+}
+
+.cm-s-obsidian span.cm-formatting-list-ul {
   color: var(--background-primary);
 }
 
