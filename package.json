@@ -1,7 +1,6 @@
 {
   "name": "obsidian-outliner",
-  "version": "1.0.22",
-  "description": "Accelerate your lists.",
+  "description": "Work with your lists like in Workflowy or RoamResearch.",
   "main": "main.js",
   "scripts": {
     "dev": "rollup --config rollup.config.js -w --configWithTests",
