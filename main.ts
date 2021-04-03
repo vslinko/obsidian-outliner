@@ -471,7 +471,14 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   detectListIndentSign(editor: CodeMirror.Editor, cursor: CodeMirror.Position) {
     const d = this.debug("ObsidianOutlinerPlugin::detectListIndentSign");
 
-    const { useTab, tabSize } = (this.app.vault as any).config;
+    const { useTab, tabSize } = {
+      useTab: true,
+      tabSize: 4,
+      ...((this.app.vault as any).config as {
+        useTab?: boolean;
+        tabSize?: number;
+      }),
+    };
     const defaultIndentSign = useTab
       ? "\t"
       : new Array(tabSize).fill(" ").join("");
