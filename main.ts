@@ -1120,26 +1120,28 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   addListsStyles() {
     document.body.classList.add("outliner-plugin-bls");
 
+    const text = (size: number) =>
+      `Outliner styles doesn't work with ${size}-spaces-tabs. Please check your Obsidian settings.`;
+
     const item = this.addStatusBarItem();
     item.style.color = "red";
     item.style.display = "none";
-    item.setText(
-      "Outliner lists styles only works with 4 spaces size of tabs. Please check your settings."
-    );
-    let visible = false;
+
+    let visible: number | null = null;
 
     this.registerInterval(
       window.setInterval(() => {
-        const { tabSize } = this.getObsidianTabsSettigns();
+        const { useTab, tabSize } = this.getObsidianTabsSettigns();
 
-        const shouldBeVisible = tabSize !== 4;
+        const shouldBeVisible = useTab && tabSize !== 4;
 
-        if (shouldBeVisible && !visible) {
+        if (shouldBeVisible && visible !== tabSize) {
           item.style.display = "block";
-          visible = true;
-        } else if (!shouldBeVisible && visible) {
+          item.setText(text(tabSize));
+          visible = tabSize;
+        } else if (!shouldBeVisible && visible !== null) {
           item.style.display = "none";
-          visible = false;
+          visible = null;
         }
       }, 1000)
     );
@@ -1363,7 +1365,9 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Style lists")
-      .setDesc("Enable better lists styles")
+      .setDesc(
+        "Enable better lists styles (works well only with spaces or 4-spaces-tabs)"
+      )
       .addToggle((toggle) => {
         toggle
           .setValue(this.plugin.settings.styleLists)
