@@ -1,47 +1,6 @@
 import { App, MarkdownView, Plugin, PluginSettingTab, Setting } from "obsidian";
 import { diffLines } from "diff";
 
-const snippet = `.cm-hmd-list-indent .cm-tab {
-  position: relative;
-}
-
-.cm-hmd-list-indent .cm-tab::before {
-  content: "";
-  border-left: 1px solid var(--text-faint);
-  position: absolute;
-  left: 3px;
-  top: -9px;
-  bottom: -9999px;
-}
-
-.cm-s-obsidian .HyperMD-list-line {
-  padding-top: 0.4em;
-}
-
-.cm-s-obsidian .CodeMirror-line {
-  position: relative;
-  overflow: hidden;
-}
-
-.cm-s-obsidian span.cm-formatting-list {
-  letter-spacing: 3px;
-}
-
-.cm-s-obsidian span.cm-formatting-list-ul {
-  color: var(--background-primary);
-}
-
-.cm-s-obsidian span.cm-formatting-list-ul:before {
-  content: "•";
-  position: absolute;
-  margin-left: -3px;
-  margin-top: -5px;
-  font-size: 24px;
-  color: var(--text-muted);
-  visibility: visible !important;
-}
-`;
-
 interface ObsidianOutlinerPluginSettings {
   styleLists: boolean;
   debug: boolean;
@@ -468,17 +427,21 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     return (...args: any[]) => console.info(method, ...args);
   }
 
+  getObsidianTabsSettigns(): {
+    useTab: boolean;
+    tabSize: number;
+  } {
+    return {
+      useTab: true,
+      tabSize: 4,
+      ...(this.app.vault as any).config,
+    };
+  }
+
   detectListIndentSign(editor: CodeMirror.Editor, cursor: CodeMirror.Position) {
     const d = this.debug("ObsidianOutlinerPlugin::detectListIndentSign");
 
-    const { useTab, tabSize } = {
-      useTab: true,
-      tabSize: 4,
-      ...((this.app.vault as any).config as {
-        useTab?: boolean;
-        tabSize?: number;
-      }),
-    };
+    const { useTab, tabSize } = this.getObsidianTabsSettigns();
     const defaultIndentSign = useTab
       ? "\t"
       : new Array(tabSize).fill(" ").join("");
@@ -1155,17 +1118,35 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   }
 
   addListsStyles() {
-    const style = document.createElement("style");
-    style.id = "obsidian-outliner-lists-style";
-    style.innerHTML = snippet;
-    document.body.appendChild(style);
+    document.body.classList.add("outliner-plugin-bls");
+
+    const item = this.addStatusBarItem();
+    item.style.color = "red";
+    item.style.display = "none";
+    item.setText(
+      "Outliner lists styles only works with 4 spaces size of tabs. Please check your settings."
+    );
+    let visible = false;
+
+    this.registerInterval(
+      window.setInterval(() => {
+        const { tabSize } = this.getObsidianTabsSettigns();
+
+        const shouldBeVisible = tabSize !== 4;
+
+        if (shouldBeVisible && !visible) {
+          item.style.display = "block";
+          visible = true;
+        } else if (!shouldBeVisible && visible) {
+          item.style.display = "none";
+          visible = false;
+        }
+      }, 1000)
+    );
   }
 
   removeListsStyles() {
-    const style = document.querySelector("#obsidian-outliner-lists-style");
-    if (style) {
-      style.parentElement.removeChild(style);
-    }
+    document.body.classList.remove("outliner-plugin-bls");
   }
 
   async onload() {
