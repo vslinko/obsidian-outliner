@@ -630,6 +630,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     }
 
     process.nextTick(() => {
+      const cursor = editor.getCursor();
       const lineStartCursor = editor.coordsChar({
         ...editor.cursorCoords(),
         left: 0,
