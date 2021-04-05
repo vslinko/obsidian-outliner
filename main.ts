@@ -1076,11 +1076,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     let worked = false;
     const metaKey = process.platform === "darwin" ? "cmd" : "ctrl";
 
-    if (testKeydown(e, "ArrowUp", [metaKey])) {
-      worked = this.fold(cm);
-    } else if (testKeydown(e, "ArrowDown", [metaKey])) {
-      worked = this.unfold(cm);
-    } else if (testKeydown(e, "ArrowLeft")) {
+    if (testKeydown(e, "ArrowLeft")) {
       worked = this.cursorLeft(cm);
     } else if (testKeydown(e, "Backspace", [metaKey])) {
       worked = this.deleteFullLeft(cm);
@@ -1207,6 +1203,30 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         {
           modifiers: [],
           key: "Tab",
+        },
+      ],
+    });
+
+    this.addCommand({
+      id: "fold",
+      name: "Fold list",
+      callback: this.createCommandCallback(this.fold.bind(this)),
+      hotkeys: [
+        {
+          modifiers: ["Mod"],
+          key: "ArrowUp",
+        },
+      ],
+    });
+
+    this.addCommand({
+      id: "unfold",
+      name: "Unfold list",
+      callback: this.createCommandCallback(this.unfold.bind(this)),
+      hotkeys: [
+        {
+          modifiers: ["Mod"],
+          key: "ArrowDown",
         },
       ],
     });
