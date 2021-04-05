@@ -114,19 +114,20 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       tests: [],
     };
 
+    const filePath = `test.md`;
+    let file = this.app.vault
+      .getMarkdownFiles()
+      .find((f) => f.path === filePath);
+    if (!file) {
+      file = await this.app.vault.create(filePath, "");
+    }
+    this.app.workspace.activeLeaf.openFile(file);
+
     for (const [key, testFn] of Object.entries(tests)) {
       const testResult: ITestResult = {
         name: key,
         passed: true,
       };
-      const filePath = `tests/${key}.md`;
-      let file = this.app.vault
-        .getMarkdownFiles()
-        .find((f) => f.path === filePath);
-      if (!file) {
-        file = await this.app.vault.create(filePath, "");
-      }
-      this.app.workspace.activeLeaf.openFile(file);
       this.editor = this.app.workspace.getActiveViewOfType(
         MarkdownView
       ).sourceMode.cmEditor;
