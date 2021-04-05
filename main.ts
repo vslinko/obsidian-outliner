@@ -1076,11 +1076,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     let worked = false;
     const metaKey = process.platform === "darwin" ? "cmd" : "ctrl";
 
-    if (testKeydown(e, "ArrowUp", ["shift", metaKey])) {
-      worked = this.moveListElementUp(cm);
-    } else if (testKeydown(e, "ArrowDown", ["shift", metaKey])) {
-      worked = this.moveListElementDown(cm);
-    } else if (testKeydown(e, "ArrowUp", [metaKey])) {
+    if (testKeydown(e, "ArrowUp", [metaKey])) {
       worked = this.fold(cm);
     } else if (testKeydown(e, "ArrowDown", [metaKey])) {
       worked = this.unfold(cm);
@@ -1148,6 +1144,24 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     document.body.classList.remove("outliner-plugin-bls");
   }
 
+  createCommandCallback(cb: (editor: CodeMirror.Editor) => boolean) {
+    return () => {
+      const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+
+      if (!view) {
+        return;
+      }
+
+      const editor = view.sourceMode.cmEditor;
+
+      const worked = cb(editor);
+
+      if (!worked && window.event && window.event.type === "keydown") {
+        (editor as any).triggerOnKeyDown(window.event);
+      }
+    };
+  }
+
   async onload() {
     console.log(`Loading obsidian-outliner`);
 
@@ -1160,34 +1174,35 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     }
 
     this.addCommand({
+      id: "move-list-item-up",
+      name: "Move list item up",
+      callback: this.createCommandCallback(this.moveListElementUp.bind(this)),
+      hotkeys: [
+        {
+          modifiers: ["Mod", "Shift"],
+          key: "ArrowUp",
+        },
+      ],
+    });
+
+    this.addCommand({
+      id: "move-list-item-down",
+      name: "Move list item down",
+      callback: this.createCommandCallback(this.moveListElementDown.bind(this)),
+      hotkeys: [
+        {
+          modifiers: ["Mod", "Shift"],
+          key: "ArrowDown",
+        },
+      ],
+    });
+
+    this.addCommand({
       id: "indent-list",
       name: "Indent list",
-      callback: () => {
-        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-
-        if (!view) {
-          return;
-        }
-
-        const editor = view.sourceMode.cmEditor;
-
-        const worked = this.moveListElementRight(editor);
-
-        const isOverrides =
-          (this.app as any).hotkeyManager.printHotkeyForCommand(
-            "obsidian-outliner:indent-list"
-          ) === "Tab";
-
-        if (!worked && isOverrides) {
-          (editor as any).triggerOnKeyDown(
-            fakeEvent({
-              type: "keydown",
-              code: "Tab",
-              keyCode: 9,
-            })
-          );
-        }
-      },
+      callback: this.createCommandCallback(
+        this.moveListElementRight.bind(this)
+      ),
       hotkeys: [
         {
           modifiers: [],
@@ -1199,33 +1214,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     this.addCommand({
       id: "outdent-list",
       name: "Outdent list",
-      callback: () => {
-        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-
-        if (!view) {
-          return;
-        }
-
-        const editor = view.sourceMode.cmEditor;
-
-        const worked = this.moveListElementLeft(editor);
-
-        const isOverrides =
-          (this.app as any).hotkeyManager.printHotkeyForCommand(
-            "obsidian-outliner:outdent-list"
-          ) === "⇧ Tab";
-
-        if (!worked && isOverrides) {
-          (editor as any).triggerOnKeyDown(
-            fakeEvent({
-              type: "keydown",
-              code: "Tab",
-              keyCode: 9,
-              shiftKey: true,
-            })
-          );
-        }
-      },
+      callback: this.createCommandCallback(this.moveListElementLeft.bind(this)),
       hotkeys: [
         {
           modifiers: ["Shift"],
@@ -1237,15 +1226,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     this.addCommand({
       id: "zoom-in",
       name: "Zoom In",
-      callback: () => {
-        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-
-        if (!view) {
-          return;
-        }
-
-        this.zoomIn(view.sourceMode.cmEditor);
-      },
+      callback: this.createCommandCallback(this.zoomIn.bind(this)),
       hotkeys: [
         {
           modifiers: ["Mod"],
@@ -1257,15 +1238,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     this.addCommand({
       id: "zoom-out",
       name: "Zoom Out",
-      callback: () => {
-        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-
-        if (!view) {
-          return;
-        }
-
-        this.zoomOut(view.sourceMode.cmEditor);
-      },
+      callback: this.createCommandCallback(this.zoomOut.bind(this)),
       hotkeys: [
         {
           modifiers: ["Mod", "Shift"],
