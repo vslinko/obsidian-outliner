@@ -1,14 +1,25 @@
-import { App, MarkdownView, Plugin, PluginSettingTab, Setting } from "obsidian";
+import {
+  App,
+  MarkdownView,
+  Plugin,
+  PluginSettingTab,
+  Setting,
+  ToggleComponent,
+} from "obsidian";
 import { diffLines } from "diff";
 
 interface ObsidianOutlinerPluginSettings {
   styleLists: boolean;
   debug: boolean;
+  smartCursor: boolean;
+  smartEnter: boolean;
 }
 
 const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
   styleLists: false,
   debug: false,
+  smartCursor: true,
+  smartEnter: true,
 };
 
 type Mod = "shift" | "ctrl" | "cmd" | "alt";
@@ -1076,9 +1087,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     let worked = false;
     const metaKey = process.platform === "darwin" ? "cmd" : "ctrl";
 
-    if (testKeydown(e, "ArrowLeft")) {
-      worked = this.cursorLeft(cm);
-    } else if (testKeydown(e, "Backspace", [metaKey])) {
+    if (testKeydown(e, "Backspace", [metaKey])) {
       worked = this.deleteFullLeft(cm);
     } else if (testKeydown(e, "Backspace")) {
       worked = this.delete(cm);
@@ -1088,8 +1097,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       worked = this.selectFullLeft(cm);
     } else if (testKeydown(e, "KeyA", [metaKey])) {
       worked = this.selectAll(cm);
-    } else if (testKeydown(e, "Enter")) {
-      worked = this.outdentIfLineIsEmpty(cm);
     }
 
     if (worked) {
@@ -1268,139 +1275,183 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     });
 
     this.registerCodeMirror((cm) => {
-      cm.on("beforeChange", (cm, changeObj) => {
-        const zoomState = this.zoomStates.get(cm);
-
-        if (
-          !zoomState ||
-          changeObj.origin !== "setValue" ||
-          changeObj.from.line !== 0 ||
-          changeObj.from.ch !== 0
-        ) {
-          return;
-        }
-
-        const tillLine = cm.lastLine();
-        const tillCh = cm.getLine(tillLine).length;
-
-        if (changeObj.to.line !== tillLine || changeObj.to.ch !== tillCh) {
-          return;
-        }
-
-        this.zoomOut(cm);
-      });
-
-      cm.on("change", (cm, changeObj) => {
-        const zoomState = this.zoomStates.get(cm);
-
-        if (!zoomState || changeObj.origin !== "setValue") {
-          return;
-        }
-
-        this.zoomIn(cm, {
-          line: cm.getLineNumber(zoomState.line),
-          ch: 0,
-        });
-      });
-
-      cm.on("beforeChange", (cm, changeObj) => {
-        const currentLine = cm.getLine(changeObj.from.line);
-        const nextLine = cm.getLine(changeObj.from.line + 1);
-
-        if (!currentLine || !nextLine) {
-          return;
-        }
-
-        const indentSign = this.detectListIndentSign(cm, changeObj.from);
-
-        if (indentSign === null) {
-          return;
-        }
-
-        const currentLineInfo = this.getListLineInfo(currentLine, indentSign);
-        const nextLineInfo = this.getListLineInfo(nextLine, indentSign);
-
-        if (!currentLineInfo || !nextLineInfo) {
-          return;
-        }
-
-        const changeIsNewline =
-          changeObj.text.length === 2 &&
-          changeObj.text[0] === "" &&
-          !!this.getListLineInfo(changeObj.text[1], indentSign);
-        const nexlineLevelIsBigger =
-          currentLineInfo.indentLevel + 1 == nextLineInfo.indentLevel;
-        const nextLineIsEmpty =
-          cm.getRange(changeObj.from, {
-            line: changeObj.from.line,
-            ch: changeObj.from.ch + 1,
-          }).length === 0;
-
-        if (changeIsNewline && nexlineLevelIsBigger && nextLineIsEmpty) {
-          changeObj.text[1] = indentSign + changeObj.text[1];
-          changeObj.update(changeObj.from, changeObj.to, changeObj.text);
-        }
-      });
-
-      cm.on("beforeSelectionChange", (cm, changeObj) => {
-        if (!this.zoomStates.has(cm)) {
-          return;
-        }
-
-        let visibleFrom: CodeMirror.Position | null = null;
-        let visibleTill: CodeMirror.Position | null = null;
-
-        for (let i = cm.firstLine(); i <= cm.lastLine(); i++) {
-          const wrapClass = cm.lineInfo(i).wrapClass || "";
-          const isHidden = wrapClass.includes("outliner-plugin-hidden-row");
-          if (visibleFrom === null && !isHidden) {
-            visibleFrom = { line: i, ch: 0 };
-          }
-          if (visibleFrom !== null && visibleTill !== null && isHidden) {
-            break;
-          }
-          if (visibleFrom !== null) {
-            visibleTill = { line: i, ch: cm.getLine(i).length };
-          }
-        }
-
-        let changed = false;
-
-        for (const range of changeObj.ranges) {
-          if (range.anchor.line < visibleFrom.line) {
-            changed = true;
-            range.anchor.line = visibleFrom.line;
-            range.anchor.ch = visibleFrom.ch;
-          }
-          if (range.anchor.line > visibleTill.line) {
-            changed = true;
-            range.anchor.line = visibleTill.line;
-            range.anchor.ch = visibleTill.ch;
-          }
-          if (range.head.line < visibleFrom.line) {
-            changed = true;
-            range.head.line = visibleFrom.line;
-            range.head.ch = visibleFrom.ch;
-          }
-          if (range.head.line > visibleTill.line) {
-            changed = true;
-            range.head.line = visibleTill.line;
-            range.head.ch = visibleTill.ch;
-          }
-        }
-
-        if (changed) {
-          changeObj.update(changeObj.ranges);
-        }
-      });
-
-      cm.on("cursorActivity", (cm) => {
-        if (this.isJustCursor(cm) && this.isCursorInList(cm)) {
-          this.evalEnsureCursorInContent(cm);
-        }
-      });
+      this.attachZoomModeHandlers(cm);
+      this.attachSmartEnterHandlers(cm);
+      this.attachSmartCursorHandlers(cm);
 
       cm.on("keydown", this.handleKeydown);
+    });
+  }
+
+  attachZoomModeHandlers(cm: CodeMirror.Editor) {
+    cm.on("beforeChange", (cm, changeObj) => {
+      const zoomState = this.zoomStates.get(cm);
+
+      if (
+        !zoomState ||
+        changeObj.origin !== "setValue" ||
+        changeObj.from.line !== 0 ||
+        changeObj.from.ch !== 0
+      ) {
+        return;
+      }
+
+      const tillLine = cm.lastLine();
+      const tillCh = cm.getLine(tillLine).length;
+
+      if (changeObj.to.line !== tillLine || changeObj.to.ch !== tillCh) {
+        return;
+      }
+
+      this.zoomOut(cm);
+    });
+
+    cm.on("change", (cm, changeObj) => {
+      const zoomState = this.zoomStates.get(cm);
+
+      if (!zoomState || changeObj.origin !== "setValue") {
+        return;
+      }
+
+      this.zoomIn(cm, {
+        line: cm.getLineNumber(zoomState.line),
+        ch: 0,
+      });
+    });
+
+    cm.on("beforeSelectionChange", (cm, changeObj) => {
+      if (!this.zoomStates.has(cm)) {
+        return;
+      }
+
+      let visibleFrom: CodeMirror.Position | null = null;
+      let visibleTill: CodeMirror.Position | null = null;
+
+      for (let i = cm.firstLine(); i <= cm.lastLine(); i++) {
+        const wrapClass = cm.lineInfo(i).wrapClass || "";
+        const isHidden = wrapClass.includes("outliner-plugin-hidden-row");
+        if (visibleFrom === null && !isHidden) {
+          visibleFrom = { line: i, ch: 0 };
+        }
+        if (visibleFrom !== null && visibleTill !== null && isHidden) {
+          break;
+        }
+        if (visibleFrom !== null) {
+          visibleTill = { line: i, ch: cm.getLine(i).length };
+        }
+      }
+
+      let changed = false;
+
+      for (const range of changeObj.ranges) {
+        if (range.anchor.line < visibleFrom.line) {
+          changed = true;
+          range.anchor.line = visibleFrom.line;
+          range.anchor.ch = visibleFrom.ch;
+        }
+        if (range.anchor.line > visibleTill.line) {
+          changed = true;
+          range.anchor.line = visibleTill.line;
+          range.anchor.ch = visibleTill.ch;
+        }
+        if (range.head.line < visibleFrom.line) {
+          changed = true;
+          range.head.line = visibleFrom.line;
+          range.head.ch = visibleFrom.ch;
+        }
+        if (range.head.line > visibleTill.line) {
+          changed = true;
+          range.head.line = visibleTill.line;
+          range.head.ch = visibleTill.ch;
+        }
+      }
+
+      if (changed) {
+        changeObj.update(changeObj.ranges);
+      }
+    });
+  }
+
+  attachSmartEnterHandlers(cm: CodeMirror.Editor) {
+    cm.on("keydown", (cm, e) => {
+      let worked = false;
+
+      if (this.settings.smartEnter && testKeydown(e, "Enter")) {
+        worked = this.outdentIfLineIsEmpty(cm);
+      }
+
+      if (worked) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    });
+
+    cm.on("beforeChange", (cm, changeObj) => {
+      if (!this.settings.smartEnter) {
+        return;
+      }
+
+      const currentLine = cm.getLine(changeObj.from.line);
+      const nextLine = cm.getLine(changeObj.from.line + 1);
+
+      if (!currentLine || !nextLine) {
+        return;
+      }
+
+      const indentSign = this.detectListIndentSign(cm, changeObj.from);
+
+      if (indentSign === null) {
+        return;
+      }
+
+      const currentLineInfo = this.getListLineInfo(currentLine, indentSign);
+      const nextLineInfo = this.getListLineInfo(nextLine, indentSign);
+
+      if (!currentLineInfo || !nextLineInfo) {
+        return;
+      }
+
+      const changeIsNewline =
+        changeObj.text.length === 2 &&
+        changeObj.text[0] === "" &&
+        !!this.getListLineInfo(changeObj.text[1], indentSign);
+      const nexlineLevelIsBigger =
+        currentLineInfo.indentLevel + 1 == nextLineInfo.indentLevel;
+      const nextLineIsEmpty =
+        cm.getRange(changeObj.from, {
+          line: changeObj.from.line,
+          ch: changeObj.from.ch + 1,
+        }).length === 0;
+
+      if (changeIsNewline && nexlineLevelIsBigger && nextLineIsEmpty) {
+        changeObj.text[1] = indentSign + changeObj.text[1];
+        changeObj.update(changeObj.from, changeObj.to, changeObj.text);
+      }
+    });
+  }
+
+  attachSmartCursorHandlers(cm: CodeMirror.Editor) {
+    cm.on("keydown", (cm, e) => {
+      let worked = false;
+
+      if (this.settings.smartCursor && testKeydown(e, "ArrowLeft")) {
+        worked = this.cursorLeft(cm);
+      }
+
+      if (worked) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    });
+
+    cm.on("cursorActivity", (cm) => {
+      if (
+        this.settings.smartCursor &&
+        this.isJustCursor(cm) &&
+        this.isCursorInList(cm)
+      ) {
+        this.evalEnsureCursorInContent(cm);
+      }
     });
   }
 
@@ -1447,6 +1498,34 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
           });
       });
 
+    const onchange = (value: boolean) => {
+      this.plugin.settings.smartCursor = value;
+      this.plugin.settings.smartEnter = value;
+      const components = [
+        smartCursor.components[0] as ToggleComponent,
+        smartEnter.components[0] as ToggleComponent,
+      ];
+      for (const component of components) {
+        if (component.getValue() !== value) {
+          component.setValue(value);
+        }
+      }
+    };
+
+    const smartCursor = new Setting(containerEl)
+      .setName("Smart cursor")
+      .setDesc("Attaching the cursor to the contents of a list item")
+      .addToggle((toggle) => {
+        toggle.setValue(this.plugin.settings.smartCursor).onChange(onchange);
+      });
+
+    const smartEnter = new Setting(containerEl)
+      .setName("Smart enter")
+      .setDesc("Make Enter behaviour similar to outliners")
+      .addToggle((toggle) => {
+        toggle.setValue(this.plugin.settings.smartEnter).onChange(onchange);
+      });
+
     new Setting(containerEl).setName("Debug mode").addToggle((toggle) => {
       toggle.setValue(this.plugin.settings.debug).onChange(async (value) => {
         this.plugin.settings.debug = value;
@@ -1454,25 +1533,4 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
       });
     });
   }
-}
-
-function fakeEvent(base: Object) {
-  return {
-    type: "keydown",
-    shiftKey: false,
-    metaKey: false,
-    altKey: false,
-    ctrlKey: false,
-    defaultPrevented: false,
-    returnValue: true,
-    cancelBubble: false,
-    preventDefault() {
-      this.defaultPrevented = true;
-      this.returnValue = true;
-    },
-    stopPropagation() {
-      this.cancelBubble = true;
-    },
-    ...base,
-  };
 }
