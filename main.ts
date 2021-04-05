@@ -1095,8 +1095,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       worked = this.deleteNext(cm);
     } else if (testKeydown(e, "ArrowLeft", [metaKey, "shift"])) {
       worked = this.selectFullLeft(cm);
-    } else if (testKeydown(e, "KeyA", [metaKey])) {
-      worked = this.selectAll(cm);
     }
 
     if (worked) {
@@ -1210,6 +1208,18 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         {
           modifiers: [],
           key: "Tab",
+        },
+      ],
+    });
+
+    this.addCommand({
+      id: "select-all",
+      name: "Select list item or whole list",
+      callback: this.createCommandCallback(this.selectAll.bind(this)),
+      hotkeys: [
+        {
+          modifiers: ["Mod"],
+          key: "a",
         },
       ],
     });
