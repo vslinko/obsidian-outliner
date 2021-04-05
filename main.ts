@@ -13,6 +13,7 @@ interface ObsidianOutlinerPluginSettings {
   debug: boolean;
   smartCursor: boolean;
   smartEnter: boolean;
+  smartDelete: boolean;
 }
 
 const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
@@ -20,6 +21,7 @@ const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
   debug: false,
   smartCursor: true,
   smartEnter: true,
+  smartDelete: true,
 };
 
 type Mod = "shift" | "ctrl" | "cmd" | "alt";
@@ -1085,15 +1087,8 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
   handleKeydown = (cm: CodeMirror.Editor, e: KeyboardEvent) => {
     let worked = false;
-    const metaKey = process.platform === "darwin" ? "cmd" : "ctrl";
 
-    if (testKeydown(e, "Backspace", [metaKey])) {
-      worked = this.deleteFullLeft(cm);
-    } else if (testKeydown(e, "Backspace")) {
-      worked = this.delete(cm);
-    } else if (testKeydown(e, "Delete")) {
-      worked = this.deleteNext(cm);
-    } else if (testKeydown(e, "ArrowLeft", [metaKey, "shift"])) {
+    if (testKeydown(e, "ArrowLeft", [this.getMetaKey(), "shift"])) {
       worked = this.selectFullLeft(cm);
     }
 
@@ -1288,6 +1283,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       this.attachZoomModeHandlers(cm);
       this.attachSmartEnterHandlers(cm);
       this.attachSmartCursorHandlers(cm);
+      this.attachSmartDeleteHandlers(cm);
 
       cm.on("keydown", this.handleKeydown);
     });
@@ -1378,6 +1374,33 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
       if (changed) {
         changeObj.update(changeObj.ranges);
+      }
+    });
+  }
+
+  getMetaKey() {
+    return process.platform === "darwin" ? "cmd" : "ctrl";
+  }
+
+  attachSmartDeleteHandlers(cm: CodeMirror.Editor) {
+    cm.on("keydown", (cm, e) => {
+      if (!this.settings.smartDelete) {
+        return;
+      }
+
+      let worked = false;
+
+      if (testKeydown(e, "Backspace", [this.getMetaKey()])) {
+        worked = this.deleteFullLeft(cm);
+      } else if (testKeydown(e, "Backspace")) {
+        worked = this.delete(cm);
+      } else if (testKeydown(e, "Delete")) {
+        worked = this.deleteNext(cm);
+      }
+
+      if (worked) {
+        e.preventDefault();
+        e.stopPropagation();
       }
     });
   }
@@ -1511,9 +1534,11 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
     const onchange = (value: boolean) => {
       this.plugin.settings.smartCursor = value;
       this.plugin.settings.smartEnter = value;
+      this.plugin.settings.smartDelete = value;
       const components = [
         smartCursor.components[0] as ToggleComponent,
         smartEnter.components[0] as ToggleComponent,
+        smartDelete.components[0] as ToggleComponent,
       ];
       for (const component of components) {
         if (component.getValue() !== value) {
@@ -1534,6 +1559,13 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
       .setDesc("Make Enter behaviour similar to outliners")
       .addToggle((toggle) => {
         toggle.setValue(this.plugin.settings.smartEnter).onChange(onchange);
+      });
+
+    const smartDelete = new Setting(containerEl)
+      .setName("Smart delete")
+      .setDesc("Make Backspace and Delete behaviour similar to outliners")
+      .addToggle((toggle) => {
+        toggle.setValue(this.plugin.settings.smartDelete).onChange(onchange);
       });
 
     new Setting(containerEl).setName("Debug mode").addToggle((toggle) => {
