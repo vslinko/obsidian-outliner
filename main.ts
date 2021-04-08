@@ -410,18 +410,6 @@ class Root implements IList {
 
     return true;
   }
-
-  deleteFullLeft() {
-    const list = this.getCursorOnList();
-    const diff = this.cursor.ch - list.getContentStartCh();
-
-    if (diff > 0) {
-      list.setContent(list.getContent().slice(diff));
-      this.cursor.ch -= diff;
-    }
-
-    return true;
-  }
 }
 
 class ZoomState {
@@ -827,17 +815,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     }
 
     return res;
-  }
-
-  deleteFullLeft(editor: CodeMirror.Editor) {
-    const selection = editor.listSelections()[0];
-
-    if (!rangeIsCursor(selection)) {
-      editor.replaceRange("", selection.from(), selection.to());
-      return true;
-    }
-
-    return this.execute(editor, (root) => root.deleteFullLeft());
   }
 
   setFold(editor: CodeMirror.Editor, type: "fold" | "unfold") {
@@ -1371,24 +1348,44 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   }
 
   attachSmartDeleteHandlers(cm: CodeMirror.Editor) {
-    cm.on("keydown", (cm, e) => {
-      if (!this.settings.smartDelete) {
+    cm.on("beforeChange", (cm, changeObj) => {
+      if (changeObj.origin !== "+delete" || !this.settings.smartDelete) {
         return;
       }
 
-      let worked = false;
+      const root = this.parseList(cm);
 
-      if (testKeydown(e, "Backspace", [this.getMetaKey()])) {
-        worked = this.deleteFullLeft(cm);
-      } else if (testKeydown(e, "Backspace")) {
-        worked = this.delete(cm);
-      } else if (testKeydown(e, "Delete")) {
-        worked = this.deleteNext(cm);
+      if (!root) {
+        return;
       }
 
-      if (worked) {
-        e.preventDefault();
-        e.stopPropagation();
+      const list = root.getCursorOnList();
+      const listContentStartCh = list.getContentStartCh();
+      const listContentEndCh = list.getContentEndCh();
+
+      const sameLine = changeObj.from.line === changeObj.to.line;
+      const nextLine = changeObj.from.line + 1 === changeObj.to.line;
+
+      if (
+        sameLine &&
+        changeObj.from.ch === listContentStartCh - 1 &&
+        changeObj.to.ch === listContentStartCh
+      ) {
+        changeObj.cancel();
+        this.delete(cm);
+      } else if (sameLine && changeObj.from.ch < listContentStartCh) {
+        const from = {
+          line: changeObj.from.line,
+          ch: listContentStartCh,
+        };
+        changeObj.update(from, changeObj.to, changeObj.text);
+      } else if (
+        nextLine &&
+        changeObj.from.ch === listContentEndCh &&
+        changeObj.to.ch === 0
+      ) {
+        changeObj.cancel();
+        this.deleteNext(cm);
       }
     });
   }
