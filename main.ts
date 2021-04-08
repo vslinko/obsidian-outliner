@@ -1354,6 +1354,11 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       }
 
       const root = this.parseList(cm);
+
+      if (!root) {
+        return;
+      }
+
       const list = root.getCursorOnList();
       const listContentStartCh = list.getContentStartCh();
 
@@ -1429,6 +1434,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       }
 
       const range = changeObj.ranges[0];
+      const cursor = cm.getCursor();
 
       if (
         range.anchor.line !== range.head.line ||
@@ -1437,10 +1443,18 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         return;
       }
 
+      if (cursor.line <= 0 || cursor.line !== range.anchor.line) {
+        return;
+      }
+
       const root = this.parseList(cm);
+
+      if (!root) {
+        return;
+      }
+
       const list = root.getCursorOnList();
       const listContentStartCh = list.getContentStartCh();
-      const cursor = cm.getCursor();
 
       if (
         cursor.ch === listContentStartCh &&
