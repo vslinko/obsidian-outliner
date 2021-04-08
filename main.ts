@@ -835,38 +835,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     return this.setFold(editor, "unfold");
   }
 
-  cursorLeft(editor: CodeMirror.Editor) {
-    const cursor = editor.getCursor();
-    const indentSign = this.detectListIndentSign(editor, cursor);
-
-    if (indentSign === null) {
-      return false;
-    }
-
-    const line = editor.getLine(cursor.line);
-    const linePrefix = this.getListLineInfo(line, indentSign).prefixLength;
-
-    if (cursor.ch > linePrefix) {
-      return false;
-    }
-
-    const newCursor = this.iterateWhileFolded(
-      editor,
-      {
-        line: cursor.line,
-        ch: 0,
-      },
-      (pos) => {
-        pos.line--;
-        pos.ch = editor.getLine(pos.line).length - 1;
-      }
-    );
-    newCursor.ch++;
-    editor.setCursor(newCursor);
-
-    return true;
-  }
-
   zoomOut(editor: CodeMirror.Editor) {
     const zoomState = this.zoomStates.get(editor);
 
@@ -1455,16 +1423,46 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   }
 
   attachSmartCursorHandlers(cm: CodeMirror.Editor) {
-    cm.on("keydown", (cm, e) => {
-      let worked = false;
-
-      if (this.settings.smartCursor && testKeydown(e, "ArrowLeft")) {
-        worked = this.cursorLeft(cm);
+    cm.on("beforeSelectionChange", (cm, changeObj) => {
+      if (!this.settings.smartCursor || changeObj.ranges.length > 1) {
+        return;
       }
 
-      if (worked) {
-        e.preventDefault();
-        e.stopPropagation();
+      const range = changeObj.ranges[0];
+
+      if (
+        range.anchor.line !== range.head.line ||
+        range.anchor.ch !== range.head.ch
+      ) {
+        return;
+      }
+
+      const root = this.parseList(cm);
+      const list = root.getCursorOnList();
+      const listContentStartCh = list.getContentStartCh();
+      const cursor = cm.getCursor();
+
+      if (
+        cursor.ch === listContentStartCh &&
+        range.anchor.ch === listContentStartCh - 1
+      ) {
+        const newCursor = this.iterateWhileFolded(
+          cm,
+          {
+            line: cursor.line,
+            ch: 0,
+          },
+          (pos) => {
+            pos.line--;
+            pos.ch = cm.getLine(pos.line).length - 1;
+          }
+        );
+        newCursor.ch++;
+        range.anchor.line = newCursor.line;
+        range.anchor.ch = newCursor.ch;
+        range.head.line = newCursor.line;
+        range.head.ch = newCursor.ch;
+        changeObj.update([range]);
       }
     });
 
