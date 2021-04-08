@@ -1340,7 +1340,11 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
   attachSmartSelectionHandlers(cm: CodeMirror.Editor) {
     cm.on("beforeSelectionChange", (cm, changeObj) => {
-      if (!this.settings.smartSelection || changeObj.ranges.length > 1) {
+      if (
+        !this.settings.smartSelection ||
+        changeObj.origin !== "+move" ||
+        changeObj.ranges.length > 1
+      ) {
         return;
       }
 
@@ -1429,7 +1433,11 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
   attachSmartCursorHandlers(cm: CodeMirror.Editor) {
     cm.on("beforeSelectionChange", (cm, changeObj) => {
-      if (!this.settings.smartCursor || changeObj.ranges.length > 1) {
+      if (
+        !this.settings.smartCursor ||
+        changeObj.origin !== "+move" ||
+        changeObj.ranges.length > 1
+      ) {
         return;
       }
 
