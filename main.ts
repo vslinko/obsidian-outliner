@@ -867,26 +867,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     return true;
   }
 
-  selectFullLeft(editor: CodeMirror.Editor) {
-    const cursor = editor.getCursor();
-    const root = this.parseList(editor, cursor);
-
-    if (!root) {
-      return false;
-    }
-
-    const list = root.getCursorOnList();
-    const startCh = list.getContentStartCh();
-    const selection = editor.listSelections()[0];
-
-    editor.setSelection(selection.anchor, {
-      line: cursor.line,
-      ch: startCh,
-    });
-
-    return true;
-  }
-
   zoomOut(editor: CodeMirror.Editor) {
     const zoomState = this.zoomStates.get(editor);
 
@@ -1391,20 +1371,27 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   }
 
   attachSmartSelectionHandlers(cm: CodeMirror.Editor) {
-    cm.on("keydown", (cm, e) => {
-      if (!this.settings.smartSelection) {
+    cm.on("beforeSelectionChange", (cm, changeObj) => {
+      if (!this.settings.smartSelection || changeObj.ranges.length > 1) {
         return;
       }
 
-      let worked = false;
+      const range = changeObj.ranges[0];
 
-      if (testKeydown(e, "ArrowLeft", [this.getMetaKey(), "shift"])) {
-        worked = this.selectFullLeft(cm);
+      if (
+        range.anchor.line !== range.head.line ||
+        range.anchor.ch === range.head.ch
+      ) {
+        return;
       }
 
-      if (worked) {
-        e.preventDefault();
-        e.stopPropagation();
+      const root = this.parseList(cm);
+      const list = root.getCursorOnList();
+      const listContentStartCh = list.getContentStartCh();
+
+      if (range.from().ch < listContentStartCh) {
+        range.from().ch = listContentStartCh;
+        changeObj.update([range]);
       }
     });
   }
