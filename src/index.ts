@@ -124,11 +124,15 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       root.getTotalLines() === 1 &&
       root.getChildren()[0].getContent().length === 0
     ) {
-      editor.replaceRange("", root.getStart(), root.getEnd());
+      editor.replaceRange(
+        "",
+        root.getListStartPosition(),
+        root.getListEndPosition()
+      );
       return true;
     }
 
-    const res = root.delete();
+    const res = root.deleteAndMergeWithPrevious();
 
     if (res) {
       this.listsUtils.applyChanges(editor, root);
@@ -148,7 +152,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       return false;
     }
 
-    const list = root.getCursorOnList();
+    const list = root.getListUnderCursor();
     const nextLineNo = root.getCursor().line + 1;
     const nextList = root.getListUnderLine(nextLineNo);
 
@@ -161,7 +165,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       ch: nextList.getContentStartCh(),
     });
 
-    const res = root.delete();
+    const res = root.deleteAndMergeWithPrevious();
     const reallyChanged = root.getCursor().line !== nextLineNo;
 
     if (reallyChanged) {
@@ -269,7 +273,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
       let list = root.getListUnderLine(lineNo).getParent();
       while (list && list.getParent()) {
-        const lineNo = root.getLineNumber(list);
+        const lineNo = root.getLineNumberOf(list);
         div.prepend(
           createTitle(list.getContent(), () =>
             this.zoomIn(editor, { line: lineNo, ch: 0 })
@@ -318,13 +322,16 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       return false;
     }
 
-    const list = root.getCursorOnList();
+    const list = root.getListUnderCursor();
     const startCh = list.getContentStartCh();
     const endCh = list.getContentEndCh();
 
     if (selection.from().ch === startCh && selection.to().ch === endCh) {
       // select all list
-      editor.setSelection(root.getStart(), root.getEnd());
+      editor.setSelection(
+        root.getListStartPosition(),
+        root.getListEndPosition()
+      );
     } else {
       // select all line
       editor.setSelection(
@@ -597,10 +604,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     });
   }
 
-  getMetaKey() {
-    return process.platform === "darwin" ? "cmd" : "ctrl";
-  }
-
   attachSmartDeleteHandlers(cm: CodeMirror.Editor) {
     cm.on("beforeChange", (cm, changeObj) => {
       if (changeObj.origin !== "+delete" || !this.settings.smartDelete) {
@@ -613,7 +616,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         return;
       }
 
-      const list = root.getCursorOnList();
+      const list = root.getListUnderCursor();
       const listContentStartCh = list.getContentStartCh();
       const listContentEndCh = list.getContentEndCh();
 
@@ -669,7 +672,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         return;
       }
 
-      const list = root.getCursorOnList();
+      const list = root.getListUnderCursor();
       const listContentStartCh = list.getContentStartCh();
 
       if (range.from().ch < listContentStartCh) {
@@ -709,7 +712,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         return;
       }
 
-      const list = root.getCursorOnList();
+      const list = root.getListUnderCursor();
       const listContentStartCh = list.getContentStartCh();
 
       if (

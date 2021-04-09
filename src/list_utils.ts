@@ -88,7 +88,7 @@ export class ListUtils {
       }
 
       const list = new List(indentSign, bullet, content);
-      currentLevel.add(list);
+      currentLevel.addAfterAll(list);
       lastList = list;
     }
 
@@ -96,11 +96,14 @@ export class ListUtils {
   }
 
   applyChanges(editor: CodeMirror.Editor, root: Root) {
-    const oldString = editor.getRange(root.getStart(), root.getEnd());
+    const oldString = editor.getRange(
+      root.getListStartPosition(),
+      root.getListEndPosition()
+    );
     const newString = root.print();
 
     const diff = diffLines(oldString, newString);
-    let l = root.getStart().line;
+    let l = root.getListStartPosition().line;
     for (const change of diff) {
       if (change.added) {
         editor.replaceRange(change.value, { line: l, ch: 0 });
