@@ -1,7 +1,7 @@
 export interface IList {
   getLevel(): number;
   getParent(): IList | null;
-  add(list: IList): void;
+  addAfterAll(list: IList): void;
 }
 
 export class List implements IList {
@@ -23,21 +23,8 @@ export class List implements IList {
     return this.children.concat();
   }
 
-  getFullContent() {
-    return (
-      new Array(this.getLevel() - 1).fill(this.indentSign).join("") +
-      this.bullet +
-      " " +
-      this.content
-    );
-  }
-
   appendContent(content: string) {
     this.content += content;
-  }
-
-  setContent(content: string) {
-    this.content = content;
   }
 
   getContent() {
@@ -61,12 +48,12 @@ export class List implements IList {
     return this.parent;
   }
 
-  getPrevSibling(list: List) {
+  getPrevSiblingOf(list: List) {
     const i = this.children.indexOf(list);
     return i > 0 ? this.children[i - 1] : null;
   }
 
-  getNextSibling(list: List) {
+  getNextSiblingOf(list: List) {
     const i = this.children.indexOf(list);
     return i >= 0 && i < this.children.length ? this.children[i + 1] : null;
   }
@@ -81,12 +68,12 @@ export class List implements IList {
     return level;
   }
 
-  add(list: List) {
+  addAfterAll(list: List) {
     this.children.push(list);
     list.parent = this;
   }
 
-  addAtBeginning(list: List) {
+  addBeforeAll(list: List) {
     this.children.unshift(list);
     list.parent = this;
   }
@@ -103,7 +90,7 @@ export class List implements IList {
     list.parent = this;
   }
 
-  remove(list: List) {
+  removeChild(list: List) {
     const i = this.children.indexOf(list);
     this.children.splice(i, 1);
     list.parent = null;
@@ -117,6 +104,15 @@ export class List implements IList {
     }
 
     return res;
+  }
+
+  private getFullContent() {
+    return (
+      new Array(this.getLevel() - 1).fill(this.indentSign).join("") +
+      this.bullet +
+      " " +
+      this.content
+    );
   }
 }
 
@@ -164,15 +160,15 @@ export class Root implements IList {
     return null;
   }
 
-  add(list: List) {
-    this.rootList.add(list);
+  addAfterAll(list: List) {
+    this.rootList.addAfterAll(list);
   }
 
-  getStart() {
+  getListStartPosition() {
     return this.start;
   }
 
-  getEnd() {
+  getListEndPosition() {
     return this.end;
   }
 
@@ -180,7 +176,7 @@ export class Root implements IList {
     return this.cursor;
   }
 
-  getCursorOnList(): List {
+  getListUnderCursor(): List {
     return this.getListUnderLine(this.cursor.line);
   }
 
@@ -194,7 +190,7 @@ export class Root implements IList {
     return res.replace(/\n$/, "");
   }
 
-  getLineNumber(list: List) {
+  getLineNumberOf(list: List) {
     let result: number = null;
     let line: number = 0;
     const visitArr = (ll: List[]) => {
@@ -243,53 +239,53 @@ export class Root implements IList {
   }
 
   moveUp() {
-    const list = this.getCursorOnList();
+    const list = this.getListUnderCursor();
     const parent = list.getParent();
     const grandParent = parent.getParent();
-    const prev = parent.getPrevSibling(list);
+    const prev = parent.getPrevSiblingOf(list);
 
     if (!prev && grandParent) {
-      const newParent = grandParent.getPrevSibling(parent);
+      const newParent = grandParent.getPrevSiblingOf(parent);
 
       if (newParent) {
-        parent.remove(list);
-        newParent.add(list);
-        this.cursor.line = this.getLineNumber(list);
+        parent.removeChild(list);
+        newParent.addAfterAll(list);
+        this.cursor.line = this.getLineNumberOf(list);
       }
     } else if (prev) {
-      parent.remove(list);
+      parent.removeChild(list);
       parent.addBefore(prev, list);
-      this.cursor.line = this.getLineNumber(list);
+      this.cursor.line = this.getLineNumberOf(list);
     }
 
     return true;
   }
 
   moveDown() {
-    const list = this.getCursorOnList();
+    const list = this.getListUnderCursor();
     const parent = list.getParent();
     const grandParent = parent.getParent();
-    const next = parent.getNextSibling(list);
+    const next = parent.getNextSiblingOf(list);
 
     if (!next && grandParent) {
-      const newParent = grandParent.getNextSibling(parent);
+      const newParent = grandParent.getNextSiblingOf(parent);
 
       if (newParent) {
-        parent.remove(list);
-        newParent.addAtBeginning(list);
-        this.cursor.line = this.getLineNumber(list);
+        parent.removeChild(list);
+        newParent.addBeforeAll(list);
+        this.cursor.line = this.getLineNumberOf(list);
       }
     } else if (next) {
-      parent.remove(list);
+      parent.removeChild(list);
       parent.addAfter(next, list);
-      this.cursor.line = this.getLineNumber(list);
+      this.cursor.line = this.getLineNumberOf(list);
     }
 
     return true;
   }
 
   moveLeft() {
-    const list = this.getCursorOnList();
+    const list = this.getListUnderCursor();
     const parent = list.getParent();
     const grandParent = parent.getParent();
 
@@ -297,33 +293,33 @@ export class Root implements IList {
       return true;
     }
 
-    parent.remove(list);
+    parent.removeChild(list);
     grandParent.addAfter(parent, list);
-    this.cursor.line = this.getLineNumber(list);
+    this.cursor.line = this.getLineNumberOf(list);
     this.cursor.ch--;
 
     return true;
   }
 
   moveRight() {
-    const list = this.getCursorOnList();
+    const list = this.getListUnderCursor();
     const parent = list.getParent();
-    const prev = parent.getPrevSibling(list);
+    const prev = parent.getPrevSiblingOf(list);
 
     if (!prev) {
       return true;
     }
 
-    parent.remove(list);
-    prev.add(list);
-    this.cursor.line = this.getLineNumber(list);
+    parent.removeChild(list);
+    prev.addAfterAll(list);
+    this.cursor.line = this.getLineNumberOf(list);
     this.cursor.ch++;
 
     return true;
   }
 
-  delete() {
-    const list = this.getCursorOnList();
+  deleteAndMergeWithPrevious() {
+    const list = this.getListUnderCursor();
 
     if (this.cursor.ch !== list.getContentStartCh()) {
       return false;
@@ -346,13 +342,13 @@ export class Root implements IList {
       const prevEndCh = prev.getContentEndCh();
 
       prev.appendContent(list.getContent());
-      parent.remove(list);
+      parent.removeChild(list);
       for (const c of list.getChildren()) {
-        list.remove(c);
-        prev.add(c);
+        list.removeChild(c);
+        prev.addAfterAll(c);
       }
 
-      this.cursor.line = this.getLineNumber(prev);
+      this.cursor.line = this.getLineNumberOf(prev);
       this.cursor.ch = prevEndCh;
     }
 
