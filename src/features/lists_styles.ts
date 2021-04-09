@@ -1,7 +1,7 @@
-import { Settings } from "./settings";
-import { App, Plugin_2 } from "obsidian";
-import { IFeature } from "./feature";
-import { getObsidianTabsSettigns } from "./utils";
+import { Settings } from "../settings";
+import { Plugin_2 } from "obsidian";
+import { IFeature } from "../feature";
+import { ObsidianUtils } from "../obsidian_utils";
 
 const text = (size: number) =>
   `Outliner styles doesn't work with ${size}-spaces-tabs. Please check your Obsidian settings.`;
@@ -11,9 +11,9 @@ export class ListsStylesFeature implements IFeature {
   private interval: number;
 
   constructor(
-    private app: App,
     private plugin: Plugin_2,
-    private settings: Settings
+    private settings: Settings,
+    private obsidianUtils: ObsidianUtils
   ) {}
 
   async load() {
@@ -38,7 +38,7 @@ export class ListsStylesFeature implements IFeature {
     let visible: number | null = null;
 
     this.interval = window.setInterval(() => {
-      const { useTab, tabSize } = getObsidianTabsSettigns(this.app.vault);
+      const { useTab, tabSize } = this.obsidianUtils.getObsidianTabsSettigns();
 
       const shouldBeVisible = useTab && tabSize !== 4;
 
