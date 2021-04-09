@@ -1,6 +1,6 @@
 import { MarkdownView } from "obsidian";
 import * as assert from "assert";
-import ObsidianOutlinerPlugin from "./main";
+import ObsidianOutlinerPlugin from "./src";
 import deleteTests from "./tests/delete";
 import enterTests from "./tests/enter";
 import outdentTests from "./tests/outdent";
