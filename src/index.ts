@@ -1,9 +1,9 @@
-import {
-  MarkdownView,
-  Plugin,
-} from "obsidian";
+import { MarkdownView, Plugin } from "obsidian";
 import { diffLines } from "diff";
 import { ObsidianOutlinerPluginSettingTab, Settings } from "./settings";
+import { ListsStylesFeature } from "./lists_styles";
+import { IFeature } from "./feature";
+import { getObsidianTabsSettigns } from "./utils";
 
 type Mod = "shift" | "ctrl" | "cmd" | "alt";
 
@@ -398,7 +398,8 @@ class ZoomState {
 const voidFn = () => {};
 
 export default class ObsidianOutlinerPlugin extends Plugin {
-  settings: Settings;
+  private features: IFeature[];
+  private settings: Settings;
   private zoomStates: WeakMap<CodeMirror.Editor, ZoomState> = new WeakMap();
 
   debug(method: string) {
@@ -409,21 +410,10 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     return (...args: any[]) => console.info(method, ...args);
   }
 
-  getObsidianTabsSettigns(): {
-    useTab: boolean;
-    tabSize: number;
-  } {
-    return {
-      useTab: true,
-      tabSize: 4,
-      ...(this.app.vault as any).config,
-    };
-  }
-
   detectListIndentSign(editor: CodeMirror.Editor, cursor: CodeMirror.Position) {
     const d = this.debug("ObsidianOutlinerPlugin::detectListIndentSign");
 
-    const { useTab, tabSize } = this.getObsidianTabsSettigns();
+    const { useTab, tabSize } = getObsidianTabsSettigns(this.app.vault);
     const defaultIndentSign = useTab
       ? "\t"
       : new Array(tabSize).fill(" ").join("");
@@ -991,40 +981,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     return true;
   }
 
-  addListsStyles() {
-    document.body.classList.add("outliner-plugin-bls");
-
-    const text = (size: number) =>
-      `Outliner styles doesn't work with ${size}-spaces-tabs. Please check your Obsidian settings.`;
-
-    const item = this.addStatusBarItem();
-    item.style.color = "red";
-    item.style.display = "none";
-
-    let visible: number | null = null;
-
-    this.registerInterval(
-      window.setInterval(() => {
-        const { useTab, tabSize } = this.getObsidianTabsSettigns();
-
-        const shouldBeVisible = useTab && tabSize !== 4;
-
-        if (shouldBeVisible && visible !== tabSize) {
-          item.style.display = "block";
-          item.setText(text(tabSize));
-          visible = tabSize;
-        } else if (!shouldBeVisible && visible !== null) {
-          item.style.display = "none";
-          visible = null;
-        }
-      }, 1000)
-    );
-  }
-
-  removeListsStyles() {
-    document.body.classList.remove("outliner-plugin-bls");
-  }
-
   createCommandCallback(cb: (editor: CodeMirror.Editor) => boolean) {
     return () => {
       const view = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -1053,16 +1009,11 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       new ObsidianOutlinerPluginSettingTab(this.app, this, this.settings)
     );
 
-    if (this.settings.styleLists) {
-      this.addListsStyles();
+    this.features = [new ListsStylesFeature(this.app, this, this.settings)];
+
+    for (const feature of this.features) {
+      await feature.load();
     }
-    this.settings.onChange("styleLists", (styleLists) => {
-      if (styleLists) {
-        this.addListsStyles();
-      } else {
-        this.removeListsStyles();
-      }
-    });
 
     this.addCommand({
       id: "move-list-item-up",
@@ -1483,6 +1434,8 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   async onunload() {
     console.log(`Unloading obsidian-outliner`);
 
-    this.removeListsStyles();
+    for (const feature of this.features) {
+      await feature.unload();
+    }
   }
 }
