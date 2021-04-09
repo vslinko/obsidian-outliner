@@ -1,30 +1,9 @@
 import {
-  App,
   MarkdownView,
   Plugin,
-  PluginSettingTab,
-  Setting,
-  ToggleComponent,
 } from "obsidian";
 import { diffLines } from "diff";
-
-interface ObsidianOutlinerPluginSettings {
-  styleLists: boolean;
-  debug: boolean;
-  smartCursor: boolean;
-  smartEnter: boolean;
-  smartDelete: boolean;
-  smartSelection: boolean;
-}
-
-const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
-  styleLists: false,
-  debug: false,
-  smartCursor: true,
-  smartEnter: true,
-  smartDelete: true,
-  smartSelection: true,
-};
+import { ObsidianOutlinerPluginSettingTab, Settings } from "./settings";
 
 type Mod = "shift" | "ctrl" | "cmd" | "alt";
 
@@ -419,7 +398,7 @@ class ZoomState {
 const voidFn = () => {};
 
 export default class ObsidianOutlinerPlugin extends Plugin {
-  settings: ObsidianOutlinerPluginSettings;
+  settings: Settings;
   private zoomStates: WeakMap<CodeMirror.Editor, ZoomState> = new WeakMap();
 
   debug(method: string) {
@@ -1012,14 +991,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     return true;
   }
 
-  async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-  }
-
-  async saveSettings() {
-    await this.saveData(this.settings);
-  }
-
   addListsStyles() {
     document.body.classList.add("outliner-plugin-bls");
 
@@ -1075,13 +1046,23 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   async onload() {
     console.log(`Loading obsidian-outliner`);
 
-    await this.loadSettings();
+    this.settings = new Settings(this);
+    await this.settings.load();
 
-    this.addSettingTab(new ObsidianOutlinerPluginSettingTab(this.app, this));
+    this.addSettingTab(
+      new ObsidianOutlinerPluginSettingTab(this.app, this, this.settings)
+    );
 
     if (this.settings.styleLists) {
       this.addListsStyles();
     }
+    this.settings.onChange("styleLists", (styleLists) => {
+      if (styleLists) {
+        this.addListsStyles();
+      } else {
+        this.removeListsStyles();
+      }
+    });
 
     this.addCommand({
       id: "move-list-item-up",
@@ -1503,92 +1484,5 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     console.log(`Unloading obsidian-outliner`);
 
     this.removeListsStyles();
-  }
-}
-
-class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
-  plugin: ObsidianOutlinerPlugin;
-
-  constructor(app: App, plugin: ObsidianOutlinerPlugin) {
-    super(app, plugin);
-    this.plugin = plugin;
-  }
-
-  display(): void {
-    let { containerEl } = this;
-
-    containerEl.empty();
-
-    new Setting(containerEl)
-      .setName("Style lists")
-      .setDesc(
-        "Enable better lists styles (works well only with spaces or 4-spaces-tabs)"
-      )
-      .addToggle((toggle) => {
-        toggle
-          .setValue(this.plugin.settings.styleLists)
-          .onChange(async (value) => {
-            this.plugin.settings.styleLists = value;
-            await this.plugin.saveSettings();
-            if (value) {
-              this.plugin.addListsStyles();
-            } else {
-              this.plugin.removeListsStyles();
-            }
-          });
-      });
-
-    const onchange = (value: boolean) => {
-      this.plugin.settings.smartCursor = value;
-      this.plugin.settings.smartEnter = value;
-      this.plugin.settings.smartDelete = value;
-      this.plugin.settings.smartSelection = value;
-      const components = [
-        smartCursor.components[0] as ToggleComponent,
-        smartEnter.components[0] as ToggleComponent,
-        smartDelete.components[0] as ToggleComponent,
-        smartSelection.components[0] as ToggleComponent,
-      ];
-      for (const component of components) {
-        if (component.getValue() !== value) {
-          component.setValue(value);
-        }
-      }
-    };
-
-    const smartCursor = new Setting(containerEl)
-      .setName("Smart cursor")
-      .setDesc("Attaching the cursor to the contents of a list item")
-      .addToggle((toggle) => {
-        toggle.setValue(this.plugin.settings.smartCursor).onChange(onchange);
-      });
-
-    const smartEnter = new Setting(containerEl)
-      .setName("Smart enter")
-      .setDesc("Make Enter behaviour similar to outliners")
-      .addToggle((toggle) => {
-        toggle.setValue(this.plugin.settings.smartEnter).onChange(onchange);
-      });
-
-    const smartDelete = new Setting(containerEl)
-      .setName("Smart delete")
-      .setDesc("Make Backspace and Delete behaviour similar to outliners")
-      .addToggle((toggle) => {
-        toggle.setValue(this.plugin.settings.smartDelete).onChange(onchange);
-      });
-
-    const smartSelection = new Setting(containerEl)
-      .setName("Smart selection")
-      .setDesc("Make text selection behaviour similar to outliners")
-      .addToggle((toggle) => {
-        toggle.setValue(this.plugin.settings.smartSelection).onChange(onchange);
-      });
-
-    new Setting(containerEl).setName("Debug mode").addToggle((toggle) => {
-      toggle.setValue(this.plugin.settings.debug).onChange(async (value) => {
-        this.plugin.settings.debug = value;
-        await this.plugin.saveSettings();
-      });
-    });
   }
 }
