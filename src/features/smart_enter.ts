@@ -47,7 +47,7 @@ export class SmartEnterFeature implements IFeature {
       return false;
     }
 
-    const list = root.getCursorOnList();
+    const list = root.getListUnderCursor();
 
     if (list.getContent().length > 0 || list.getLevel() === 1) {
       return false;
