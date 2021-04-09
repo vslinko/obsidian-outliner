@@ -85,16 +85,20 @@ export class Settings implements ObsidianOutlinerPluginSettings {
     this.set("smartSelection", value);
   }
 
-  onChange<T extends K>(key: T, cb: Callback<T>): () => void {
+  onChange<T extends K>(key: T, cb: Callback<T>) {
     if (!this.handlers.has(key)) {
       this.handlers.set(key, new Set());
     }
 
     this.handlers.get(key).add(cb);
+  }
 
-    return () => {
-      this.handlers.get(key).delete(cb);
-    };
+  removeCallback<T extends K>(key: T, cb: Callback<T>): void {
+    const handlers = this.handlers.get(key);
+
+    if (handlers) {
+      handlers.delete(cb);
+    }
   }
 
   async load() {
