@@ -75,6 +75,10 @@ export class ListUtils {
         line,
         indentSign
       );
+      const folded = (editor as any).isFolded({
+        line: l,
+        ch: 0,
+      });
 
       if (indentLevel === currentLevel.getLevel() + 1) {
         currentLevel = lastList;
@@ -87,7 +91,7 @@ export class ListUtils {
         return null;
       }
 
-      const list = new List(indentSign, bullet, content);
+      const list = new List(indentSign, bullet, content, folded);
       currentLevel.addAfterAll(list);
       lastList = list;
     }
@@ -101,6 +105,13 @@ export class ListUtils {
       root.getListEndPosition()
     );
     const newString = root.print();
+
+    const fromLine = root.getListStartPosition().line;
+    const toLine = root.getListEndPosition().line;
+
+    for (let l = fromLine; l <= toLine; l++) {
+      (editor as any).foldCode(l, null, "unfold");
+    }
 
     const diff = diffLines(oldString, newString);
     let l = root.getListStartPosition().line;
@@ -127,6 +138,14 @@ export class ListUtils {
 
     if (oldCursor.line != newCursor.line || oldCursor.ch != newCursor.ch) {
       editor.setCursor(newCursor);
+    }
+
+    for (let l = fromLine; l <= toLine; l++) {
+      const line = root.getListUnderLine(l);
+      if (line.isFoldRoot()) {
+        // TODO: why working only with -1?
+        (editor as any).foldCode(l - 1);
+      }
     }
   }
 
