@@ -12,6 +12,7 @@ import { EnterShouldCreateNewlineOnChildLevelFeature } from "./features/EnterSho
 import { MoveCursorToPreviousUnfoldedLineFeature } from "./features/MoveCursorToPreviousUnfoldedLineFeature";
 import { EnsureCursorInListContentFeature } from "./features/EnsureCursorInListContentFeature";
 import { DeleteShouldIgnoreBulletsFeature } from "./features/DeleteShouldIgnoreBulletsFeature";
+import { SelectionShouldIgnoreBulletsFeature } from "./features/SelectionShouldIgnoreBulletsFeature";
 
 class ZoomState {
   constructor(public line: CodeMirror.LineHandle, public header: HTMLElement) {}
@@ -296,6 +297,11 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this.editorUtils,
         this.listsUtils
       ),
+      new SelectionShouldIgnoreBulletsFeature(
+        this,
+        this.settings,
+        this.listsUtils
+      ),
     ];
 
     for (const feature of this.features) {
@@ -414,7 +420,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
     this.registerCodeMirror((cm) => {
       this.attachZoomModeHandlers(cm);
-      this.attachSmartSelectionHandlers(cm);
     });
   }
 
@@ -503,41 +508,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
       if (changed) {
         changeObj.update(changeObj.ranges);
-      }
-    });
-  }
-
-  attachSmartSelectionHandlers(cm: CodeMirror.Editor) {
-    cm.on("beforeSelectionChange", (cm, changeObj) => {
-      if (
-        !this.settings.smartSelection ||
-        changeObj.origin !== "+move" ||
-        changeObj.ranges.length > 1
-      ) {
-        return;
-      }
-
-      const range = changeObj.ranges[0];
-
-      if (
-        range.anchor.line !== range.head.line ||
-        range.anchor.ch === range.head.ch
-      ) {
-        return;
-      }
-
-      const root = this.listsUtils.parseList(cm);
-
-      if (!root) {
-        return;
-      }
-
-      const list = root.getListUnderCursor();
-      const listContentStartCh = list.getContentStartCh();
-
-      if (range.from().ch < listContentStartCh) {
-        range.from().ch = listContentStartCh;
-        changeObj.update([range]);
       }
     });
   }
