@@ -14,6 +14,7 @@ import { EnsureCursorInListContentFeature } from "./features/EnsureCursorInListC
 import { DeleteShouldIgnoreBulletsFeature } from "./features/DeleteShouldIgnoreBulletsFeature";
 import { SelectionShouldIgnoreBulletsFeature } from "./features/SelectionShouldIgnoreBulletsFeature";
 import { ZoomFeature } from "./features/ZoomFeature";
+import { FoldFeature } from "./features/FoldFeature";
 
 export default class ObsidianOutlinerPlugin extends Plugin {
   private features: IFeature[];
@@ -53,24 +54,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
   moveListElementLeft(editor: CodeMirror.Editor) {
     return this.execute(editor, (root) => root.moveLeft());
-  }
-
-  setFold(editor: CodeMirror.Editor, type: "fold" | "unfold") {
-    if (!this.listsUtils.isCursorInList(editor)) {
-      return false;
-    }
-
-    (editor as any).foldCode(editor.getCursor(), null, type);
-
-    return true;
-  }
-
-  fold(editor: CodeMirror.Editor) {
-    return this.setFold(editor, "fold");
-  }
-
-  unfold(editor: CodeMirror.Editor) {
-    return this.setFold(editor, "unfold");
   }
 
   selectAll(editor: CodeMirror.Editor) {
@@ -171,6 +154,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this.listsUtils
       ),
       new ZoomFeature(this, this.obsidianUtils, this.listsUtils),
+      new FoldFeature(this, this.obsidianUtils, this.listsUtils),
     ];
 
     for (const feature of this.features) {
@@ -229,32 +213,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         {
           modifiers: ["Mod"],
           key: "a",
-        },
-      ],
-    });
-
-    this.addCommand({
-      id: "fold",
-      name: "Fold list",
-      callback: this.obsidianUtils.createCommandCallback(this.fold.bind(this)),
-      hotkeys: [
-        {
-          modifiers: ["Mod"],
-          key: "ArrowUp",
-        },
-      ],
-    });
-
-    this.addCommand({
-      id: "unfold",
-      name: "Unfold list",
-      callback: this.obsidianUtils.createCommandCallback(
-        this.unfold.bind(this)
-      ),
-      hotkeys: [
-        {
-          modifiers: ["Mod"],
-          key: "ArrowDown",
         },
       ],
     });
