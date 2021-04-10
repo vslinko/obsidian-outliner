@@ -8,6 +8,8 @@ import { Root } from "./root";
 import { Logger } from "./logger";
 import { ListsStylesFeature } from "./features/lists_styles";
 import { SmartEnterFeature } from "./features/smart_enter";
+import { MoveCursorToPreviousUnfoldedLineFeature } from "./features/move_cursor_to_previous_unfolded_line";
+import { EnsureCursorInListContentFeature } from "./features/ensure_cursor_in_list_content";
 
 class ZoomState {
   constructor(public line: CodeMirror.LineHandle, public header: HTMLElement) {}
@@ -21,52 +23,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   private editorUtils: EditorUtils;
   private listsUtils: ListUtils;
   private zoomStates: WeakMap<CodeMirror.Editor, ZoomState> = new WeakMap();
-
-  iterateWhileFolded(
-    editor: CodeMirror.Editor,
-    pos: CodeMirror.Position,
-    inc: (pos: CodeMirror.Position) => void
-  ) {
-    let folded = false;
-    do {
-      inc(pos);
-      folded = (editor as any).isFolded(pos);
-    } while (folded);
-    return pos;
-  }
-
-  evalEnsureCursorInContent(editor: CodeMirror.Editor) {
-    const cursor = editor.getCursor();
-    const indentSign = this.listsUtils.detectListIndentSign(editor, cursor);
-
-    if (indentSign === null) {
-      return;
-    }
-
-    process.nextTick(() => {
-      const cursor = editor.getCursor();
-      const lineStartCursor = editor.coordsChar({
-        ...editor.cursorCoords(),
-        left: 0,
-      });
-
-      if (lineStartCursor.line !== cursor.line) {
-        editor.setCursor({
-          line: lineStartCursor.line,
-          ch: editor.getLine(lineStartCursor.line).length,
-        });
-      }
-    });
-
-    const line = editor.getLine(cursor.line);
-    const linePrefix = this.listsUtils.getListLineInfo(line, indentSign)
-      .prefixLength;
-
-    if (cursor.ch < linePrefix) {
-      cursor.ch = linePrefix;
-      editor.setCursor(cursor);
-    }
-  }
 
   execute(editor: CodeMirror.Editor, cb: (root: Root) => boolean): boolean {
     const root = this.listsUtils.parseList(editor, editor.getCursor());
@@ -82,15 +38,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     }
 
     return result;
-  }
-
-  isCursorInList(editor: CodeMirror.Editor) {
-    const indentSign = this.listsUtils.detectListIndentSign(
-      editor,
-      editor.getCursor()
-    );
-
-    return indentSign !== null;
   }
 
   moveListElementDown(editor: CodeMirror.Editor) {
@@ -176,7 +123,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   }
 
   setFold(editor: CodeMirror.Editor, type: "fold" | "unfold") {
-    if (!this.isCursorInList(editor)) {
+    if (!this.listsUtils.isCursorInList(editor)) {
       return false;
     }
 
@@ -391,6 +338,17 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this.editorUtils,
         this.listsUtils
       ),
+      new EnsureCursorInListContentFeature(
+        this,
+        this.settings,
+        this.editorUtils,
+        this.listsUtils
+      ),
+      new MoveCursorToPreviousUnfoldedLineFeature(
+        this,
+        this.settings,
+        this.listsUtils
+      ),
     ];
 
     for (const feature of this.features) {
@@ -509,7 +467,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
     this.registerCodeMirror((cm) => {
       this.attachZoomModeHandlers(cm);
-      this.attachSmartCursorHandlers(cm);
       this.attachSmartDeleteHandlers(cm);
       this.attachSmartSelectionHandlers(cm);
     });
@@ -678,74 +635,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       if (range.from().ch < listContentStartCh) {
         range.from().ch = listContentStartCh;
         changeObj.update([range]);
-      }
-    });
-  }
-
-  attachSmartCursorHandlers(cm: CodeMirror.Editor) {
-    cm.on("beforeSelectionChange", (cm, changeObj) => {
-      if (
-        !this.settings.smartCursor ||
-        changeObj.origin !== "+move" ||
-        changeObj.ranges.length > 1
-      ) {
-        return;
-      }
-
-      const range = changeObj.ranges[0];
-      const cursor = cm.getCursor();
-
-      if (
-        range.anchor.line !== range.head.line ||
-        range.anchor.ch !== range.head.ch
-      ) {
-        return;
-      }
-
-      if (cursor.line <= 0 || cursor.line !== range.anchor.line) {
-        return;
-      }
-
-      const root = this.listsUtils.parseList(cm);
-
-      if (!root) {
-        return;
-      }
-
-      const list = root.getListUnderCursor();
-      const listContentStartCh = list.getContentStartCh();
-
-      if (
-        cursor.ch === listContentStartCh &&
-        range.anchor.ch === listContentStartCh - 1
-      ) {
-        const newCursor = this.iterateWhileFolded(
-          cm,
-          {
-            line: cursor.line,
-            ch: 0,
-          },
-          (pos) => {
-            pos.line--;
-            pos.ch = cm.getLine(pos.line).length - 1;
-          }
-        );
-        newCursor.ch++;
-        range.anchor.line = newCursor.line;
-        range.anchor.ch = newCursor.ch;
-        range.head.line = newCursor.line;
-        range.head.ch = newCursor.ch;
-        changeObj.update([range]);
-      }
-    });
-
-    cm.on("cursorActivity", (cm) => {
-      if (
-        this.settings.smartCursor &&
-        this.editorUtils.containsSingleCursor(cm) &&
-        this.isCursorInList(cm)
-      ) {
-        this.evalEnsureCursorInContent(cm);
       }
     });
   }
