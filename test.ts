@@ -3,6 +3,8 @@ import * as assert from "assert";
 import ObsidianOutlinerPlugin from "./src";
 import deleteTests from "./tests/delete";
 import smartEnterTests from "./tests/features/smart_enter";
+import ensureCursorInListContentTests from "./tests/features/ensure_cursor_in_list_content";
+import moveCursorToPreviousUnfoldedLineTests from "./tests/features/move_cursor_to_previous_unfolded_line";
 import outdentTests from "./tests/outdent";
 
 interface IState {
@@ -26,6 +28,8 @@ const tests = {
   ...deleteTests,
   ...smartEnterTests,
   ...outdentTests,
+  ...ensureCursorInListContentTests,
+  ...moveCursorToPreviousUnfoldedLineTests,
 };
 
 export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlugin {

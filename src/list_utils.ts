@@ -204,4 +204,8 @@ export class ListUtils {
     d("unable to detect");
     return null;
   }
+
+  isCursorInList(editor: CodeMirror.Editor) {
+    return this.detectListIndentSign(editor, editor.getCursor()) !== null;
+  }
 }
