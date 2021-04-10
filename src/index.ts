@@ -15,6 +15,7 @@ import { DeleteShouldIgnoreBulletsFeature } from "./features/DeleteShouldIgnoreB
 import { SelectionShouldIgnoreBulletsFeature } from "./features/SelectionShouldIgnoreBulletsFeature";
 import { ZoomFeature } from "./features/ZoomFeature";
 import { FoldFeature } from "./features/FoldFeature";
+import { SelectAllFeature } from "./features/SelectAllFeature";
 
 export default class ObsidianOutlinerPlugin extends Plugin {
   private features: IFeature[];
@@ -54,52 +55,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
   moveListElementLeft(editor: CodeMirror.Editor) {
     return this.execute(editor, (root) => root.moveLeft());
-  }
-
-  selectAll(editor: CodeMirror.Editor) {
-    const selections = editor.listSelections();
-
-    if (selections.length !== 1) {
-      return false;
-    }
-
-    const selection = selections[0];
-
-    if (selection.anchor.line !== selection.head.line) {
-      return false;
-    }
-
-    const root = this.listsUtils.parseList(editor, selection.anchor);
-
-    if (!root) {
-      return false;
-    }
-
-    const list = root.getListUnderCursor();
-    const startCh = list.getContentStartCh();
-    const endCh = list.getContentEndCh();
-
-    if (selection.from().ch === startCh && selection.to().ch === endCh) {
-      // select all list
-      editor.setSelection(
-        root.getListStartPosition(),
-        root.getListEndPosition()
-      );
-    } else {
-      // select all line
-      editor.setSelection(
-        {
-          line: selection.anchor.line,
-          ch: startCh,
-        },
-        {
-          line: selection.anchor.line,
-          ch: endCh,
-        }
-      );
-    }
-
-    return true;
   }
 
   async onload() {
@@ -155,6 +110,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       ),
       new ZoomFeature(this, this.obsidianUtils, this.listsUtils),
       new FoldFeature(this, this.obsidianUtils, this.listsUtils),
+      new SelectAllFeature(this, this.obsidianUtils, this.listsUtils),
     ];
 
     for (const feature of this.features) {
@@ -199,20 +155,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         {
           modifiers: [],
           key: "Tab",
-        },
-      ],
-    });
-
-    this.addCommand({
-      id: "select-all",
-      name: "Select list item or whole list",
-      callback: this.obsidianUtils.createCommandCallback(
-        this.selectAll.bind(this)
-      ),
-      hotkeys: [
-        {
-          modifiers: ["Mod"],
-          key: "a",
         },
       ],
     });
