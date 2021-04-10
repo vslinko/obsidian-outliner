@@ -1,7 +1,7 @@
 import type ObsidianOutlinerPluginWithTests from "../../test";
 
 export default {
-  "Cmd-A should select list item content": (plugin) => {
+  "obsidian-outliner:select-all should select list item content": (plugin) => {
     // arrange
     plugin.applyState(["- one", "\t- two|"]);
 
@@ -11,7 +11,9 @@ export default {
     // assert
     plugin.assertCurrentState(["- one", "\t- |two|"]);
   },
-  "Cmd-A should select list whole list after second invoke": (plugin) => {
+  "obsidian-outliner:select-all should select list whole list after second invoke": (
+    plugin
+  ) => {
     // arrange
     plugin.applyState(["a", "- one", "\t- two|", "b"]);
 
