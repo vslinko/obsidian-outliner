@@ -8,15 +8,38 @@ export class List implements IList {
   private indentSign: string;
   private bullet: string;
   private content: string;
+  private folded: boolean;
   private children: List[];
   private parent: List;
 
-  constructor(indentSign: string, bullet: string, content: string) {
+  constructor(
+    indentSign: string,
+    bullet: string,
+    content: string,
+    folded: boolean
+  ) {
     this.indentSign = indentSign;
     this.bullet = bullet;
     this.content = content;
+    this.folded = folded;
     this.children = [];
     this.parent = null;
+  }
+
+  isFolded() {
+    return this.folded;
+  }
+
+  isFoldRoot() {
+    let parent = this.getParent();
+    while (parent) {
+      if (parent.isFolded()) {
+        return false;
+      }
+      parent = parent.getParent();
+    }
+
+    return this.isFolded();
   }
 
   getChildren() {
@@ -133,7 +156,7 @@ export class Root implements IList {
     this.start = start;
     this.end = end;
     this.cursor = cursor;
-    this.rootList = new List("", "", "");
+    this.rootList = new List("", "", "", false);
   }
 
   replaceCursor(cursor: CodeMirror.Position) {
