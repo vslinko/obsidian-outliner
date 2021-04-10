@@ -2,7 +2,6 @@ import { MarkdownView } from "obsidian";
 import * as assert from "assert";
 import ObsidianOutlinerPlugin from "./src";
 
-import outdent_tests from "./tests/outdent";
 import EnterOutdentIfLineIsEmptyFeature from "./tests/features/EnterOutdentIfLineIsEmptyFeature.test";
 import EnterShouldCreateNewlineOnChildLevelFeature from "./tests/features/EnterShouldCreateNewlineOnChildLevelFeature.test";
 import EnsureCursorInListContentFeature from "./tests/features/EnsureCursorInListContentFeature.test";
@@ -10,6 +9,7 @@ import MoveCursorToPreviousUnfoldedLineFeature from "./tests/features/MoveCursor
 import DeleteShouldIgnoreBulletsFeature from "./tests/features/DeleteShouldIgnoreBulletsFeature.test";
 import SelectionShouldIgnoreBulletsFeature from "./tests/features/SelectionShouldIgnoreBulletsFeature.test";
 import SelectAllFeature from "./tests/features/SelectAllFeature.test";
+import MoveItemsFeature from "./tests/features/MoveItemsFeature.test";
 
 interface IState {
   selections: Array<{ from: CodeMirror.Position; to: CodeMirror.Position }>;
@@ -29,7 +29,6 @@ interface ITestResults {
 }
 
 const tests = {
-  ...outdent_tests,
   ...EnterOutdentIfLineIsEmptyFeature,
   ...EnterShouldCreateNewlineOnChildLevelFeature,
   ...EnsureCursorInListContentFeature,
@@ -37,6 +36,7 @@ const tests = {
   ...DeleteShouldIgnoreBulletsFeature,
   ...SelectionShouldIgnoreBulletsFeature,
   ...SelectAllFeature,
+  ...MoveItemsFeature,
 };
 
 export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlugin {
