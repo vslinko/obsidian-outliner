@@ -1,11 +1,12 @@
 import { MarkdownView } from "obsidian";
 import * as assert from "assert";
 import ObsidianOutlinerPlugin from "./src";
-import deleteTests from "./tests/delete";
-import smartEnterTests from "./tests/features/smart_enter";
-import ensureCursorInListContentTests from "./tests/features/ensure_cursor_in_list_content";
-import moveCursorToPreviousUnfoldedLineTests from "./tests/features/move_cursor_to_previous_unfolded_line";
-import outdentTests from "./tests/outdent";
+
+import delete_tests from "./tests/delete";
+import outdent_tests from "./tests/outdent";
+import SmartEnterFeature from "./tests/features/SmartEnterFeature.test";
+import EnsureCursorInListContentFeature from "./tests/features/EnsureCursorInListContentFeature.test";
+import MoveCursorToPreviousUnfoldedLineFeature from "./tests/features/MoveCursorToPreviousUnfoldedLineFeature.test";
 
 interface IState {
   selections: Array<{ anchor: CodeMirror.Position; head: CodeMirror.Position }>;
@@ -25,11 +26,11 @@ interface ITestResults {
 }
 
 const tests = {
-  ...deleteTests,
-  ...smartEnterTests,
-  ...outdentTests,
-  ...ensureCursorInListContentTests,
-  ...moveCursorToPreviousUnfoldedLineTests,
+  ...delete_tests,
+  ...SmartEnterFeature,
+  ...EnsureCursorInListContentFeature,
+  ...MoveCursorToPreviousUnfoldedLineFeature,
+  ...outdent_tests,
 };
 
 export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlugin {
