@@ -11,6 +11,7 @@ import { EnterOutdentIfLineIsEmptyFeature } from "./features/EnterOutdentIfLineI
 import { EnterShouldCreateNewlineOnChildLevelFeature } from "./features/EnterShouldCreateNewlineOnChildLevelFeature";
 import { MoveCursorToPreviousUnfoldedLineFeature } from "./features/MoveCursorToPreviousUnfoldedLineFeature";
 import { EnsureCursorInListContentFeature } from "./features/EnsureCursorInListContentFeature";
+import { DeleteShouldIgnoreBulletsFeature } from "./features/DeleteShouldIgnoreBulletsFeature";
 
 class ZoomState {
   constructor(public line: CodeMirror.LineHandle, public header: HTMLElement) {}
@@ -55,72 +56,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
   moveListElementLeft(editor: CodeMirror.Editor) {
     return this.execute(editor, (root) => root.moveLeft());
-  }
-
-  delete(editor: CodeMirror.Editor) {
-    if (!this.editorUtils.containsSingleCursor(editor)) {
-      return false;
-    }
-
-    const root = this.listsUtils.parseList(editor);
-
-    if (!root) {
-      return false;
-    }
-
-    if (
-      root.getTotalLines() === 1 &&
-      root.getChildren()[0].getContent().length === 0
-    ) {
-      editor.replaceRange(
-        "",
-        root.getListStartPosition(),
-        root.getListEndPosition()
-      );
-      return true;
-    }
-
-    const res = root.deleteAndMergeWithPrevious();
-
-    if (res) {
-      this.listsUtils.applyChanges(editor, root);
-    }
-
-    return res;
-  }
-
-  deleteNext(editor: CodeMirror.Editor) {
-    if (!this.editorUtils.containsSingleCursor(editor)) {
-      return false;
-    }
-
-    const root = this.listsUtils.parseList(editor);
-
-    if (!root) {
-      return false;
-    }
-
-    const list = root.getListUnderCursor();
-    const nextLineNo = root.getCursor().line + 1;
-    const nextList = root.getListUnderLine(nextLineNo);
-
-    if (!nextList || root.getCursor().ch !== list.getContentEndCh()) {
-      return false;
-    }
-
-    root.replaceCursor({
-      line: nextLineNo,
-      ch: nextList.getContentStartCh(),
-    });
-
-    const res = root.deleteAndMergeWithPrevious();
-    const reallyChanged = root.getCursor().line !== nextLineNo;
-
-    if (reallyChanged) {
-      this.listsUtils.applyChanges(editor, root);
-    }
-
-    return res;
   }
 
   setFold(editor: CodeMirror.Editor, type: "fold" | "unfold") {
@@ -355,6 +290,12 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this.settings,
         this.listsUtils
       ),
+      new DeleteShouldIgnoreBulletsFeature(
+        this,
+        this.settings,
+        this.editorUtils,
+        this.listsUtils
+      ),
     ];
 
     for (const feature of this.features) {
@@ -473,7 +414,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
     this.registerCodeMirror((cm) => {
       this.attachZoomModeHandlers(cm);
-      this.attachSmartDeleteHandlers(cm);
       this.attachSmartSelectionHandlers(cm);
     });
   }
@@ -563,49 +503,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
       if (changed) {
         changeObj.update(changeObj.ranges);
-      }
-    });
-  }
-
-  attachSmartDeleteHandlers(cm: CodeMirror.Editor) {
-    cm.on("beforeChange", (cm, changeObj) => {
-      if (changeObj.origin !== "+delete" || !this.settings.smartDelete) {
-        return;
-      }
-
-      const root = this.listsUtils.parseList(cm);
-
-      if (!root) {
-        return;
-      }
-
-      const list = root.getListUnderCursor();
-      const listContentStartCh = list.getContentStartCh();
-      const listContentEndCh = list.getContentEndCh();
-
-      const sameLine = changeObj.from.line === changeObj.to.line;
-      const nextLine = changeObj.from.line + 1 === changeObj.to.line;
-
-      if (
-        sameLine &&
-        changeObj.from.ch === listContentStartCh - 1 &&
-        changeObj.to.ch === listContentStartCh
-      ) {
-        changeObj.cancel();
-        this.delete(cm);
-      } else if (sameLine && changeObj.from.ch < listContentStartCh) {
-        const from = {
-          line: changeObj.from.line,
-          ch: listContentStartCh,
-        };
-        changeObj.update(from, changeObj.to, changeObj.text);
-      } else if (
-        nextLine &&
-        changeObj.from.ch === listContentEndCh &&
-        changeObj.to.ch === 0
-      ) {
-        changeObj.cancel();
-        this.deleteNext(cm);
       }
     });
   }
