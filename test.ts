@@ -4,7 +4,8 @@ import ObsidianOutlinerPlugin from "./src";
 
 import delete_tests from "./tests/delete";
 import outdent_tests from "./tests/outdent";
-import SmartEnterFeature from "./tests/features/SmartEnterFeature.test";
+import EnterOutdentIfLineIsEmptyFeature from "./tests/features/EnterOutdentIfLineIsEmptyFeature.test";
+import EnterShouldCreateNewlineOnChildLevelFeature from "./tests/features/EnterShouldCreateNewlineOnChildLevelFeature.test";
 import EnsureCursorInListContentFeature from "./tests/features/EnsureCursorInListContentFeature.test";
 import MoveCursorToPreviousUnfoldedLineFeature from "./tests/features/MoveCursorToPreviousUnfoldedLineFeature.test";
 
@@ -27,10 +28,11 @@ interface ITestResults {
 
 const tests = {
   ...delete_tests,
-  ...SmartEnterFeature,
+  ...outdent_tests,
+  ...EnterOutdentIfLineIsEmptyFeature,
+  ...EnterShouldCreateNewlineOnChildLevelFeature,
   ...EnsureCursorInListContentFeature,
   ...MoveCursorToPreviousUnfoldedLineFeature,
-  ...outdent_tests,
 };
 
 export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlugin {

@@ -7,7 +7,8 @@ import { ListUtils } from "./list_utils";
 import { Root } from "./root";
 import { Logger } from "./logger";
 import { ListsStylesFeature } from "./features/ListsStylesFeature";
-import { SmartEnterFeature } from "./features/SmartEnterFeature";
+import { EnterOutdentIfLineIsEmptyFeature } from "./features/EnterOutdentIfLineIsEmptyFeature";
+import { EnterShouldCreateNewlineOnChildLevelFeature } from "./features/EnterShouldCreateNewlineOnChildLevelFeature";
 import { MoveCursorToPreviousUnfoldedLineFeature } from "./features/MoveCursorToPreviousUnfoldedLineFeature";
 import { EnsureCursorInListContentFeature } from "./features/EnsureCursorInListContentFeature";
 
@@ -332,10 +333,15 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
     this.features = [
       new ListsStylesFeature(this, this.settings, this.obsidianUtils),
-      new SmartEnterFeature(
+      new EnterOutdentIfLineIsEmptyFeature(
         this,
         this.settings,
         this.editorUtils,
+        this.listsUtils
+      ),
+      new EnterShouldCreateNewlineOnChildLevelFeature(
+        this,
+        this.settings,
         this.listsUtils
       ),
       new EnsureCursorInListContentFeature(
