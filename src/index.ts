@@ -6,10 +6,10 @@ import { EditorUtils } from "./editor_utils";
 import { ListUtils } from "./list_utils";
 import { Root } from "./root";
 import { Logger } from "./logger";
-import { ListsStylesFeature } from "./features/lists_styles";
-import { SmartEnterFeature } from "./features/smart_enter";
-import { MoveCursorToPreviousUnfoldedLineFeature } from "./features/move_cursor_to_previous_unfolded_line";
-import { EnsureCursorInListContentFeature } from "./features/ensure_cursor_in_list_content";
+import { ListsStylesFeature } from "./features/ListsStylesFeature";
+import { SmartEnterFeature } from "./features/SmartEnterFeature";
+import { MoveCursorToPreviousUnfoldedLineFeature } from "./features/MoveCursorToPreviousUnfoldedLineFeature";
+import { EnsureCursorInListContentFeature } from "./features/EnsureCursorInListContentFeature";
 
 class ZoomState {
   constructor(public line: CodeMirror.LineHandle, public header: HTMLElement) {}
