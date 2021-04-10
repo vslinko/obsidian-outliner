@@ -9,6 +9,7 @@ import EnsureCursorInListContentFeature from "./tests/features/EnsureCursorInLis
 import MoveCursorToPreviousUnfoldedLineFeature from "./tests/features/MoveCursorToPreviousUnfoldedLineFeature.test";
 import DeleteShouldIgnoreBulletsFeature from "./tests/features/DeleteShouldIgnoreBulletsFeature.test";
 import SelectionShouldIgnoreBulletsFeature from "./tests/features/SelectionShouldIgnoreBulletsFeature.test";
+import SelectAllFeature from "./tests/features/SelectAllFeature.test";
 
 interface IState {
   selections: Array<{ from: CodeMirror.Position; to: CodeMirror.Position }>;
@@ -35,6 +36,7 @@ const tests = {
   ...MoveCursorToPreviousUnfoldedLineFeature,
   ...DeleteShouldIgnoreBulletsFeature,
   ...SelectionShouldIgnoreBulletsFeature,
+  ...SelectAllFeature,
 };
 
 export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlugin {
@@ -42,6 +44,10 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
 
   wait(time: number) {
     return new Promise((resolve) => setTimeout(resolve, time));
+  }
+
+  executeCommandById(id: string) {
+    (this.app as any).commands.executeCommandById(id);
   }
 
   simulateKeydown(keys: string) {
