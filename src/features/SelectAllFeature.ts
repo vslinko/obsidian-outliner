@@ -13,7 +13,7 @@ export class SelectAllFeature implements IFeature {
   async load() {
     this.plugin.addCommand({
       id: "select-all",
-      name: "Select list item or whole list",
+      name: "Select a list item or the entire list",
       callback: this.obsidianUtils.createCommandCallback(
         this.selectAll.bind(this)
       ),

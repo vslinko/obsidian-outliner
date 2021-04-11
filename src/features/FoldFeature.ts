@@ -13,7 +13,7 @@ export class FoldFeature implements IFeature {
   async load() {
     this.plugin.addCommand({
       id: "fold",
-      name: "Fold list",
+      name: "Fold the list",
       callback: this.obsidianUtils.createCommandCallback(this.fold.bind(this)),
       hotkeys: [
         {
@@ -25,7 +25,7 @@ export class FoldFeature implements IFeature {
 
     this.plugin.addCommand({
       id: "unfold",
-      name: "Unfold list",
+      name: "Unfold the list",
       callback: this.obsidianUtils.createCommandCallback(
         this.unfold.bind(this)
       ),
