@@ -1,27 +1,17 @@
-import {
-  App,
-  PluginSettingTab,
-  Plugin_2,
-  Setting,
-  ToggleComponent,
-} from "obsidian";
+import { App, PluginSettingTab, Plugin_2, Setting } from "obsidian";
 
 export interface ObsidianOutlinerPluginSettings {
   styleLists: boolean;
   debug: boolean;
-  smartCursor: boolean;
-  smartEnter: boolean;
-  smartDelete: boolean;
-  smartSelection: boolean;
+  stickCursor: boolean;
+  betterEnter: boolean;
 }
 
 const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
   styleLists: false,
   debug: false,
-  smartCursor: true,
-  smartEnter: true,
-  smartDelete: true,
-  smartSelection: true,
+  stickCursor: true,
+  betterEnter: true,
 };
 
 export interface Storage {
@@ -57,32 +47,18 @@ export class Settings implements ObsidianOutlinerPluginSettings {
     this.set("debug", value);
   }
 
-  get smartCursor() {
-    return this.values.smartCursor;
+  get stickCursor() {
+    return this.values.stickCursor;
   }
-  set smartCursor(value: boolean) {
-    this.set("smartCursor", value);
-  }
-
-  get smartEnter() {
-    return this.values.smartEnter;
-  }
-  set smartEnter(value: boolean) {
-    this.set("smartEnter", value);
+  set stickCursor(value: boolean) {
+    this.set("stickCursor", value);
   }
 
-  get smartDelete() {
-    return this.values.smartDelete;
+  get betterEnter() {
+    return this.values.betterEnter;
   }
-  set smartDelete(value: boolean) {
-    this.set("smartDelete", value);
-  }
-
-  get smartSelection() {
-    return this.values.smartSelection;
-  }
-  set smartSelection(value: boolean) {
-    this.set("smartSelection", value);
+  set betterEnter(value: boolean) {
+    this.set("betterEnter", value);
   }
 
   onChange<T extends K>(key: T, cb: Callback<T>) {
@@ -149,54 +125,24 @@ export class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
         });
       });
 
-    const onchange = async (value: boolean) => {
-      this.settings.smartCursor = value;
-      this.settings.smartEnter = value;
-      this.settings.smartDelete = value;
-      this.settings.smartSelection = value;
-
-      const components = [
-        smartCursor.components[0],
-        smartEnter.components[0],
-        smartDelete.components[0],
-        smartSelection.components[0],
-      ] as ToggleComponent[];
-
-      for (const component of components) {
-        if (component.getValue() !== value) {
-          component.setValue(value);
-        }
-      }
-
-      await this.settings.save();
-    };
-
-    const smartCursor = new Setting(containerEl)
-      .setName("Smart cursor")
-      .setDesc("Attaching the cursor to the contents of a list item")
+    new Setting(containerEl)
+      .setName("Stick cursor")
+      .setDesc("Stick the cursor to the contents of a list item")
       .addToggle((toggle) => {
-        toggle.setValue(this.settings.smartCursor).onChange(onchange);
+        toggle.setValue(this.settings.stickCursor).onChange(async (value) => {
+          this.settings.stickCursor = value;
+          await this.settings.save();
+        });
       });
 
-    const smartEnter = new Setting(containerEl)
-      .setName("Smart enter")
+    new Setting(containerEl)
+      .setName("Enhance Enter")
       .setDesc("Make Enter behaviour similar to outliners")
       .addToggle((toggle) => {
-        toggle.setValue(this.settings.smartEnter).onChange(onchange);
-      });
-
-    const smartDelete = new Setting(containerEl)
-      .setName("Smart delete")
-      .setDesc("Make Backspace and Delete behaviour similar to outliners")
-      .addToggle((toggle) => {
-        toggle.setValue(this.settings.smartDelete).onChange(onchange);
-      });
-
-    const smartSelection = new Setting(containerEl)
-      .setName("Smart selection")
-      .setDesc("Make text selection behaviour similar to outliners")
-      .addToggle((toggle) => {
-        toggle.setValue(this.settings.smartSelection).onChange(onchange);
+        toggle.setValue(this.settings.betterEnter).onChange(async (value) => {
+          this.settings.betterEnter = value;
+          await this.settings.save();
+        });
       });
 
     new Setting(containerEl)

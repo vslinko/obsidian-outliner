@@ -40,7 +40,7 @@ export class MoveCursorToPreviousUnfoldedLineFeature implements IFeature {
     changeObj: CodeMirror.EditorSelectionChange
   ) => {
     if (
-      !this.settings.smartCursor ||
+      !this.settings.stickCursor ||
       changeObj.origin !== "+move" ||
       changeObj.ranges.length > 1
     ) {

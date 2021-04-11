@@ -59,7 +59,7 @@ export class EnsureCursorInListContentFeature implements IFeature {
 
   private handleCursorActivity = (cm: CodeMirror.Editor) => {
     if (
-      this.settings.smartCursor &&
+      this.settings.stickCursor &&
       this.editorUtils.containsSingleCursor(cm) &&
       this.listsUtils.isCursorInList(cm)
     ) {
