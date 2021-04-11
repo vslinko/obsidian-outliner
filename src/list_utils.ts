@@ -142,7 +142,7 @@ export class ListUtils {
 
     for (let l = fromLine; l <= toLine; l++) {
       const line = root.getListUnderLine(l);
-      if (line.isFoldRoot()) {
+      if (line && line.isFoldRoot()) {
         // TODO: why working only with -1?
         (editor as any).foldCode(l - 1);
       }
