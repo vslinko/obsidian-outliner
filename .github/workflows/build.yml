@@ -1,0 +1,40 @@
+name: Build
+
+on: push
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: "15.x"
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Obsidian
+        run: |
+          wget -q https://github.com/obsidianmd/obsidian-releases/releases/download/v0.11.13/Obsidian-0.11.13-universal.dmg
+          sudo hdiutil attach Obsidian-0.11.13-universal.dmg
+          sudo cp -rf "/Volumes/Obsidian 0.11.13-universal/Obsidian.app" /Applications
+          sudo hdiutil detach "/Volumes/Obsidian 0.11.13-universal"
+      - name: Test
+        run: |
+          npm run build-with-tests
+          npm test
+      - name: Build
+        if: startsWith(github.ref, 'refs/tags/')
+        run: npm run build
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          draft: true
+          files: |
+            main.js
+            manifest.json
+            styles.css

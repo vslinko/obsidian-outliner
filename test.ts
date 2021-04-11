@@ -31,6 +31,10 @@ const tests = {
 export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlugin {
   private editor: CodeMirror.Editor;
 
+  wait(time: number) {
+    return new Promise((resolve) => setTimeout(resolve, time));
+  }
+
   simulateKeydown(keys: string) {
     const e = {
       type: "keydown",
@@ -94,10 +98,11 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     };
 
     if (process.env.RUN_OUTLINER_TESTS) {
-      setTimeout(async () => {
+      setImmediate(async () => {
+        await this.wait(1000);
         const results = await this.runTests();
         this.app.vault.create("results.json", JSON.stringify(results, null, 2));
-      }, 500);
+      });
     }
   }
 
@@ -121,7 +126,9 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     if (!file) {
       file = await this.app.vault.create(filePath, "");
     }
+    await this.wait(1000);
     this.app.workspace.activeLeaf.openFile(file);
+    await this.wait(1000);
 
     for (const [key, testFn] of Object.entries(tests)) {
       const testResult: ITestResult = {
