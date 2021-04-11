@@ -28,7 +28,7 @@ export class DeleteShouldIgnoreBulletsFeature implements IFeature {
     cm: CodeMirror.Editor,
     changeObj: CodeMirror.EditorChangeCancellable
   ) => {
-    if (changeObj.origin !== "+delete" || !this.settings.smartDelete) {
+    if (changeObj.origin !== "+delete" || !this.settings.stickCursor) {
       return;
     }
 

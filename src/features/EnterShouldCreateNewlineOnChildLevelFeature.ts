@@ -26,7 +26,7 @@ export class EnterShouldCreateNewlineOnChildLevelFeature implements IFeature {
     cm: CodeMirror.Editor,
     changeObj: CodeMirror.EditorChangeCancellable
   ) => {
-    if (!this.settings.smartEnter) {
+    if (!this.settings.betterEnter) {
       return;
     }
 

@@ -27,7 +27,7 @@ export class SelectionShouldIgnoreBulletsFeature implements IFeature {
     changeObj: CodeMirror.EditorSelectionChange
   ) => {
     if (
-      !this.settings.smartSelection ||
+      !this.settings.stickCursor ||
       changeObj.origin !== "+move" ||
       changeObj.ranges.length > 1
     ) {

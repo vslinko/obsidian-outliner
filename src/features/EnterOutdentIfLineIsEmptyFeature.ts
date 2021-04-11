@@ -59,7 +59,7 @@ export class EnterOutdentIfLineIsEmptyFeature implements IFeature {
   }
 
   private onKeyDown = (cm: CodeMirror.Editor, e: KeyboardEvent) => {
-    if (!this.settings.smartEnter || !isEnter(e)) {
+    if (!this.settings.betterEnter || !isEnter(e)) {
       return;
     }
 
