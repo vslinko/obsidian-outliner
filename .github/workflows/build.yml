@@ -1,6 +1,10 @@
 name: Build
 
-on: push
+on:
+  push:
+    branches: "**"
+  pull_request:
+    branches: "**"
 
 jobs:
   build:
@@ -24,17 +28,3 @@ jobs:
         run: |
           npm run build-with-tests
           npm test
-      - name: Build
-        if: startsWith(github.ref, 'refs/tags/')
-        run: npm run build
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          draft: true
-          files: |
-            main.js
-            manifest.json
-            styles.css
