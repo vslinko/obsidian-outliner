@@ -14,7 +14,7 @@ export class MoveItemsFeature implements IFeature {
   async load() {
     this.plugin.addCommand({
       id: "move-list-item-up",
-      name: "Move list item up",
+      name: "Move list and sublists up",
       callback: this.obsidianUtils.createCommandCallback(
         this.moveListElementUp.bind(this)
       ),
@@ -28,7 +28,7 @@ export class MoveItemsFeature implements IFeature {
 
     this.plugin.addCommand({
       id: "move-list-item-down",
-      name: "Move list item down",
+      name: "Move list and sublists down",
       callback: this.obsidianUtils.createCommandCallback(
         this.moveListElementDown.bind(this)
       ),
@@ -42,7 +42,7 @@ export class MoveItemsFeature implements IFeature {
 
     this.plugin.addCommand({
       id: "indent-list",
-      name: "Indent list",
+      name: "Indent the list and sublists",
       callback: this.obsidianUtils.createCommandCallback(
         this.moveListElementRight.bind(this)
       ),
@@ -56,7 +56,7 @@ export class MoveItemsFeature implements IFeature {
 
     this.plugin.addCommand({
       id: "outdent-list",
-      name: "Outdent list",
+      name: "Outdent the list and sublists",
       callback: this.obsidianUtils.createCommandCallback(
         this.moveListElementLeft.bind(this)
       ),

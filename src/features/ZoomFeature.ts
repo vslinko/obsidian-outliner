@@ -27,7 +27,7 @@ export class ZoomFeature implements IFeature {
 
     this.plugin.addCommand({
       id: "zoom-in",
-      name: "Zoom In",
+      name: "Zoom in to the current list item",
       callback: this.obsidianUtils.createCommandCallback(
         this.zoomIn.bind(this)
       ),
@@ -41,7 +41,7 @@ export class ZoomFeature implements IFeature {
 
     this.plugin.addCommand({
       id: "zoom-out",
-      name: "Zoom Out",
+      name: "Zoom out the entire document",
       callback: this.obsidianUtils.createCommandCallback(
         this.zoomOut.bind(this)
       ),

@@ -114,9 +114,9 @@ export class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
     containerEl.empty();
 
     new Setting(containerEl)
-      .setName("Style lists")
+      .setName("Improve the style of your lists")
       .setDesc(
-        "Enable better lists styles (works well only with spaces or 4-spaces-tabs)"
+        "Styles are only compatible with built-in Obsidian themes and may not be compatible with other themes. Styles only work well with spaces or four-space tabs."
       )
       .addToggle((toggle) => {
         toggle.setValue(this.settings.styleLists).onChange(async (value) => {
@@ -126,8 +126,8 @@ export class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName("Stick cursor")
-      .setDesc("Stick the cursor to the contents of a list item")
+      .setName("Stick the cursor to the content")
+      .setDesc("Don't let the cursor move to the bullet position.")
       .addToggle((toggle) => {
         toggle.setValue(this.settings.stickCursor).onChange(async (value) => {
           this.settings.stickCursor = value;
@@ -136,8 +136,8 @@ export class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName("Enhance Enter")
-      .setDesc("Make Enter behaviour similar to outliners")
+      .setName("Enhance the Enter key")
+      .setDesc("Make the Enter key behave the same as other outliners.")
       .addToggle((toggle) => {
         toggle.setValue(this.settings.betterEnter).onChange(async (value) => {
           this.settings.betterEnter = value;
@@ -147,7 +147,9 @@ export class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Debug mode")
-      .setDesc("Enable debug logging")
+      .setDesc(
+        "Open DevTools (Command+Option+I or Control+Shift+I) to copy the debug logs."
+      )
       .addToggle((toggle) => {
         toggle.setValue(this.settings.debug).onChange(async (value) => {
           this.settings.debug = value;
