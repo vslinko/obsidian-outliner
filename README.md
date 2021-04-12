@@ -71,6 +71,8 @@ Press the hotkey once to select the current list item. Press the hotkey twice to
 
 Hide everything except the list and its children.
 
+![Zoom Demo](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/demo2.gif)
+
 | Command                          | Default hotkey |
 |----------------------------------|----------------|
 | Zoom in to the current list item | `Mod-.`        |
