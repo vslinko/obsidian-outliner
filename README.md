@@ -52,8 +52,8 @@ Move lists with children wherever you want without breaking the structure.
 
 | Command                       | Default hotkey (Windows/Linux) | Default hotkey (MacOS) |
 | ----------------------------- | :----------------------------: | :--------------------: |
-| Move list and sublists up     |      `Win-Shift-ArrowUp`       |  `Cmd-Shift-ArrowUp`   |
-| Move list and sublists down   |     `Win-Shift-ArrowDown`      | `Cmd-Shift-ArrowDown`  |
+| Move list and sublists up     |      `Ctrl-Shift-ArrowUp`      |  `Cmd-Shift-ArrowUp`   |
+| Move list and sublists down   |     `Ctrl-Shift-ArrowDown`     | `Cmd-Shift-ArrowDown`  |
 | Indent the list and sublists  |             `Tab`              |         `Tab`          |
 | Outdent the list and sublists |          `Shift-Tab`           |      `Shift-Tab`       |
 
@@ -77,8 +77,8 @@ Make the Enter key behave the same as other outliners.
 
 | Command         | Default hotkey (Windows/Linux) | Default hotkey (MacOS) |
 | --------------- | :----------------------------: | :--------------------: |
-| Fold the list   |         `Win-ArrowUp`          |     `Cmd-ArrowUp`      |
-| Unfold the list |        `Win-ArrowDown`         |    `Cmd-ArrowDown`     |
+| Fold the list   |         `Ctrl-ArrowUp`         |     `Cmd-ArrowUp`      |
+| Unfold the list |        `Ctrl-ArrowDown`        |    `Cmd-ArrowDown`     |
 
 ### Select a list item or the entire list
 
@@ -86,7 +86,7 @@ Press the hotkey once to select the current list item. Press the hotkey twice to
 
 | Command                               | Default hotkey (Windows/Linux) | Default hotkey (MacOS) |
 | ------------------------------------- | :----------------------------: | :--------------------: |
-| Select a list item or the entire list |            `Win-a`             |        `Cmd-a`         |
+| Select a list item or the entire list |            `Ctrl-a`            |        `Cmd-a`         |
 
 ### Zoom in to a specific list item
 
@@ -96,8 +96,8 @@ Hide everything except the list and its children.
 
 | Command                          | Default hotkey (Windows/Linux) | Default hotkey (MacOS) |
 | -------------------------------- | :----------------------------: | :--------------------: |
-| Zoom in to the current list item |            `Win-.`             |        `Cmd-.`         |
-| Zoom out the entire document     |         `Win-Shift-.`          |     `Cmd-Shift-.`      |
+| Zoom in to the current list item |            `Ctrl-.`            |        `Cmd-.`         |
+| Zoom out the entire document     |         `Ctrl-Shift-.`         |     `Cmd-Shift-.`      |
 
 ### Debug mode
 
