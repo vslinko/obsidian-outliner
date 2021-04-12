@@ -1,12 +1,18 @@
 import { MarkdownView } from "obsidian";
 import * as assert from "assert";
-import ObsidianOutlinerPlugin from "./main";
-import deleteTests from "./tests/delete";
-import enterTests from "./tests/enter";
-import outdentTests from "./tests/outdent";
+import ObsidianOutlinerPlugin from "./src";
+
+import EnterOutdentIfLineIsEmptyFeature from "./tests/features/EnterOutdentIfLineIsEmptyFeature.test";
+import EnterShouldCreateNewlineOnChildLevelFeature from "./tests/features/EnterShouldCreateNewlineOnChildLevelFeature.test";
+import EnsureCursorInListContentFeature from "./tests/features/EnsureCursorInListContentFeature.test";
+import MoveCursorToPreviousUnfoldedLineFeature from "./tests/features/MoveCursorToPreviousUnfoldedLineFeature.test";
+import DeleteShouldIgnoreBulletsFeature from "./tests/features/DeleteShouldIgnoreBulletsFeature.test";
+import SelectionShouldIgnoreBulletsFeature from "./tests/features/SelectionShouldIgnoreBulletsFeature.test";
+import SelectAllFeature from "./tests/features/SelectAllFeature.test";
+import MoveItemsFeature from "./tests/features/MoveItemsFeature.test";
 
 interface IState {
-  selections: Array<{ anchor: CodeMirror.Position; head: CodeMirror.Position }>;
+  selections: Array<{ from: CodeMirror.Position; to: CodeMirror.Position }>;
   value: string;
 }
 
@@ -23,9 +29,14 @@ interface ITestResults {
 }
 
 const tests = {
-  ...deleteTests,
-  ...enterTests,
-  ...outdentTests,
+  ...EnterOutdentIfLineIsEmptyFeature,
+  ...EnterShouldCreateNewlineOnChildLevelFeature,
+  ...EnsureCursorInListContentFeature,
+  ...MoveCursorToPreviousUnfoldedLineFeature,
+  ...DeleteShouldIgnoreBulletsFeature,
+  ...SelectionShouldIgnoreBulletsFeature,
+  ...SelectAllFeature,
+  ...MoveItemsFeature,
 };
 
 export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlugin {
@@ -33,6 +44,10 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
 
   wait(time: number) {
     return new Promise((resolve) => setTimeout(resolve, time));
+  }
+
+  executeCommandById(id: string) {
+    (this.app as any).commands.executeCommandById(id);
   }
 
   simulateKeydown(keys: string) {
@@ -175,11 +190,16 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       state = state.split("\n");
     }
     if (Array.isArray(state)) {
-      state = parseState(state);
+      state = this.parseState(state);
     }
 
     this.editor.setValue(state.value);
-    this.editor.setSelections(state.selections);
+    this.editor.setSelections(
+      state.selections.map((s) => ({
+        anchor: s.from,
+        head: s.to,
+      }))
+    );
   }
 
   assertCurrentState(expectedState: string[]): void;
@@ -190,7 +210,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       expectedState = expectedState.split("\n");
     }
     if (Array.isArray(expectedState)) {
-      expectedState = parseState(expectedState);
+      expectedState = this.parseState(expectedState);
     }
 
     const currentState = this.getCurrentState();
@@ -202,72 +222,72 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
   getCurrentState(): IState {
     return {
       selections: this.editor.listSelections().map((range) => ({
-        anchor: {
-          line: range.anchor.line,
-          ch: range.anchor.ch,
+        from: {
+          line: range.from().line,
+          ch: range.from().ch,
         },
-        head: {
-          line: range.head.line,
-          ch: range.head.ch,
+        to: {
+          line: range.to().line,
+          ch: range.to().ch,
         },
       })),
       value: this.editor.getValue(),
     };
   }
-}
 
-function parseState(content: string[]): IState;
-function parseState(content: string): IState;
-function parseState(content: string | string[]): IState {
-  if (typeof content === "string") {
-    content = content.split("\n");
-  }
-
-  const acc = content.reduce(
-    (acc, line, lineNo) => {
-      if (!acc.from) {
-        const dashIndex = line.indexOf("|");
-        if (dashIndex >= 0) {
-          acc.from = {
-            line: lineNo,
-            ch: dashIndex,
-          };
-          line = line.substring(0, dashIndex) + line.substring(dashIndex + 1);
-        }
-      }
-
-      if (!acc.to) {
-        const dashIndex = line.indexOf("|");
-        if (dashIndex >= 0) {
-          acc.to = {
-            line: lineNo,
-            ch: dashIndex,
-          };
-          line = line.substring(0, dashIndex) + line.substring(dashIndex + 1);
-        }
-      }
-
-      acc.lines.push(line);
-
-      return acc;
-    },
-    {
-      from: null as CodeMirror.Position | null,
-      to: null as CodeMirror.Position | null,
-      lines: [] as string[],
+  parseState(content: string[]): IState;
+  parseState(content: string): IState;
+  parseState(content: string | string[]): IState {
+    if (typeof content === "string") {
+      content = content.split("\n");
     }
-  );
-  if (!acc.from) {
-    acc.from = { line: 0, ch: 0 };
-  }
-  if (!acc.to) {
-    acc.to = { ...acc.from };
-  }
 
-  return {
-    selections: [{ anchor: acc.from, head: acc.to }],
-    value: acc.lines.join("\n"),
-  };
+    const acc = content.reduce(
+      (acc, line, lineNo) => {
+        if (!acc.from) {
+          const dashIndex = line.indexOf("|");
+          if (dashIndex >= 0) {
+            acc.from = {
+              line: lineNo,
+              ch: dashIndex,
+            };
+            line = line.substring(0, dashIndex) + line.substring(dashIndex + 1);
+          }
+        }
+
+        if (!acc.to) {
+          const dashIndex = line.indexOf("|");
+          if (dashIndex >= 0) {
+            acc.to = {
+              line: lineNo,
+              ch: dashIndex,
+            };
+            line = line.substring(0, dashIndex) + line.substring(dashIndex + 1);
+          }
+        }
+
+        acc.lines.push(line);
+
+        return acc;
+      },
+      {
+        from: null as CodeMirror.Position | null,
+        to: null as CodeMirror.Position | null,
+        lines: [] as string[],
+      }
+    );
+    if (!acc.from) {
+      acc.from = { line: 0, ch: 0 };
+    }
+    if (!acc.to) {
+      acc.to = { ...acc.from };
+    }
+
+    return {
+      selections: [{ from: acc.from, to: acc.to }],
+      value: acc.lines.join("\n"),
+    };
+  }
 }
 
 const consoleOrigins: typeof window.console = {
