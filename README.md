@@ -76,6 +76,8 @@ Commands:
 
 Hide everything except the list and its children.
 
+![Zoom Demo](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/demo2.gif)
+
 ### Debug mode
 
 Settings:
