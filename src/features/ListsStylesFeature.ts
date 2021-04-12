@@ -40,7 +40,8 @@ export class ListsStylesFeature implements IFeature {
     this.interval = window.setInterval(() => {
       const { useTab, tabSize } = this.obsidianUtils.getObsidianTabsSettigns();
 
-      const shouldBeVisible = useTab && tabSize !== 4;
+      const shouldBeVisible =
+        this.settings.styleLists && useTab && tabSize !== 4;
 
       if (shouldBeVisible && visible !== tabSize) {
         this.statusBarText.style.display = "block";
