@@ -1,4 +1,4 @@
-import { Plugin_2 } from "obsidian";
+import { Notice, Plugin_2 } from "obsidian";
 import { ListUtils } from "src/list_utils";
 import { ObsidianUtils } from "src/obsidian_utils";
 import { IFeature } from "../feature";
@@ -43,6 +43,14 @@ export class FoldFeature implements IFeature {
   private setFold(editor: CodeMirror.Editor, type: "fold" | "unfold") {
     if (!this.listsUtils.isCursorInList(editor)) {
       return false;
+    }
+
+    if (!this.obsidianUtils.getObsidianFoldSettigns().foldIndent) {
+      new Notice(
+        `Unable to ${type} because folding is disabled. Please enable "Fold indent" in Obsidian settings.`,
+        5000
+      );
+      return true;
     }
 
     (editor as any).foldCode(editor.getCursor(), null, type);

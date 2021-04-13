@@ -5,6 +5,10 @@ export interface IObsidianTabsSettigns {
   tabSize: number;
 }
 
+export interface IObsidianFoldSettigns {
+  foldIndent: boolean;
+}
+
 export class ObsidianUtils {
   constructor(private app: App) {}
 
@@ -12,6 +16,13 @@ export class ObsidianUtils {
     return {
       useTab: true,
       tabSize: 4,
+      ...(this.app.vault as any).config,
+    };
+  }
+
+  getObsidianFoldSettigns(): IObsidianFoldSettigns {
+    return {
+      foldIndent: false,
       ...(this.app.vault as any).config,
     };
   }
