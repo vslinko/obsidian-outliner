@@ -3,7 +3,7 @@ import { nodeResolve } from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 
 export default (commandLineArgs) => ({
-  input: commandLineArgs.configWithTests ? "test.ts" : "src/index.ts",
+  input: commandLineArgs.configWithTests ? "src/test_index.ts" : "src/index.ts",
   output: {
     file: "main.js",
     sourcemap: "inline",

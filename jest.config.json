@@ -1,0 +1,9 @@
+{
+  "clearMocks": true,
+  "globalSetup": "./jest/global-setup.js",
+  "globalTeardown": "./jest/global-teardown.js",
+  "setupFilesAfterEnv": ["./jest/obsidian-expect.js"],
+  "testEnvironment": "node",
+  "maxConcurrency": 1,
+  "maxWorkers": 1
+}

@@ -1,43 +1,6 @@
 import { MarkdownView } from "obsidian";
 import * as assert from "assert";
-import ObsidianOutlinerPlugin from "./src";
-
-import EnterOutdentIfLineIsEmptyFeature from "./tests/features/EnterOutdentIfLineIsEmptyFeature.test";
-import EnterShouldCreateNewlineOnChildLevelFeature from "./tests/features/EnterShouldCreateNewlineOnChildLevelFeature.test";
-import EnsureCursorInListContentFeature from "./tests/features/EnsureCursorInListContentFeature.test";
-import MoveCursorToPreviousUnfoldedLineFeature from "./tests/features/MoveCursorToPreviousUnfoldedLineFeature.test";
-import DeleteShouldIgnoreBulletsFeature from "./tests/features/DeleteShouldIgnoreBulletsFeature.test";
-import SelectionShouldIgnoreBulletsFeature from "./tests/features/SelectionShouldIgnoreBulletsFeature.test";
-import SelectAllFeature from "./tests/features/SelectAllFeature.test";
-import MoveItemsFeature from "./tests/features/MoveItemsFeature.test";
-
-interface IState {
-  selections: Array<{ from: CodeMirror.Position; to: CodeMirror.Position }>;
-  value: string;
-}
-
-interface ITestResult {
-  name: string;
-  passed: boolean;
-}
-
-interface ITestResults {
-  passed: number;
-  failed: number;
-  total: number;
-  tests: ITestResult[];
-}
-
-const tests = {
-  ...EnterOutdentIfLineIsEmptyFeature,
-  ...EnterShouldCreateNewlineOnChildLevelFeature,
-  ...EnsureCursorInListContentFeature,
-  ...MoveCursorToPreviousUnfoldedLineFeature,
-  ...DeleteShouldIgnoreBulletsFeature,
-  ...SelectionShouldIgnoreBulletsFeature,
-  ...SelectAllFeature,
-  ...MoveItemsFeature,
-};
+import ObsidianOutlinerPlugin from ".";
 
 export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlugin {
   private editor: CodeMirror.Editor;
@@ -108,15 +71,10 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
   async load() {
     await super.load();
 
-    (window as any).ObsidianOutlinerPlugin = {
-      runTests: this.runTests.bind(this),
-    };
-
-    if (process.env.RUN_OUTLINER_TESTS) {
+    if (process.env.TEST_PLATFORM) {
       setImmediate(async () => {
         await this.wait(1000);
-        const results = await this.runTests();
-        this.app.vault.create("results.json", JSON.stringify(results, null, 2));
+        this.connect();
       });
     }
   }
@@ -126,14 +84,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     delete (window as any).ObsidianOutlinerPlugin;
   }
 
-  async runTests(): Promise<ITestResults> {
-    const results: ITestResults = {
-      passed: 0,
-      failed: 0,
-      total: 0,
-      tests: [],
-    };
-
+  async prepareForTests() {
     const filePath = `test.md`;
     let file = this.app.vault
       .getMarkdownFiles()
@@ -141,45 +92,55 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     if (!file) {
       file = await this.app.vault.create(filePath, "");
     }
-    await this.wait(1000);
-    this.app.workspace.activeLeaf.openFile(file);
-    await this.wait(1000);
-
-    for (const [key, testFn] of Object.entries(tests)) {
-      const testResult: ITestResult = {
-        name: key,
-        passed: true,
-      };
-      this.editor = this.app.workspace.getActiveViewOfType(
-        MarkdownView
-      ).sourceMode.cmEditor;
-
-      const groupLabel = `> ${key}`;
-      mockConsole((invokeOriginal) => {
-        unmockConsole();
-        console.log(groupLabel);
-        invokeOriginal();
-      });
-      try {
-        this.applyState("|");
-        await testFn(this);
-      } catch (e) {
-        console.error(e);
-        testResult.passed = false;
+    for (let i = 0; i < 10; i++) {
+      await this.wait(1000);
+      if (this.app.workspace.activeLeaf) {
+        this.app.workspace.activeLeaf.openFile(file);
+        break;
       }
-      unmockConsole();
-      console.log(`${groupLabel} ${testResult.passed ? "SUCCESS" : "FAIL"}`);
-
-      results.tests.push(testResult);
-      if (testResult.passed) {
-        results.passed++;
-      } else {
-        results.failed++;
-      }
-      results.total++;
     }
+    await this.wait(1000);
+  }
 
-    return results;
+  async connect() {
+    await this.prepareForTests();
+
+    this.editor = this.app.workspace.getActiveViewOfType(
+      MarkdownView
+    ).sourceMode.cmEditor;
+
+    const ws = new WebSocket("ws://127.0.0.1:8080/");
+
+    ws.addEventListener("message", (event) => {
+      const { id, type, data } = JSON.parse(event.data);
+
+      let result;
+      let error;
+
+      try {
+        switch (type) {
+          case "applyState":
+            this.applyState(data);
+            break;
+          case "simulateKeydown":
+            this.simulateKeydown(data);
+            break;
+          case "executeCommandById":
+            this.executeCommandById(data);
+            break;
+          case "parseState":
+            result = this.parseState(data);
+            break;
+          case "getCurrentState":
+            result = this.getCurrentState();
+            break;
+        }
+      } catch (e) {
+        error = String(e);
+      }
+
+      ws.send(JSON.stringify({ id, data: result, error }));
+    });
   }
 
   applyState(state: string[]): void;
@@ -287,35 +248,5 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       selections: [{ from: acc.from, to: acc.to }],
       value: acc.lines.join("\n"),
     };
-  }
-}
-
-const consoleOrigins: typeof window.console = {
-  ...window.console,
-};
-
-function mockConsole(cb: (invokeOriginal: () => void) => void) {
-  for (const key in window.console) {
-    const k = key as keyof Console;
-
-    if (typeof console[k] === "function") {
-      console[k] = (...args: any[]) => {
-        const invokeOriginal = () => {
-          consoleOrigins[k](...args);
-        };
-
-        cb(invokeOriginal);
-      };
-    }
-  }
-}
-
-function unmockConsole() {
-  for (const key in window.console) {
-    const k = key as keyof Console;
-
-    if (typeof console[k] === "function") {
-      console[k] = consoleOrigins[k];
-    }
   }
 }
