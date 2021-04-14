@@ -49,4 +49,11 @@
   font-size: 24px;
   color: var(--text-muted);
   visibility: visible !important;
+  cursor: pointer;
+}
+
+.outliner-plugin-bls .cm-s-obsidian span.cm-formatting-list-ul:hover:before {
+  font-size: 42px;
+  margin-left: -8px;
+  margin-top: -21px;
 }

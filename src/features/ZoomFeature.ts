@@ -23,6 +23,10 @@ export class ZoomFeature implements IFeature {
       cm.on("beforeChange", this.handleBeforeChange);
       cm.on("change", this.handleChange);
       cm.on("beforeSelectionChange", this.handleBeforeSelectionChange);
+
+      this.plugin.registerDomEvent(cm.getWrapperElement(), "click", (e) =>
+        this.handleClick(cm, e)
+      );
     });
 
     this.plugin.addCommand({
@@ -61,6 +65,33 @@ export class ZoomFeature implements IFeature {
       cm.off("beforeChange", this.handleBeforeChange);
     });
   }
+
+  private handleClick = (cm: CodeMirror.Editor, e: MouseEvent) => {
+    const target = e.target as HTMLElement | null;
+
+    if (!target || !target.classList.contains("cm-formatting-list-ul")) {
+      return;
+    }
+
+    const pos = cm.coordsChar({
+      left: e.x,
+      top: e.y,
+    });
+
+    if (!pos) {
+      return;
+    }
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    this.zoomIn(cm, pos);
+
+    cm.setCursor({
+      line: pos.line,
+      ch: cm.getLine(pos.line).length,
+    });
+  };
 
   private handleBeforeChange = (
     cm: CodeMirror.Editor,
