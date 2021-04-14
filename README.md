@@ -99,6 +99,10 @@ Hide everything except the list and its children.
 | Zoom in to the current list item |            `Ctrl-.`            |        `Cmd-.`         |
 | Zoom out the entire document     |         `Ctrl-Shift-.`         |     `Cmd-Shift-.`      |
 
+| Setting                                | Default value |
+| -------------------------------------- | :-----------: |
+| Zooming in when clicking on the bullet |    `true`     |
+
 ### Debug mode
 
 Open DevTools (Command+Option+I or Control+Shift+I) to copy the debug logs.

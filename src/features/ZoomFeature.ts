@@ -1,6 +1,7 @@
 import { Plugin_2 } from "obsidian";
 import { ListUtils } from "src/list_utils";
 import { ObsidianUtils } from "src/obsidian_utils";
+import { Settings } from "src/settings";
 import { IFeature } from "../feature";
 
 class ZoomState {
@@ -12,6 +13,7 @@ export class ZoomFeature implements IFeature {
 
   constructor(
     private plugin: Plugin_2,
+    private settings: Settings,
     private obsidianUtils: ObsidianUtils,
     private listsUtils: ListUtils
   ) {
@@ -69,7 +71,11 @@ export class ZoomFeature implements IFeature {
   private handleClick = (cm: CodeMirror.Editor, e: MouseEvent) => {
     const target = e.target as HTMLElement | null;
 
-    if (!target || !target.classList.contains("cm-formatting-list-ul")) {
+    if (
+      !target ||
+      !this.settings.zoomOnClick ||
+      !target.classList.contains("cm-formatting-list-ul")
+    ) {
       return;
     }
 

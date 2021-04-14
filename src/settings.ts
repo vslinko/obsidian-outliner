@@ -5,6 +5,7 @@ export interface ObsidianOutlinerPluginSettings {
   debug: boolean;
   stickCursor: boolean;
   betterEnter: boolean;
+  zoomOnClick: boolean;
 }
 
 const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
@@ -12,6 +13,7 @@ const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
   debug: false,
   stickCursor: true,
   betterEnter: true,
+  zoomOnClick: true,
 };
 
 export interface Storage {
@@ -59,6 +61,13 @@ export class Settings implements ObsidianOutlinerPluginSettings {
   }
   set betterEnter(value: boolean) {
     this.set("betterEnter", value);
+  }
+
+  get zoomOnClick() {
+    return this.values.zoomOnClick;
+  }
+  set zoomOnClick(value: boolean) {
+    this.set("zoomOnClick", value);
   }
 
   onChange<T extends K>(key: T, cb: Callback<T>) {
@@ -141,6 +150,15 @@ export class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
       .addToggle((toggle) => {
         toggle.setValue(this.settings.betterEnter).onChange(async (value) => {
           this.settings.betterEnter = value;
+          await this.settings.save();
+        });
+      });
+
+    new Setting(containerEl)
+      .setName("Zooming in when clicking on the bullet")
+      .addToggle((toggle) => {
+        toggle.setValue(this.settings.zoomOnClick).onChange(async (value) => {
+          this.settings.zoomOnClick = value;
           await this.settings.save();
         });
       });

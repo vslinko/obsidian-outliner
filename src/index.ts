@@ -76,7 +76,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this.settings,
         this.listsUtils
       ),
-      new ZoomFeature(this, this.obsidianUtils, this.listsUtils),
+      new ZoomFeature(this, this.settings, this.obsidianUtils, this.listsUtils),
       new FoldFeature(this, this.obsidianUtils, this.listsUtils),
       new SelectAllFeature(this, this.obsidianUtils, this.listsUtils),
       new MoveItemsFeature(this, this.obsidianUtils, this.listsUtils),
