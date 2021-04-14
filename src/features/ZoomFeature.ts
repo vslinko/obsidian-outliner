@@ -25,11 +25,9 @@ export class ZoomFeature implements IFeature {
       cm.on("beforeChange", this.handleBeforeChange);
       cm.on("change", this.handleChange);
       cm.on("beforeSelectionChange", this.handleBeforeSelectionChange);
-
-      this.plugin.registerDomEvent(cm.getWrapperElement(), "click", (e) =>
-        this.handleClick(cm, e)
-      );
     });
+
+    this.plugin.registerDomEvent(window, "click", this.handleClick);
 
     this.plugin.addCommand({
       id: "zoom-in",
@@ -68,7 +66,7 @@ export class ZoomFeature implements IFeature {
     });
   }
 
-  private handleClick = (cm: CodeMirror.Editor, e: MouseEvent) => {
+  private handleClick = (e: MouseEvent) => {
     const target = e.target as HTMLElement | null;
 
     if (
@@ -79,7 +77,35 @@ export class ZoomFeature implements IFeature {
       return;
     }
 
-    const pos = cm.coordsChar({
+    let wrap = target;
+    while (wrap) {
+      if (wrap.classList.contains("CodeMirror-wrap")) {
+        break;
+      }
+      wrap = wrap.parentElement;
+    }
+
+    if (!wrap) {
+      return;
+    }
+
+    let foundEditor: CodeMirror.Editor | null = null;
+
+    this.plugin.app.workspace.iterateCodeMirrors((cm) => {
+      if (foundEditor) {
+        return;
+      }
+
+      if (cm.getWrapperElement() === wrap) {
+        foundEditor = cm;
+      }
+    });
+
+    if (!foundEditor) {
+      return;
+    }
+
+    const pos = foundEditor.coordsChar({
       left: e.x,
       top: e.y,
     });
@@ -91,11 +117,11 @@ export class ZoomFeature implements IFeature {
     e.preventDefault();
     e.stopPropagation();
 
-    this.zoomIn(cm, pos);
+    this.zoomIn(foundEditor, pos);
 
-    cm.setCursor({
+    foundEditor.setCursor({
       line: pos.line,
-      ch: cm.getLine(pos.line).length,
+      ch: foundEditor.getLine(pos.line).length,
     });
   };
 
