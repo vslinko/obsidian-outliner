@@ -2,6 +2,7 @@ import { Plugin_2 } from "obsidian";
 import { EditorUtils } from "src/editor_utils";
 import { IFeature } from "src/feature";
 import { ListUtils } from "src/list_utils";
+import { Root } from "src/root";
 import { Settings } from "src/settings";
 
 export class DeleteShouldIgnoreBulletsFeature implements IFeature {
@@ -28,7 +29,11 @@ export class DeleteShouldIgnoreBulletsFeature implements IFeature {
     cm: CodeMirror.Editor,
     changeObj: CodeMirror.EditorChangeCancellable
   ) => {
-    if (changeObj.origin !== "+delete" || !this.settings.stickCursor) {
+    if (
+      changeObj.origin !== "+delete" ||
+      !this.settings.stickCursor ||
+      !this.editorUtils.containsSingleCursor(cm)
+    ) {
       return;
     }
 
@@ -42,75 +47,86 @@ export class DeleteShouldIgnoreBulletsFeature implements IFeature {
     const listContentStartCh = list.getContentStartCh();
     const listContentEndCh = list.getContentEndCh();
 
-    const sameLine = changeObj.from.line === changeObj.to.line;
-    const nextLine = changeObj.from.line + 1 === changeObj.to.line;
-
-    if (
-      sameLine &&
-      changeObj.from.ch === listContentStartCh - 1 &&
-      changeObj.to.ch === listContentStartCh
-    ) {
-      changeObj.cancel();
-      this.backspace(cm);
-    } else if (sameLine && changeObj.from.ch < listContentStartCh) {
-      const from = {
-        line: changeObj.from.line,
-        ch: listContentStartCh,
-      };
-      changeObj.update(from, changeObj.to, changeObj.text);
-    } else if (
-      nextLine &&
-      changeObj.from.ch === listContentEndCh &&
-      changeObj.to.ch === 0
-    ) {
-      changeObj.cancel();
-      this.delete(cm);
+    if (this.isBackspaceOnContentStart(changeObj, listContentStartCh)) {
+      this.deleteItemAndMergeContentWithPreviousLine(cm, root, changeObj);
+    } else if (this.isDeletionIncludesBullet(changeObj, listContentStartCh)) {
+      this.limitDeleteRangeToContentRange(changeObj, listContentStartCh);
+    } else if (this.isDeleteOnLineEnd(changeObj, listContentEndCh)) {
+      this.deleteNextItemAndMergeContentWithCurrentLine(cm, root, changeObj);
     }
   };
 
-  private backspace(editor: CodeMirror.Editor) {
-    if (!this.editorUtils.containsSingleCursor(editor)) {
-      return false;
-    }
+  private isDeleteOnLineEnd(
+    changeObj: CodeMirror.EditorChangeCancellable,
+    listContentEndCh: number
+  ) {
+    return (
+      changeObj.from.line + 1 === changeObj.to.line &&
+      changeObj.from.ch === listContentEndCh &&
+      changeObj.to.ch === 0
+    );
+  }
 
-    const root = this.listsUtils.parseList(editor);
+  private isDeletionIncludesBullet(
+    changeObj: CodeMirror.EditorChangeCancellable,
+    listContentStartCh: number
+  ) {
+    return (
+      changeObj.from.line === changeObj.to.line &&
+      changeObj.from.ch < listContentStartCh
+    );
+  }
 
-    if (!root) {
-      return false;
-    }
+  private isBackspaceOnContentStart(
+    changeObj: CodeMirror.EditorChangeCancellable,
+    listContentStartCh: number
+  ) {
+    return (
+      changeObj.from.line === changeObj.to.line &&
+      changeObj.from.ch === listContentStartCh - 1 &&
+      changeObj.to.ch === listContentStartCh
+    );
+  }
 
+  private limitDeleteRangeToContentRange(
+    changeObj: CodeMirror.EditorChangeCancellable,
+    listContentStartCh: number
+  ) {
+    const from = {
+      line: changeObj.from.line,
+      ch: listContentStartCh,
+    };
+    changeObj.update(from, changeObj.to, changeObj.text);
+  }
+
+  private deleteItemAndMergeContentWithPreviousLine(
+    editor: CodeMirror.Editor,
+    root: Root,
+    changeObj: CodeMirror.EditorChangeCancellable
+  ) {
+    const list = root.getListUnderCursor();
     if (
-      root.getTotalLines() === 1 &&
-      root.getChildren()[0].getContent().length === 0
+      root.getListStartPosition().line === root.getLineNumberOf(list) &&
+      list.getChildren().length === 0
     ) {
-      editor.replaceRange(
-        "",
-        root.getListStartPosition(),
-        root.getListEndPosition()
-      );
-      return true;
+      return false;
     }
 
     const res = root.deleteAndMergeWithPrevious();
 
     if (res) {
+      changeObj.cancel();
       this.listsUtils.applyChanges(editor, root);
     }
 
     return res;
   }
 
-  private delete(editor: CodeMirror.Editor) {
-    if (!this.editorUtils.containsSingleCursor(editor)) {
-      return false;
-    }
-
-    const root = this.listsUtils.parseList(editor);
-
-    if (!root) {
-      return false;
-    }
-
+  private deleteNextItemAndMergeContentWithCurrentLine(
+    editor: CodeMirror.Editor,
+    root: Root,
+    changeObj: CodeMirror.EditorChangeCancellable
+  ) {
     const list = root.getListUnderCursor();
     const nextLineNo = root.getCursor().line + 1;
     const nextList = root.getListUnderLine(nextLineNo);
@@ -128,6 +144,7 @@ export class DeleteShouldIgnoreBulletsFeature implements IFeature {
     const reallyChanged = root.getCursor().line !== nextLineNo;
 
     if (reallyChanged) {
+      changeObj.cancel();
       this.listsUtils.applyChanges(editor, root);
     }
 

@@ -1,7 +1,7 @@
 import type ObsidianOutlinerPluginWithTests from "../../test";
 
 export default {
-  "backspace should remove line if it's last empty line": (plugin) => {
+  "backspace should work as regular if it's last empty line": (plugin) => {
     // arrange
     plugin.applyState(["- |"]);
 
@@ -9,7 +9,31 @@ export default {
     plugin.simulateKeydown("Backspace");
 
     // assert
-    plugin.assertCurrentState(["|"]);
+    plugin.assertCurrentState(["-|"]);
+  },
+  "backspace should work as regular if it's first line without children": (
+    plugin
+  ) => {
+    // arrange
+    plugin.applyState(["- |one", "- two"]);
+
+    // act
+    plugin.simulateKeydown("Backspace");
+
+    // assert
+    plugin.assertCurrentState(["-|one", "- two"]);
+  },
+  "backspace should do nothing if it's first line but with children": (
+    plugin
+  ) => {
+    // arrange
+    plugin.applyState(["- |one", "\t- two"]);
+
+    // act
+    plugin.simulateKeydown("Backspace");
+
+    // assert
+    plugin.assertCurrentState(["- |one", "\t- two"]);
   },
   "backspace should remove symbol if it isn't empty line": (plugin) => {
     // arrange
