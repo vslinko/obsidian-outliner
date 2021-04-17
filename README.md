@@ -50,12 +50,12 @@ If you liked the styles from the demo above, you can enable them in the plugin s
 
 Move lists with children wherever you want without breaking the structure.
 
-| Command                       | Default hotkey (Windows/Linux) | Default hotkey (MacOS) |
-| ----------------------------- | :----------------------------: | :--------------------: |
-| Move list and sublists up     |      `Ctrl-Shift-ArrowUp`      |  `Cmd-Shift-ArrowUp`   |
-| Move list and sublists down   |     `Ctrl-Shift-ArrowDown`     | `Cmd-Shift-ArrowDown`  |
-| Indent the list and sublists  |             `Tab`              |         `Tab`          |
-| Outdent the list and sublists |          `Shift-Tab`           |      `Shift-Tab`       |
+| Command                       |       Default hotkey (Windows/Linux)        |             Default hotkey (MacOS)             |
+| ----------------------------- | :-----------------------------------------: | :--------------------------------------------: |
+| Move list and sublists up     | <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>↑</kbd> | <kbd>Command</kbd><kbd>Shift</kbd><kbd>↑</kbd> |
+| Move list and sublists down   | <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>↓</kbd> | <kbd>Command</kbd><kbd>Shift</kbd><kbd>↓</kbd> |
+| Indent the list and sublists  |               <kbd>Tab</kbd>                |                 <kbd>Tab</kbd>                 |
+| Outdent the list and sublists |       <kbd>Shift</kbd><kbd>Tab</kbd>        |         <kbd>Shift</kbd><kbd>Tab</kbd>         |
 
 ### Stick the cursor to the content
 
@@ -75,18 +75,18 @@ Make the Enter key behave the same as other outliners.
 
 ### Fold and unfold your lists
 
-| Command         | Default hotkey (Windows/Linux) | Default hotkey (MacOS) |
-| --------------- | :----------------------------: | :--------------------: |
-| Fold the list   |         `Ctrl-ArrowUp`         |     `Cmd-ArrowUp`      |
-| Unfold the list |        `Ctrl-ArrowDown`        |    `Cmd-ArrowDown`     |
+| Command         | Default hotkey (Windows/Linux) |     Default hotkey (MacOS)     |
+| --------------- | :----------------------------: | :----------------------------: |
+| Fold the list   |  <kbd>Ctrl</kbd><kbd>↑</kbd>   | <kbd>Command</kbd><kbd>↑</kbd> |
+| Unfold the list |  <kbd>Ctrl</kbd><kbd>↓</kbd>   | <kbd>Command</kbd><kbd>↓</kbd> |
 
 ### Select a list item or the entire list
 
 Press the hotkey once to select the current list item. Press the hotkey twice to select the entire list.
 
-| Command                               | Default hotkey (Windows/Linux) | Default hotkey (MacOS) |
-| ------------------------------------- | :----------------------------: | :--------------------: |
-| Select a list item or the entire list |            `Ctrl-a`            |        `Cmd-a`         |
+| Command                               | Default hotkey (Windows/Linux) |     Default hotkey (MacOS)     |
+| ------------------------------------- | :----------------------------: | :----------------------------: |
+| Select a list item or the entire list |  <kbd>Ctrl</kbd><kbd>a</kbd>   | <kbd>Command</kbd><kbd>a</kbd> |
 
 ### Zoom in to a specific list item
 
@@ -94,10 +94,10 @@ Hide everything except the list and its children.
 
 ![Zoom Demo](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/demo2.gif)
 
-| Command                          | Default hotkey (Windows/Linux) | Default hotkey (MacOS) |
-| -------------------------------- | :----------------------------: | :--------------------: |
-| Zoom in to the current list item |            `Ctrl-.`            |        `Cmd-.`         |
-| Zoom out the entire document     |         `Ctrl-Shift-.`         |     `Cmd-Shift-.`      |
+| Command                          |       Default hotkey (Windows/Linux)        |             Default hotkey (MacOS)             |
+| -------------------------------- | :-----------------------------------------: | :--------------------------------------------: |
+| Zoom in to the current list item |         <kbd>Ctrl</kbd><kbd>.</kbd>         |         <kbd>Command</kbd><kbd>.</kbd>         |
+| Zoom out the entire document     | <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>.</kbd> | <kbd>Command</kbd><kbd>Shift</kbd><kbd>.</kbd> |
 
 | Setting                                | Default value |
 | -------------------------------------- | :-----------: |
