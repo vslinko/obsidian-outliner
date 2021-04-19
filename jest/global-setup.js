@@ -121,6 +121,10 @@ async function prepareVault() {
 }
 
 module.exports = async () => {
+  if (process.env.SKIP_OBSIDIAN) {
+    return;
+  }
+
   await prepareObsidian();
   await prepareVault();
 

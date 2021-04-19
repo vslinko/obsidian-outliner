@@ -3,11 +3,13 @@ import { Logger } from "./logger";
 import { ObsidianUtils } from "./obsidian_utils";
 import { IList, List, Root } from "./root";
 
+const bulletSign = "-*+";
+
 export class ListUtils {
   constructor(private logger: Logger, private obsidianUtils: ObsidianUtils) {}
 
   getListLineInfo(line: string, indentSign: string) {
-    const prefixRe = new RegExp(`^(?:${indentSign})*([-*]) `);
+    const prefixRe = new RegExp(`^(?:${indentSign})*([${bulletSign}]) `);
     const matches = prefixRe.exec(line);
 
     if (!matches) {
@@ -159,9 +161,9 @@ export class ListUtils {
 
     const line = editor.getLine(cursor.line);
 
-    const withTabsRe = /^\t+[-*] /;
-    const withSpacesRe = /^[ ]+[-*] /;
-    const mayBeWithSpacesRe = /^[ ]*[-*] /;
+    const withTabsRe = new RegExp(`^\t+[${bulletSign}] `);
+    const withSpacesRe = new RegExp(`^[ ]+[${bulletSign}] `);
+    const mayBeWithSpacesRe = new RegExp(`^[ ]*[${bulletSign}] `);
 
     if (withTabsRe.test(line)) {
       d("detected tab on current line");
