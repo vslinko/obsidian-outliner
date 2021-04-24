@@ -25,7 +25,7 @@ export class ListUtils {
     return matches[0].length;
   }
 
-  getListLineInfo(line: string, indentSign: string) {
+  private getListLineInfo(line: string, indentSign: string) {
     const prefixRe = new RegExp(`^(?:${indentSign})*([${bulletSign}]) `);
     const matches = prefixRe.exec(line);
 
