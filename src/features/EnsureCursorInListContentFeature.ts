@@ -32,21 +32,6 @@ export class EnsureCursorInListContentFeature implements IFeature {
       return;
     }
 
-    process.nextTick(() => {
-      const cursor = editor.getCursor();
-      const lineStartCursor = editor.coordsChar({
-        ...editor.cursorCoords(),
-        left: 0,
-      });
-
-      if (lineStartCursor.line !== cursor.line) {
-        editor.setCursor({
-          line: lineStartCursor.line,
-          ch: editor.getLine(lineStartCursor.line).length,
-        });
-      }
-    });
-
     const line = editor.getLine(cursor.line);
     const linePrefix = this.listsUtils.getListLineInfo(line, indentSign)
       .prefixLength;
@@ -57,12 +42,38 @@ export class EnsureCursorInListContentFeature implements IFeature {
     }
   }
 
+  private ensureCursorIsInUnfoldedLine(editor: CodeMirror.Editor) {
+    const cursor = editor.getCursor();
+
+    const mark = editor.findMarksAt(cursor).find((m) => (m as any).__isFold);
+
+    if (!mark) {
+      return;
+    }
+
+    const firstFoldingLine: CodeMirror.LineHandle = (mark as any).lines[0];
+
+    if (!firstFoldingLine) {
+      return;
+    }
+
+    const lineNo = editor.getLineNumber(firstFoldingLine);
+
+    if (lineNo !== cursor.line) {
+      editor.setCursor({
+        line: lineNo,
+        ch: editor.getLine(lineNo).length,
+      });
+    }
+  }
+
   private handleCursorActivity = (cm: CodeMirror.Editor) => {
     if (
       this.settings.stickCursor &&
       this.editorUtils.containsSingleCursor(cm) &&
       this.listsUtils.isCursorInList(cm)
     ) {
+      this.ensureCursorIsInUnfoldedLine(cm);
       this.ensureCursorInListContent(cm);
     }
   };
