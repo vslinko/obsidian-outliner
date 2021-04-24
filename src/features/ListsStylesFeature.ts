@@ -34,7 +34,7 @@ export class ListsStylesFeature implements IFeature {
   async unload() {
     clearInterval(this.interval);
     if (this.statusBarText.parentElement) {
-    this.statusBarText.parentElement.removeChild(this.statusBarText);
+      this.statusBarText.parentElement.removeChild(this.statusBarText);
     }
     this.settings.removeCallback(
       "zoomOnClick",
