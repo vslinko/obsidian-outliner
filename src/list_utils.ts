@@ -4,6 +4,13 @@ import { IList, List, Root } from "./root";
 
 const bulletSign = "-*+";
 
+const listItemWithTabsRe = new RegExp(`^\t+[${bulletSign}] `);
+const listItemWithSpacesRe = new RegExp(`^[ ]+[${bulletSign}] `);
+const listItemMayBeWithSpacesRe = new RegExp(`^[ ]*[${bulletSign}] `);
+const listItemWithoutSpacesRe = new RegExp(`^[${bulletSign}] `);
+const listItemRe = new RegExp(`^[ \t]*[${bulletSign}] `);
+const stringWithSpacesRe = new RegExp(`^[ \t]+`);
+
 export class ListUtils {
   constructor(private logger: Logger, private obsidianUtils: ObsidianUtils) {}
 
@@ -172,7 +179,10 @@ export class ListUtils {
     }
   }
 
-  detectListIndentSign(editor: CodeMirror.Editor, cursor: CodeMirror.Position) {
+  detectListIndentSign(
+    editor: CodeMirror.Editor,
+    cursor: CodeMirror.Position
+  ): string | null {
     const d = this.logger.bind("ObsidianOutlinerPlugin::detectListIndentSign");
 
     const { useTab, tabSize } = this.obsidianUtils.getObsidianTabsSettigns();
@@ -182,30 +192,31 @@ export class ListUtils {
 
     const line = editor.getLine(cursor.line);
 
-    const withTabsRe = new RegExp(`^\t+[${bulletSign}] `);
-    const withSpacesRe = new RegExp(`^[ ]+[${bulletSign}] `);
-    const mayBeWithSpacesRe = new RegExp(`^[ ]*[${bulletSign}] `);
-
-    if (withTabsRe.test(line)) {
+    if (listItemWithTabsRe.test(line)) {
       d("detected tab on current line");
       return "\t";
     }
 
-    if (withSpacesRe.test(line)) {
+    if (listItemWithSpacesRe.test(line)) {
       d("detected whitespaces on current line, trying to count");
       const spacesA = line.length - line.trimLeft().length;
 
       let lineNo = cursor.line - 1;
       while (lineNo >= editor.firstLine()) {
         const line = editor.getLine(lineNo);
-        if (!mayBeWithSpacesRe.test(line)) {
-          break;
+
+        if (listItemMayBeWithSpacesRe.test(line)) {
+          const spacesB = line.length - line.trimLeft().length;
+
+          if (spacesB < spacesA) {
+            const l = spacesA - spacesB;
+            d(`detected ${l} whitespaces`);
+            return new Array(l).fill(" ").join("");
+          }
         }
-        const spacesB = line.length - line.trimLeft().length;
-        if (spacesB < spacesA) {
-          const l = spacesA - spacesB;
-          d(`detected ${l} whitespaces`);
-          return new Array(l).fill(" ").join("");
+
+        if (line.trim().length > 0 && !stringWithSpacesRe.test(line)) {
+          break;
         }
 
         lineNo--;
@@ -215,25 +226,31 @@ export class ListUtils {
       return null;
     }
 
-    if (mayBeWithSpacesRe.test(line)) {
+    if (listItemWithoutSpacesRe.test(line)) {
       d("detected nothing on current line, looking forward");
       const spacesA = line.length - line.trimLeft().length;
 
       let lineNo = cursor.line + 1;
       while (lineNo <= editor.lastLine()) {
         const line = editor.getLine(lineNo);
-        if (withTabsRe.test(line)) {
+
+        if (listItemWithTabsRe.test(line)) {
           d("detected tab");
           return "\t";
         }
-        if (!mayBeWithSpacesRe.test(line)) {
-          break;
+
+        if (listItemMayBeWithSpacesRe.test(line)) {
+          const spacesB = line.length - line.trimLeft().length;
+
+          if (spacesB > spacesA) {
+            const l = spacesB - spacesA;
+            d(`detected ${l} whitespaces`);
+            return new Array(l).fill(" ").join("");
+          }
         }
-        const spacesB = line.length - line.trimLeft().length;
-        if (spacesB > spacesA) {
-          const l = spacesB - spacesA;
-          d(`detected ${l} whitespaces`);
-          return new Array(l).fill(" ").join("");
+
+        if (line.trim().length > 0 && !stringWithSpacesRe.test(line)) {
+          break;
         }
 
         lineNo++;
@@ -241,6 +258,28 @@ export class ListUtils {
 
       d(`detected nothing, using default useTab=${useTab} tabSize=${tabSize}`);
       return defaultIndentSign;
+    }
+
+    if (stringWithSpacesRe.test(line)) {
+      d(`detected notes, looking backward for list item`);
+      let lineNo = cursor.line - 1;
+      while (lineNo >= editor.firstLine()) {
+        const line = editor.getLine(lineNo);
+
+        if (listItemRe.test(line)) {
+          d(`found list item on line ${lineNo}`);
+          return this.detectListIndentSign(editor, {
+            line: lineNo,
+            ch: 0,
+          });
+        }
+
+        if (line.trim().length > 0 && !stringWithSpacesRe.test(line)) {
+          break;
+        }
+
+        lineNo--;
+      }
     }
 
     d("unable to detect");
