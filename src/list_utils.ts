@@ -14,6 +14,17 @@ const stringWithSpacesRe = new RegExp(`^[ \t]+`);
 export class ListUtils {
   constructor(private logger: Logger, private obsidianUtils: ObsidianUtils) {}
 
+  getListLinePrefixLength(line: string) {
+    const prefixRe = new RegExp(`^[ \t]*[${bulletSign}] `);
+    const matches = prefixRe.exec(line);
+
+    if (!matches) {
+      return null;
+    }
+
+    return matches[0].length;
+  }
+
   getListLineInfo(line: string, indentSign: string) {
     const prefixRe = new RegExp(`^(?:${indentSign})*([${bulletSign}]) `);
     const matches = prefixRe.exec(line);

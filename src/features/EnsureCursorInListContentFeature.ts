@@ -26,17 +26,10 @@ export class EnsureCursorInListContentFeature implements IFeature {
 
   private ensureCursorInListContent(editor: CodeMirror.Editor) {
     const cursor = editor.getCursor();
-    const indentSign = this.listsUtils.detectListIndentSign(editor, cursor);
-
-    if (indentSign === null) {
-      return;
-    }
-
     const line = editor.getLine(cursor.line);
-    const linePrefix = this.listsUtils.getListLineInfo(line, indentSign)
-      .prefixLength;
+    const linePrefix = this.listsUtils.getListLinePrefixLength(line);
 
-    if (cursor.ch < linePrefix) {
+    if (linePrefix !== null && cursor.ch < linePrefix) {
       cursor.ch = linePrefix;
       editor.setCursor(cursor);
     }
