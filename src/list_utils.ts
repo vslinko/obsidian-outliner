@@ -14,7 +14,7 @@ const stringWithSpacesRe = new RegExp(`^[ \t]+`);
 export class ListUtils {
   constructor(private logger: Logger, private obsidianUtils: ObsidianUtils) {}
 
-  getListLinePrefixLength(line: string) {
+  getListItemBulletPrefixLength(line: string) {
     const prefixRe = new RegExp(`^[ \t]*[${bulletSign}] `);
     const matches = prefixRe.exec(line);
 
@@ -25,24 +25,8 @@ export class ListUtils {
     return matches[0].length;
   }
 
-  private getListLineInfo(line: string, indentSign: string) {
-    const prefixRe = new RegExp(`^(?:${indentSign})*([${bulletSign}]) `);
-    const matches = prefixRe.exec(line);
-
-    if (!matches) {
-      return null;
-    }
-
-    const prefixLength = matches[0].length;
-    const bullet = matches[1];
-    const content = line.slice(prefixLength);
-    const indentLevel = (prefixLength - 2) / indentSign.length;
-
-    return {
-      bullet,
-      content,
-      indentLevel,
-    };
+  isCursorInList(editor: CodeMirror.Editor, cursor = editor.getCursor()) {
+    return this.detectListIndentSign(editor, cursor) !== null;
   }
 
   parseList(editor: CodeMirror.Editor, cursor = editor.getCursor()): Root {
@@ -189,7 +173,27 @@ export class ListUtils {
     }
   }
 
-  detectListIndentSign(
+  private getListLineInfo(line: string, indentSign: string) {
+    const prefixRe = new RegExp(`^(?:${indentSign})*([${bulletSign}]) `);
+    const matches = prefixRe.exec(line);
+
+    if (!matches) {
+      return null;
+    }
+
+    const prefixLength = matches[0].length;
+    const bullet = matches[1];
+    const content = line.slice(prefixLength);
+    const indentLevel = (prefixLength - 2) / indentSign.length;
+
+    return {
+      bullet,
+      content,
+      indentLevel,
+    };
+  }
+
+  private detectListIndentSign(
     editor: CodeMirror.Editor,
     cursor: CodeMirror.Position
   ): string | null {
@@ -294,9 +298,5 @@ export class ListUtils {
 
     d("unable to detect");
     return null;
-  }
-
-  isCursorInList(editor: CodeMirror.Editor) {
-    return this.detectListIndentSign(editor, editor.getCursor()) !== null;
   }
 }

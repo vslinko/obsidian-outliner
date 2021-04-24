@@ -27,7 +27,7 @@ export class EnsureCursorInListContentFeature implements IFeature {
   private ensureCursorInListContent(editor: CodeMirror.Editor) {
     const cursor = editor.getCursor();
     const line = editor.getLine(cursor.line);
-    const linePrefix = this.listsUtils.getListLinePrefixLength(line);
+    const linePrefix = this.listsUtils.getListItemBulletPrefixLength(line);
 
     if (linePrefix !== null && cursor.ch < linePrefix) {
       cursor.ch = linePrefix;

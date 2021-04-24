@@ -88,7 +88,7 @@ describe("detectListIndentSign", () => {
       cursor: { line: 0, ch: 0 },
     });
 
-    const indentSign = listUtils.detectListIndentSign(
+    const indentSign = (listUtils as any).detectListIndentSign(
       editor as any,
       editor.getCursor()
     );
@@ -103,7 +103,7 @@ describe("detectListIndentSign", () => {
       cursor: { line: 0, ch: 0 },
     });
 
-    const indentSign = listUtils.detectListIndentSign(
+    const indentSign = (listUtils as any).detectListIndentSign(
       editor as any,
       editor.getCursor()
     );
@@ -118,7 +118,7 @@ describe("detectListIndentSign", () => {
       cursor: { line: 0, ch: 0 },
     });
 
-    const indentSign = listUtils.detectListIndentSign(
+    const indentSign = (listUtils as any).detectListIndentSign(
       editor as any,
       editor.getCursor()
     );
@@ -133,7 +133,7 @@ describe("detectListIndentSign", () => {
       cursor: { line: 1, ch: 0 },
     });
 
-    const indentSign = listUtils.detectListIndentSign(
+    const indentSign = (listUtils as any).detectListIndentSign(
       editor as any,
       editor.getCursor()
     );
@@ -148,7 +148,7 @@ describe("detectListIndentSign", () => {
       cursor: { line: 3, ch: 4 },
     });
 
-    const indentSign = listUtils.detectListIndentSign(
+    const indentSign = (listUtils as any).detectListIndentSign(
       editor as any,
       editor.getCursor()
     );
@@ -163,7 +163,7 @@ describe("detectListIndentSign", () => {
       cursor: { line: 0, ch: 4 },
     });
 
-    const indentSign = listUtils.detectListIndentSign(
+    const indentSign = (listUtils as any).detectListIndentSign(
       editor as any,
       editor.getCursor()
     );
@@ -178,7 +178,7 @@ describe("detectListIndentSign", () => {
       cursor: { line: 3, ch: 4 },
     });
 
-    const indentSign = listUtils.detectListIndentSign(
+    const indentSign = (listUtils as any).detectListIndentSign(
       editor as any,
       editor.getCursor()
     );
@@ -193,7 +193,7 @@ describe("detectListIndentSign", () => {
       cursor: { line: 4, ch: 4 },
     });
 
-    const indentSign = listUtils.detectListIndentSign(
+    const indentSign = (listUtils as any).detectListIndentSign(
       editor as any,
       editor.getCursor()
     );
@@ -208,7 +208,7 @@ describe("detectListIndentSign", () => {
       cursor: { line: 3, ch: 4 },
     });
 
-    const indentSign = listUtils.detectListIndentSign(
+    const indentSign = (listUtils as any).detectListIndentSign(
       editor as any,
       editor.getCursor()
     );
