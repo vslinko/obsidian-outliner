@@ -42,8 +42,16 @@ export class List implements IList {
     return this.isFolded();
   }
 
+  getBullet() {
+    return this.bullet;
+  }
+
   getChildren() {
     return this.children.concat();
+  }
+
+  setContent(content: string) {
+    this.content = content;
   }
 
   appendContent(content: string) {
@@ -303,27 +311,6 @@ export class Root implements IList {
     return true;
   }
 
-  createNewlineOnChildLevel() {
-    const list = this.getListUnderCursor();
-
-    if (list.isEmpty()) {
-      return false;
-    }
-
-    if (this.cursor.ch !== list.getContentEndCh()) {
-      return false;
-    }
-
-    const newList = list.getChildren()[0].copy({ content: "", folded: false });
-
-    list.addBeforeAll(newList);
-
-    this.cursor.line = this.getLineNumberOf(newList);
-    this.cursor.ch = newList.getContentStartCh();
-
-    return true;
-  }
-
   moveDown() {
     const list = this.getListUnderCursor();
     const parent = list.getParent();
@@ -414,6 +401,42 @@ export class Root implements IList {
       this.cursor.line = this.getLineNumberOf(prev);
       this.cursor.ch = prevEndCh;
     }
+
+    return true;
+  }
+
+  enter() {
+    const list = this.getListUnderCursor();
+
+    if (list.getContent() === "") {
+      return false;
+    }
+
+    const bullet = list.isEmpty()
+      ? list.getBullet()
+      : list.getChildren()[0].getBullet();
+
+    const diff = this.cursor.ch - list.getContentStartCh();
+    const oldListContent =
+      diff > 0 ? list.getContent().slice(0, diff) : list.getContent();
+    const newListContent = diff > 0 ? list.getContent().slice(diff) : "";
+    const newList = new List(
+      this.getIndentSign(),
+      bullet,
+      newListContent,
+      list.isFolded()
+    );
+
+    if (list.isEmpty()) {
+      list.getParent().addAfter(list, newList);
+    } else {
+      list.addBeforeAll(newList);
+    }
+
+    list.setContent(oldListContent);
+
+    this.cursor.line = this.getLineNumberOf(newList);
+    this.cursor.ch = newList.getContentStartCh();
 
     return true;
   }

@@ -49,7 +49,7 @@ export class EnterShouldCreateNewlineOnChildLevelFeature implements IFeature {
       return;
     }
 
-    const worked = root.createNewlineOnChildLevel();
+    const worked = root.enter();
 
     if (worked) {
       e.preventDefault();

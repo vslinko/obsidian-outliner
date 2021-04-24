@@ -41,7 +41,6 @@ export class ListUtils {
     return {
       bullet,
       content,
-      prefixLength,
       indentLevel,
     };
   }
