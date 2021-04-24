@@ -252,21 +252,15 @@ export class ZoomFeature implements IFeature {
 
     this.zoomOut(editor);
 
-    const { indentLevel } = this.listsUtils.getListLineInfo(
-      editor.getLine(lineNo),
-      root.getIndentSign()
-    );
+    const indentLevel = root.getListUnderLine(lineNo).getLevel();
 
     let after = false;
     for (let i = editor.firstLine(), l = editor.lastLine(); i <= l; i++) {
       if (i < lineNo) {
         editor.addLineClass(i, "wrap", "outliner-plugin-hidden-row");
       } else if (i > lineNo && !after) {
-        const afterLineInfo = this.listsUtils.getListLineInfo(
-          editor.getLine(i),
-          root.getIndentSign()
-        );
-        after = !afterLineInfo || afterLineInfo.indentLevel <= indentLevel;
+        const afterLineList = root.getListUnderLine(i);
+        after = !afterLineList || afterLineList.getLevel() <= indentLevel;
       }
 
       if (after) {
