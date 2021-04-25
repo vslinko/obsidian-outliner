@@ -22,19 +22,6 @@ export class MoveCursorToPreviousUnfoldedLineFeature implements IFeature {
     });
   }
 
-  private iterateWhileFolded(
-    editor: CodeMirror.Editor,
-    pos: CodeMirror.Position,
-    inc: (pos: CodeMirror.Position) => void
-  ) {
-    let folded = false;
-    do {
-      inc(pos);
-      folded = (editor as any).isFolded(pos);
-    } while (folded);
-    return pos;
-  }
-
   private handleBeforeSelectionChange = (
     cm: CodeMirror.Editor,
     changeObj: CodeMirror.EditorSelectionChange
@@ -61,7 +48,7 @@ export class MoveCursorToPreviousUnfoldedLineFeature implements IFeature {
       return;
     }
 
-    const root = this.listsUtils.parseList(cm);
+    const root = this.listsUtils.parseListNew(cm);
 
     if (!root) {
       return;
@@ -69,23 +56,36 @@ export class MoveCursorToPreviousUnfoldedLineFeature implements IFeature {
 
     const list = root.getListUnderCursor();
     const listContentStartCh = list.getContentStartCh();
+    const listStartLine = root.getContentLinesRangeOf(list)[0];
 
     if (
+      cursor.line === listStartLine &&
       cursor.ch === listContentStartCh &&
       range.anchor.ch === listContentStartCh - 1
     ) {
-      const newCursor = this.iterateWhileFolded(
-        cm,
-        {
-          line: cursor.line,
-          ch: 0,
-        },
-        (pos) => {
-          pos.line--;
-          pos.ch = cm.getLine(pos.line).length - 1;
+      let newCursor = {
+        line: cursor.line - 1,
+        ch: cm.getLine(cursor.line - 1).length,
+      };
+
+      const foldMark = cm
+        .findMarksAt(newCursor)
+        .find((m) => (m as any).__isFold);
+
+      if (foldMark) {
+        const firstFoldingLine: CodeMirror.LineHandle = (foldMark as any)
+          .lines[0];
+
+        if (firstFoldingLine) {
+          const firstFoldingLineNo = cm.getLineNumber(firstFoldingLine);
+
+          newCursor = {
+            line: firstFoldingLineNo,
+            ch: cm.getLine(firstFoldingLineNo).length,
+          };
         }
-      );
-      newCursor.ch++;
+      }
+
       range.anchor.line = newCursor.line;
       range.anchor.ch = newCursor.ch;
       range.head.line = newCursor.line;
