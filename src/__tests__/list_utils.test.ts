@@ -1,43 +1,102 @@
 import { ListUtils } from "../list_utils";
+import { Logger } from "../logger";
+import { ObsidianUtils } from "../obsidian_utils";
+import { makeEditor, makeLogger, makeObsidianUtils } from "../test_utils";
 
-interface EditorMockParams {
-  text: string;
-  cursor: { line: number; ch: number };
-}
-
-function makeEditor(params: EditorMockParams) {
-  let text = params.text;
-  let cursor = { ...params.cursor };
-
-  const editor = {
-    getCursor: () => cursor,
-    getLine: (l: number) => text.split("\n")[l],
-    firstLine: () => 0,
-    lastLine: () => text.split("\n").length - 1,
-    lineCount: () => text.split("\n").length,
-    isFolded: (l: number) => false,
-  };
-
-  return editor;
-}
-
-function makeListUtils(options: { useTab?: boolean; tabSize?: number } = {}) {
-  const { useTab, tabSize } = {
-    useTab: true,
-    tabSize: 4,
+export function makeListUtils(
+  options: { logger?: Logger; obsidianUtils?: ObsidianUtils } = {}
+) {
+  const { logger, obsidianUtils } = {
+    logger: makeLogger(),
+    obsidianUtils: makeObsidianUtils(),
     ...options,
-  };
-  const logger: any = {
-    bind: jest.fn().mockReturnValue(jest.fn()),
-  };
-  const obsidianUtils: any = {
-    getObsidianTabsSettigns: jest.fn().mockReturnValue({ useTab, tabSize }),
   };
 
   const listUtils = new ListUtils(logger, obsidianUtils);
 
   return listUtils;
 }
+
+describe("parseListNew", () => {
+  test("should parse list with notes and sublists", () => {
+    const listUtils = makeListUtils();
+    const editor = makeEditor({
+      text: "- one\n  side\n\t- two\n\t\t- three\n\t- four",
+      cursor: { line: 0, ch: 0 },
+    });
+
+    const list = listUtils.parseListNew(editor as any);
+
+    expect(list).toBeDefined();
+    expect(list).toMatchObject(
+      expect.objectContaining({
+        rootList: expect.objectContaining({
+          children: [
+            expect.objectContaining({
+              indent: "",
+              bullet: "-",
+              content: "one\n  side",
+              children: [
+                expect.objectContaining({
+                  indent: "\t",
+                  bullet: "-",
+                  content: "two",
+                  children: [
+                    expect.objectContaining({
+                      indent: "\t\t",
+                      bullet: "-",
+                      content: "three",
+                    }),
+                  ],
+                }),
+                expect.objectContaining({
+                  indent: "\t",
+                  bullet: "-",
+                  content: "four",
+                }),
+              ],
+            }),
+          ],
+        }),
+      })
+    );
+    expect(list.print()).toBe("- one\n  side\n\t- two\n\t\t- three\n\t- four");
+  });
+
+  test("should error if indent is not match 1", () => {
+    const logger = makeLogger();
+    const listUtils = makeListUtils({ logger });
+    const editor = makeEditor({
+      text: "- one\n  - two\n\t- three",
+      cursor: { line: 0, ch: 0 },
+    });
+
+    const list = listUtils.parseListNew(editor as any);
+
+    expect(list).toBeNull();
+    expect(logger.log).toBeCalledWith(
+      "parseListNew",
+      `Unable to parse list: expected indent "S", got "T"`
+    );
+  });
+
+  test("should error if indent is not match 2", () => {
+    const logger = makeLogger();
+    const listUtils = makeListUtils({ logger });
+    const editor = makeEditor({
+      text: "- one\n\t- two\n  - three",
+      cursor: { line: 0, ch: 0 },
+    });
+
+    const list = listUtils.parseListNew(editor as any);
+
+    expect(list).toBeNull();
+    expect(logger.log).toBeCalledWith(
+      "parseListNew",
+      `Unable to parse list: expected indent "T", got "S"`
+    );
+  });
+});
 
 describe("parseList", () => {
   test("should parse list with dash bullet", () => {
@@ -82,7 +141,8 @@ describe("parseList", () => {
 
 describe("detectListIndentSign", () => {
   test("should detect default (tab) on single list item", () => {
-    const listUtils = makeListUtils({ useTab: true, tabSize: 4 });
+    const obsidianUtils = makeObsidianUtils({ useTab: true, tabSize: 4 });
+    const listUtils = makeListUtils({ obsidianUtils });
     const editor = makeEditor({
       text: "- qwe",
       cursor: { line: 0, ch: 0 },
@@ -97,7 +157,8 @@ describe("detectListIndentSign", () => {
   });
 
   test("should detect default (spaces) on single list item", () => {
-    const listUtils = makeListUtils({ useTab: false, tabSize: 4 });
+    const obsidianUtils = makeObsidianUtils({ useTab: false, tabSize: 4 });
+    const listUtils = makeListUtils({ obsidianUtils });
     const editor = makeEditor({
       text: "- qwe",
       cursor: { line: 0, ch: 0 },
@@ -142,7 +203,8 @@ describe("detectListIndentSign", () => {
   });
 
   test("should detect when cursor on note", () => {
-    const listUtils = makeListUtils({ useTab: false, tabSize: 4 });
+    const obsidianUtils = makeObsidianUtils({ useTab: false, tabSize: 4 });
+    const listUtils = makeListUtils({ obsidianUtils });
     const editor = makeEditor({
       text: "- qwe\n  - qwe\n    qwe\n    qwe\n  - qwe",
       cursor: { line: 3, ch: 4 },
@@ -157,7 +219,8 @@ describe("detectListIndentSign", () => {
   });
 
   test("should detect spaces looking forward skipping notes", () => {
-    const listUtils = makeListUtils({ useTab: false, tabSize: 4 });
+    const obsidianUtils = makeObsidianUtils({ useTab: false, tabSize: 4 });
+    const listUtils = makeListUtils({ obsidianUtils });
     const editor = makeEditor({
       text: "- qwe\n  qwe\n  qwe\n  - qwe",
       cursor: { line: 0, ch: 4 },
@@ -172,7 +235,8 @@ describe("detectListIndentSign", () => {
   });
 
   test("should detect spaces looking backward skipping notes", () => {
-    const listUtils = makeListUtils({ useTab: false, tabSize: 4 });
+    const obsidianUtils = makeObsidianUtils({ useTab: false, tabSize: 4 });
+    const listUtils = makeListUtils({ obsidianUtils });
     const editor = makeEditor({
       text: "- qwe\n  qwe\n  qwe\n  - qwe",
       cursor: { line: 3, ch: 4 },
@@ -187,7 +251,8 @@ describe("detectListIndentSign", () => {
   });
 
   test("should not detect if list breaks with other content", () => {
-    const listUtils = makeListUtils({ useTab: false, tabSize: 4 });
+    const obsidianUtils = makeObsidianUtils({ useTab: false, tabSize: 4 });
+    const listUtils = makeListUtils({ obsidianUtils });
     const editor = makeEditor({
       text: "- one\n  - two\n\ntext\n  some",
       cursor: { line: 4, ch: 4 },
@@ -202,7 +267,8 @@ describe("detectListIndentSign", () => {
   });
 
   test("should detect when cursor on note and blank lines", () => {
-    const listUtils = makeListUtils({ useTab: false, tabSize: 4 });
+    const obsidianUtils = makeObsidianUtils({ useTab: false, tabSize: 4 });
+    const listUtils = makeListUtils({ obsidianUtils });
     const editor = makeEditor({
       text: "- one\n  - two\n\n    some",
       cursor: { line: 3, ch: 4 },

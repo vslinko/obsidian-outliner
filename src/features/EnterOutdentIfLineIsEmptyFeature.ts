@@ -39,7 +39,7 @@ export class EnterOutdentIfLineIsEmptyFeature implements IFeature {
       return false;
     }
 
-    const root = this.listUtils.parseList(editor);
+    const root = this.listUtils.parseListNew(editor);
 
     if (!root) {
       return false;

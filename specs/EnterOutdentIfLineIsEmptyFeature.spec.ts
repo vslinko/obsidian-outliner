@@ -17,6 +17,22 @@ test("enter should outdent line if line is empty", async () => {
   ]);
 });
 
+test("enter should outdent line if line is empty and previous line has notes", async () => {
+  // arrange
+  await applyState(["- one", "\t- two", "\t\tnote", "\t\t- |"]);
+
+  // act
+  await simulateKeydown("Enter");
+
+  // assert
+  await expect(await getCurrentState()).toEqualEditorState([
+    "- one",
+    "\t- two",
+    "\t\tnote",
+    "\t- |",
+  ]);
+});
+
 test("enter should delete list item if it's last item and it's on the top level", async () => {
   // arrange
   await applyState(["- one", "- |"]);
