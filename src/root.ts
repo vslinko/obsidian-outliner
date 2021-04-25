@@ -34,6 +34,10 @@ export class NewList {
     return this.content;
   }
 
+  getContentStartCh() {
+    return this.indent.length + this.bullet.length + 1;
+  }
+
   isFolded() {
     return this.folded;
   }
@@ -72,8 +76,21 @@ export class NewList {
     return this.indent;
   }
 
+  getBullet() {
+    return this.bullet;
+  }
+
   getParent() {
     return this.parent;
+  }
+
+  setContent(content: string) {
+    this.content = content;
+  }
+
+  addBeforeAll(list: NewList) {
+    this.children.unshift(list);
+    list.parent = this;
   }
 
   addAfterAll(list: NewList) {
@@ -95,6 +112,10 @@ export class NewList {
 
   appendContent(content: string) {
     this.content += content;
+  }
+
+  isEmpty() {
+    return this.children.length === 0;
   }
 
   print() {
@@ -242,6 +263,61 @@ export class NewRoot {
     }
 
     return res.replace(/\n$/, "");
+  }
+
+  private enterOnItem(list: NewList) {
+    const indent = list.isEmpty()
+      ? list.getIndent()
+      : list.getChildren()[0].getIndent();
+
+    const bullet = list.isEmpty()
+      ? list.getBullet()
+      : list.getChildren()[0].getBullet();
+
+    const fullContent = list.getContent();
+    const newlineIndex = fullContent.indexOf("\n");
+    const itemContent = fullContent.slice(0, newlineIndex);
+    const notesContent = fullContent.slice(newlineIndex);
+
+    const diff = this.cursor.ch - list.getContentStartCh();
+    const oldListContent = diff > 0 ? itemContent.slice(0, diff) : itemContent;
+    const newListContent = diff > 0 ? itemContent.slice(diff) : "";
+
+    const newList = new NewList(
+      indent,
+      bullet,
+      newListContent,
+      list.isFolded()
+    );
+
+    if (list.isEmpty()) {
+      list.getParent().addAfter(list, newList);
+    } else {
+      list.addBeforeAll(newList);
+    }
+
+    list.setContent(oldListContent + notesContent);
+
+    this.cursor.line = this.getContentLinesRangeOf(newList)[0];
+    this.cursor.ch = newList.getContentStartCh();
+
+    return true;
+  }
+
+  enter() {
+    const list = this.getListUnderCursor();
+
+    if (list.getContent() === "") {
+      return false;
+    }
+
+    const listStartLine = this.getContentLinesRangeOf(list)[0];
+
+    if (listStartLine === this.cursor.line) {
+      return this.enterOnItem(list);
+    }
+
+    return false;
   }
 }
 

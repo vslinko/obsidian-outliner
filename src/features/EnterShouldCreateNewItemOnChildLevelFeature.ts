@@ -14,7 +14,7 @@ function isEnter(e: KeyboardEvent) {
   );
 }
 
-export class EnterShouldCreateNewlineOnChildLevelFeature implements IFeature {
+export class EnterShouldCreateNewItemOnChildLevelFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
     private settings: Settings,
@@ -43,7 +43,7 @@ export class EnterShouldCreateNewlineOnChildLevelFeature implements IFeature {
       return;
     }
 
-    const root = this.listUtils.parseList(cm);
+    const root = this.listUtils.parseListNew(cm);
 
     if (!root) {
       return;
