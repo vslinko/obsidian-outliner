@@ -124,4 +124,5 @@ or help with further development, you can donate in one of the following ways:
 I want to say thank you to the people who support me, I really appreciate it!
 
 - [Lucas D](https://twitter.com/lucasdreier)
+- Philipp K.
 - more patrons and anonymous supporters
