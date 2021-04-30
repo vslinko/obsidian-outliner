@@ -125,4 +125,5 @@ I want to say thank you to the people who support me, I really appreciate it!
 
 - [Lucas D](https://twitter.com/lucasdreier)
 - Philipp K.
+- [Daniel B.](https://github.com/danieltomasz)
 - more patrons and anonymous supporters
