@@ -5,7 +5,7 @@ import { IFeature } from "../feature";
 
 function isCmdA(e: KeyboardEvent) {
   return (
-    e.code === "KeyA" &&
+    e.keyCode === 65 &&
     e.shiftKey === false &&
     e.metaKey === true &&
     e.altKey === false &&
@@ -15,7 +15,7 @@ function isCmdA(e: KeyboardEvent) {
 
 function isCtrlA(e: KeyboardEvent) {
   return (
-    e.code === "KeyA" &&
+    e.keyCode === 65 &&
     e.shiftKey === false &&
     e.metaKey === false &&
     e.altKey === false &&

@@ -71,6 +71,8 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
   async load() {
     await super.load();
 
+    (window as any).ObsidianOutlinerPlugin = this;
+
     if (process.env.TEST_PLATFORM) {
       setImmediate(async () => {
         await this.wait(1000);
@@ -100,14 +102,14 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       }
     }
     await this.wait(1000);
-  }
-
-  async connect() {
-    await this.prepareForTests();
 
     this.editor = this.app.workspace.getActiveViewOfType(
       MarkdownView
     ).sourceMode.cmEditor;
+  }
+
+  async connect() {
+    await this.prepareForTests();
 
     const ws = new WebSocket("ws://127.0.0.1:8080/");
 

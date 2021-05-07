@@ -7,7 +7,7 @@ test("obsidian-outliner:select-all should select list item content", async () =>
   await applyState(["- one", "\t- two|"]);
 
   // act
-  await executeCommandById("obsidian-outliner:select-all");
+  await simulateKeydown("Cmd-A");
 
   // assert
   await expect(await getCurrentState()).toEqualEditorState([
@@ -21,8 +21,8 @@ test("obsidian-outliner:select-all should select list whole list after second in
   await applyState(["a", "- one", "\t- two|", "b"]);
 
   // act
-  await executeCommandById("obsidian-outliner:select-all");
-  await executeCommandById("obsidian-outliner:select-all");
+  await simulateKeydown("Cmd-A");
+  await simulateKeydown("Cmd-A");
 
   // assert
   await expect(await getCurrentState()).toEqualEditorState([
