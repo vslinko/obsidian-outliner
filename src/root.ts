@@ -319,7 +319,7 @@ export class Root implements IList {
     parent.removeChild(list);
     grandParent.addAfter(parent, list);
     this.cursor.line = this.getLineNumberOf(list);
-    this.cursor.ch--;
+    this.cursor.ch -= this.getIndentSign().length;
 
     return true;
   }
@@ -336,7 +336,7 @@ export class Root implements IList {
     parent.removeChild(list);
     prev.addAfterAll(list);
     this.cursor.line = this.getLineNumberOf(list);
-    this.cursor.ch++;
+    this.cursor.ch += this.getIndentSign().length;
 
     return true;
   }

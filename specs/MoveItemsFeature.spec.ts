@@ -71,6 +71,21 @@ test("obsidian-outliner:indent-list should not indent line if it's no parent", a
   ]);
 });
 
+test("obsidian-outliner:indent-list should keep cursor at the same text position", async () => {
+  // arrange
+  await applyState(["- qwe", "  - qwe", "  - q|we"]);
+
+  // act
+  await executeCommandById("obsidian-outliner:indent-list");
+
+  // assert
+  await expect(await getCurrentState()).toEqualEditorState([
+    "- qwe",
+    "  - qwe",
+    "    - q|we",
+  ]);
+});
+
 test("obsidian-outliner:move-list-item-down should move line down", async () => {
   // arrange
   await applyState(["- one|", "- two"]);
