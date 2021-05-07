@@ -1,4 +1,4 @@
-import { Platform, Plugin_2 } from "obsidian";
+import { Plugin_2 } from "obsidian";
 import { ListUtils } from "src/list_utils";
 import { Settings } from "src/settings";
 import { IFeature } from "../feature";
@@ -24,7 +24,7 @@ function isCtrlA(e: KeyboardEvent) {
 }
 
 function isSelectAll(e: KeyboardEvent) {
-  return Platform.isMacOS ? isCmdA(e) : isCtrlA(e);
+  return process.platform === "darwin" ? isCmdA(e) : isCtrlA(e);
 }
 
 export class SelectAllFeature implements IFeature {
