@@ -67,7 +67,12 @@ Don't let the cursor move to the bullet position.
 
 ### Enhance the Enter key
 
-Make the Enter key behave the same as other outliners.
+Make the Enter key behave the same as other outliners:
+
+- Enter outdents list item if it's empty.
+- Enter creates new line on children level if there are any children.
+
+[More info](https://github.com/vslinko/obsidian-outliner/discussions/98#discussioncomment-649514)
 
 | Setting               | Default value |
 | --------------------- | :-----------: |
