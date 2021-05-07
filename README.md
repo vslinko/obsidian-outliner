@@ -85,13 +85,13 @@ Make the Enter key behave the same as other outliners:
 | Fold the list   |  <kbd>Ctrl</kbd><kbd>↑</kbd>   | <kbd>Command</kbd><kbd>↑</kbd> |
 | Unfold the list |  <kbd>Ctrl</kbd><kbd>↓</kbd>   | <kbd>Command</kbd><kbd>↓</kbd> |
 
-### Select a list item or the entire list
+### Enhance the <kbd>Ctrl</kbd><kbd>A</kbd> or <kbd>Cmd</kbd><kbd>A</kbd> behavior
 
 Press the hotkey once to select the current list item. Press the hotkey twice to select the entire list.
 
-| Command                               | Default hotkey (Windows/Linux) |     Default hotkey (MacOS)     |
-| ------------------------------------- | :----------------------------: | :----------------------------: |
-| Select a list item or the entire list |  <kbd>Ctrl</kbd><kbd>a</kbd>   | <kbd>Command</kbd><kbd>a</kbd> |
+| Setting                              | Default value |
+| ------------------------------------ | :-----------: |
+| Enhance the Ctrl+A or Cmd+A behavior |    `true`     |
 
 ### Zoom in to a specific list item
 

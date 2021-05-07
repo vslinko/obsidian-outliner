@@ -5,6 +5,7 @@ export interface ObsidianOutlinerPluginSettings {
   debug: boolean;
   stickCursor: boolean;
   betterEnter: boolean;
+  selectAll: boolean;
   zoomOnClick: boolean;
 }
 
@@ -13,6 +14,7 @@ const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
   debug: false,
   stickCursor: true,
   betterEnter: true,
+  selectAll: true,
   zoomOnClick: true,
 };
 
@@ -61,6 +63,13 @@ export class Settings implements ObsidianOutlinerPluginSettings {
   }
   set betterEnter(value: boolean) {
     this.set("betterEnter", value);
+  }
+
+  get selectAll() {
+    return this.values.selectAll;
+  }
+  set selectAll(value: boolean) {
+    this.set("selectAll", value);
   }
 
   get zoomOnClick() {
@@ -150,6 +159,18 @@ export class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
       .addToggle((toggle) => {
         toggle.setValue(this.settings.betterEnter).onChange(async (value) => {
           this.settings.betterEnter = value;
+          await this.settings.save();
+        });
+      });
+
+    new Setting(containerEl)
+      .setName("Enhance the Ctrl+A or Cmd+A behavior")
+      .setDesc(
+        "Press the hotkey once to select the current list item. Press the hotkey twice to select the entire list."
+      )
+      .addToggle((toggle) => {
+        toggle.setValue(this.settings.selectAll).onChange(async (value) => {
+          this.settings.selectAll = value;
           await this.settings.save();
         });
       });

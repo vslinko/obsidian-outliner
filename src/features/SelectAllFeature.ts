@@ -1,32 +1,63 @@
-import { Plugin_2 } from "obsidian";
+import { Platform, Plugin_2 } from "obsidian";
 import { ListUtils } from "src/list_utils";
-import { ObsidianUtils } from "src/obsidian_utils";
+import { Settings } from "src/settings";
 import { IFeature } from "../feature";
+
+function isCmdA(e: KeyboardEvent) {
+  return (
+    e.code === "KeyA" &&
+    e.shiftKey === false &&
+    e.metaKey === true &&
+    e.altKey === false &&
+    e.ctrlKey === false
+  );
+}
+
+function isCtrlA(e: KeyboardEvent) {
+  return (
+    e.code === "KeyA" &&
+    e.shiftKey === false &&
+    e.metaKey === false &&
+    e.altKey === false &&
+    e.ctrlKey === true
+  );
+}
+
+function isSelectAll(e: KeyboardEvent) {
+  return Platform.isMacOS ? isCmdA(e) : isCtrlA(e);
+}
 
 export class SelectAllFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
-    private obsidianUtils: ObsidianUtils,
+    private settings: Settings,
     private listsUtils: ListUtils
   ) {}
 
   async load() {
-    this.plugin.addCommand({
-      id: "select-all",
-      name: "Select a list item or the entire list",
-      callback: this.obsidianUtils.createCommandCallback(
-        this.selectAll.bind(this)
-      ),
-      hotkeys: [
-        {
-          modifiers: ["Mod"],
-          key: "a",
-        },
-      ],
+    this.plugin.registerCodeMirror((cm) => {
+      cm.on("keydown", this.onKeyDown);
     });
   }
 
-  async unload() {}
+  async unload() {
+    this.plugin.app.workspace.iterateCodeMirrors((cm) => {
+      cm.off("keydown", this.onKeyDown);
+    });
+  }
+
+  onKeyDown = (cm: CodeMirror.Editor, event: KeyboardEvent) => {
+    if (!this.settings.selectAll || !isSelectAll(event)) {
+      return;
+    }
+
+    const worked = this.selectAll(cm);
+
+    if (worked) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  };
 
   private selectAll(editor: CodeMirror.Editor) {
     const selections = editor.listSelections();
