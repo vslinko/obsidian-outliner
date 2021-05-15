@@ -75,7 +75,7 @@ export class MoveItemsFeature implements IFeature {
     editor: CodeMirror.Editor,
     cb: (root: NewRoot) => boolean
   ): boolean {
-    const root = this.listsUtils.parseListNew(editor);
+    const root = this.listsUtils.parseList(editor);
 
     if (!root) {
       return false;

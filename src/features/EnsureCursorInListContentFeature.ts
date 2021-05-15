@@ -26,7 +26,7 @@ export class EnsureCursorInListContentFeature implements IFeature {
 
   private ensureCursorInListContent(editor: CodeMirror.Editor) {
     const cursor = editor.getCursor();
-    const root = this.listsUtils.parseListNew(editor, cursor);
+    const root = this.listsUtils.parseList(editor, cursor);
 
     if (!root) {
       return;

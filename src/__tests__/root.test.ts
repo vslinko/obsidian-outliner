@@ -16,7 +16,7 @@ export function makeNewRoot(options: {
 
   const listUtils = new ListUtils(logger, obsidianUtils);
 
-  return listUtils.parseListNew(editor);
+  return listUtils.parseList(editor);
 }
 
 describe("NewRoot", () => {

@@ -243,7 +243,7 @@ export class ZoomFeature implements IFeature {
     editor: CodeMirror.Editor,
     cursor: CodeMirror.Position = editor.getCursor()
   ) {
-    const root = this.listsUtils.parseListNew(editor, cursor);
+    const root = this.listsUtils.parseList(editor, cursor);
 
     if (!root) {
       return false;

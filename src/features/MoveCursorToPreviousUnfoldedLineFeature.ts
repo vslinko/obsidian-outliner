@@ -48,7 +48,7 @@ export class MoveCursorToPreviousUnfoldedLineFeature implements IFeature {
       return;
     }
 
-    const root = this.listsUtils.parseListNew(cm);
+    const root = this.listsUtils.parseList(cm);
 
     if (!root) {
       return;

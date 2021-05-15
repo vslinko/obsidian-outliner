@@ -49,11 +49,11 @@ export class ListUtils {
     return this.detectListIndentSign(editor, cursor) !== null;
   }
 
-  parseListNew(
+  parseList(
     editor: CodeMirror.Editor,
     cursor = editor.getCursor()
   ): NewRoot | null {
-    const d = this.logger.bind("parseListNew");
+    const d = this.logger.bind("parseList");
     const error = (msg: string): null => {
       d(msg);
       return null;
@@ -196,78 +196,6 @@ export class ListUtils {
           `Unable to parse list: expected list item or empty line, got "${line}"`
         );
       }
-    }
-
-    return root;
-  }
-
-  parseList(editor: CodeMirror.Editor, cursor = editor.getCursor()): Root {
-    const cursorLine = cursor.line;
-    const cursorCh = cursor.ch;
-    const line = editor.getLine(cursorLine);
-
-    const indentSign = this.detectListIndentSign(editor, cursor);
-
-    if (indentSign === null) {
-      return null;
-    }
-
-    let listStartLine = cursorLine;
-    const listStartCh = 0;
-    while (listStartLine >= 1) {
-      const line = editor.getLine(listStartLine - 1);
-      if (!this.getListLineInfo(line, indentSign)) {
-        break;
-      }
-      listStartLine--;
-    }
-
-    let listEndLine = cursorLine;
-    let listEndCh = line.length;
-    while (listEndLine < editor.lineCount()) {
-      const line = editor.getLine(listEndLine + 1);
-      if (!this.getListLineInfo(line, indentSign)) {
-        break;
-      }
-      listEndCh = line.length;
-      listEndLine++;
-    }
-
-    const root = new Root(
-      indentSign,
-      { line: listStartLine, ch: listStartCh },
-      { line: listEndLine, ch: listEndCh },
-      { line: cursorLine, ch: cursorCh }
-    );
-
-    let currentLevel: IList = root;
-    let lastList: IList = root;
-
-    for (let l = listStartLine; l <= listEndLine; l++) {
-      const line = editor.getLine(l);
-      const { bullet, content, indentLevel } = this.getListLineInfo(
-        line,
-        indentSign
-      );
-      const folded = (editor as any).isFolded({
-        line: l,
-        ch: 0,
-      });
-
-      if (indentLevel === currentLevel.getLevel() + 1) {
-        currentLevel = lastList;
-      } else if (indentLevel < currentLevel.getLevel()) {
-        while (indentLevel < currentLevel.getLevel()) {
-          currentLevel = currentLevel.getParent();
-        }
-      } else if (indentLevel != currentLevel.getLevel()) {
-        console.error(`Unable to parse list`);
-        return null;
-      }
-
-      const list = new List(indentSign, bullet, content, folded);
-      currentLevel.addAfterAll(list);
-      lastList = list;
     }
 
     return root;

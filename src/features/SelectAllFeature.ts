@@ -68,7 +68,7 @@ export class SelectAllFeature implements IFeature {
 
     const selection = selections[0];
 
-    const root = this.listsUtils.parseListNew(editor, selection.anchor);
+    const root = this.listsUtils.parseList(editor, selection.anchor);
 
     if (!root) {
       return false;

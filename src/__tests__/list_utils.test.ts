@@ -17,7 +17,7 @@ export function makeListUtils(
   return listUtils;
 }
 
-describe("parseListNew", () => {
+describe("parseList", () => {
   test("should parse list with notes and sublists", () => {
     const listUtils = makeListUtils();
     const editor = makeEditor({
@@ -25,7 +25,7 @@ describe("parseListNew", () => {
       cursor: { line: 0, ch: 0 },
     });
 
-    const list = listUtils.parseListNew(editor as any);
+    const list = listUtils.parseList(editor as any);
 
     expect(list).toBeDefined();
     expect(list).toMatchObject(
@@ -71,11 +71,11 @@ describe("parseListNew", () => {
       cursor: { line: 0, ch: 0 },
     });
 
-    const list = listUtils.parseListNew(editor as any);
+    const list = listUtils.parseList(editor as any);
 
     expect(list).toBeNull();
     expect(logger.log).toBeCalledWith(
-      "parseListNew",
+      "parseList",
       `Unable to parse list: expected indent "S", got "T"`
     );
   });
@@ -88,11 +88,11 @@ describe("parseListNew", () => {
       cursor: { line: 0, ch: 0 },
     });
 
-    const list = listUtils.parseListNew(editor as any);
+    const list = listUtils.parseList(editor as any);
 
     expect(list).toBeNull();
     expect(logger.log).toBeCalledWith(
-      "parseListNew",
+      "parseList",
       `Unable to parse list: expected indent "T", got "S"`
     );
   });
@@ -105,54 +105,13 @@ describe("parseListNew", () => {
       cursor: { line: 0, ch: 0 },
     });
 
-    const list = listUtils.parseListNew(editor as any);
+    const list = listUtils.parseList(editor as any);
 
     expect(list).toBeNull();
     expect(logger.log).toBeCalledWith(
-      "parseListNew",
+      "parseList",
       `Unable to parse list: expected indent "T", got "SS"`
     );
-  });
-});
-
-describe("parseList", () => {
-  test("should parse list with dash bullet", () => {
-    const listUtils = makeListUtils();
-    const editor = makeEditor({
-      text: "- qwe",
-      cursor: { line: 0, ch: 0 },
-    });
-
-    const list = listUtils.parseList(editor as any);
-
-    expect(list).toBeDefined();
-    expect(list.print()).toBe(`- qwe`);
-  });
-
-  test("should parse list with asterisk bullet", () => {
-    const listUtils = makeListUtils();
-    const editor = makeEditor({
-      text: "* qwe",
-      cursor: { line: 0, ch: 0 },
-    });
-
-    const list = listUtils.parseList(editor as any);
-
-    expect(list).toBeDefined();
-    expect(list.print()).toBe(`* qwe`);
-  });
-
-  test("should parse list with plus bullet", () => {
-    const listUtils = makeListUtils();
-    const editor = makeEditor({
-      text: "+ qwe",
-      cursor: { line: 0, ch: 0 },
-    });
-
-    const list = listUtils.parseList(editor as any);
-
-    expect(list).toBeDefined();
-    expect(list.print()).toBe(`+ qwe`);
   });
 });
 

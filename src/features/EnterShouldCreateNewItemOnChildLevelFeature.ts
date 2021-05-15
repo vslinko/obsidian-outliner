@@ -43,7 +43,7 @@ export class EnterShouldCreateNewItemOnChildLevelFeature implements IFeature {
       return;
     }
 
-    const root = this.listUtils.parseListNew(cm);
+    const root = this.listUtils.parseList(cm);
 
     if (!root) {
       return;
