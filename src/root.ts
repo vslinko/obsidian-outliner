@@ -355,13 +355,20 @@ export class Root {
 
     const indentPos = list.getIndent().length;
     let indentChars = "";
-    if (prev.isEmpty()) {
-      indentChars = list.getIndent().slice(parent.getIndent().length);
-    } else {
+
+    if (indentChars === "" && !prev.isEmpty()) {
       indentChars = prev
         .getChildren()[0]
         .getIndent()
         .slice(prev.getIndent().length);
+    }
+
+    if (indentChars === "") {
+      indentChars = list.getIndent().slice(parent.getIndent().length);
+    }
+
+    if (indentChars === "" && !list.isEmpty()) {
+      indentChars = list.getChildren()[0].getIndent();
     }
 
     if (indentChars === "") {
