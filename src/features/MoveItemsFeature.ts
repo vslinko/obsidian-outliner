@@ -1,7 +1,7 @@
 import { Plugin_2 } from "obsidian";
 import { ListUtils } from "src/list_utils";
 import { ObsidianUtils } from "src/obsidian_utils";
-import { Root } from "src/root";
+import { NewRoot } from "src/root";
 import { IFeature } from "../feature";
 
 export class MoveItemsFeature implements IFeature {
@@ -73,9 +73,9 @@ export class MoveItemsFeature implements IFeature {
 
   private execute(
     editor: CodeMirror.Editor,
-    cb: (root: Root) => boolean
+    cb: (root: NewRoot) => boolean
   ): boolean {
-    const root = this.listsUtils.parseList(editor, editor.getCursor());
+    const root = this.listsUtils.parseListNew(editor);
 
     if (!root) {
       return false;

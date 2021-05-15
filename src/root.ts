@@ -64,11 +64,42 @@ export class NewList {
     return this.parent.getLevel() + 1;
   }
 
-  unindent(from: number, till: number) {
+  unindentContent(from: number, till: number) {
     this.indent = this.indent.slice(0, from) + this.indent.slice(till);
 
+    this.content = this.content
+      .split("\n")
+      .map((row, i) => {
+        if (i === 0) {
+          return row;
+        }
+        return row.slice(0, from) + row.slice(till);
+      })
+      .join("\n");
+
     for (const child of this.children) {
-      child.unindent(from, till);
+      child.unindentContent(from, till);
+    }
+  }
+
+  indentContent(indentPos: number, indentChars: string) {
+    this.indent =
+      this.indent.slice(0, indentPos) +
+      indentChars +
+      this.indent.slice(indentPos);
+
+    this.content = this.content
+      .split("\n")
+      .map((row, i) => {
+        if (i === 0) {
+          return row;
+        }
+        return row.slice(0, indentPos) + indentChars + row.slice(indentPos);
+      })
+      .join("\n");
+
+    for (const child of this.children) {
+      child.indentContent(indentPos, indentChars);
     }
   }
 
@@ -104,10 +135,26 @@ export class NewList {
     list.parent = null;
   }
 
+  addBefore(before: NewList, list: NewList) {
+    const i = this.children.indexOf(before);
+    this.children.splice(i, 0, list);
+    list.parent = this;
+  }
+
   addAfter(before: NewList, list: NewList) {
     const i = this.children.indexOf(before);
     this.children.splice(i + 1, 0, list);
     list.parent = this;
+  }
+
+  getPrevSiblingOf(list: NewList) {
+    const i = this.children.indexOf(list);
+    return i > 0 ? this.children[i - 1] : null;
+  }
+
+  getNextSiblingOf(list: NewList) {
+    const i = this.children.indexOf(list);
+    return i >= 0 && i < this.children.length ? this.children[i + 1] : null;
   }
 
   appendContent(content: string) {
@@ -135,7 +182,8 @@ export class NewRoot {
   constructor(
     private start: CodeMirror.Position,
     private end: CodeMirror.Position,
-    private cursor: CodeMirror.Position
+    private cursor: CodeMirror.Position,
+    private defaultIndentChars: string
   ) {}
 
   getListStartPosition() {
@@ -170,6 +218,101 @@ export class NewRoot {
     return this.getListUnderLine(this.cursor.line);
   }
 
+  moveUp() {
+    const list = this.getListUnderCursor();
+    const parent = list.getParent();
+    const grandParent = parent.getParent();
+    const prev = parent.getPrevSiblingOf(list);
+
+    const listStartLineBefore = this.getContentLinesRangeOf(list)[0];
+
+    if (!prev && grandParent) {
+      const newParent = grandParent.getPrevSiblingOf(parent);
+
+      if (newParent) {
+        parent.removeChild(list);
+        newParent.addAfterAll(list);
+      }
+    } else if (prev) {
+      parent.removeChild(list);
+      parent.addBefore(prev, list);
+    }
+
+    const listStartLineAfter = this.getContentLinesRangeOf(list)[0];
+    const lineDiff = listStartLineAfter - listStartLineBefore;
+
+    this.cursor.line += lineDiff;
+
+    return true;
+  }
+
+  moveDown() {
+    const list = this.getListUnderCursor();
+    const parent = list.getParent();
+    const grandParent = parent.getParent();
+    const next = parent.getNextSiblingOf(list);
+
+    const listStartLineBefore = this.getContentLinesRangeOf(list)[0];
+
+    if (!next && grandParent) {
+      const newParent = grandParent.getNextSiblingOf(parent);
+
+      if (newParent) {
+        parent.removeChild(list);
+        newParent.addBeforeAll(list);
+      }
+    } else if (next) {
+      parent.removeChild(list);
+      parent.addAfter(next, list);
+    }
+
+    const listStartLineAfter = this.getContentLinesRangeOf(list)[0];
+    const lineDiff = listStartLineAfter - listStartLineBefore;
+
+    this.cursor.line += lineDiff;
+
+    return true;
+  }
+
+  moveRight() {
+    const list = this.getListUnderCursor();
+    const parent = list.getParent();
+    const prev = parent.getPrevSiblingOf(list);
+
+    if (!prev) {
+      return true;
+    }
+
+    const listStartLineBefore = this.getContentLinesRangeOf(list)[0];
+
+    const indentPos = list.getIndent().length;
+    let indentChars = "";
+    if (prev.isEmpty()) {
+      indentChars = list.getIndent().slice(parent.getIndent().length);
+    } else {
+      indentChars = prev
+        .getChildren()[0]
+        .getIndent()
+        .slice(prev.getIndent().length);
+    }
+
+    if (indentChars === "") {
+      indentChars = this.defaultIndentChars;
+    }
+
+    parent.removeChild(list);
+    prev.addAfterAll(list);
+    list.indentContent(indentPos, indentChars);
+
+    const listStartLineAfter = this.getContentLinesRangeOf(list)[0];
+    const lineDiff = listStartLineAfter - listStartLineBefore;
+
+    this.cursor.line += lineDiff;
+    this.cursor.ch += indentChars.length;
+
+    return true;
+  }
+
   moveLeft() {
     const list = this.getListUnderCursor();
     const parent = list.getParent();
@@ -179,17 +322,20 @@ export class NewRoot {
       return true;
     }
 
-    parent.removeChild(list);
-    grandParent.addAfter(parent, list);
-
+    const listStartLineBefore = this.getContentLinesRangeOf(list)[0];
     const indentRmFrom = parent.getIndent().length;
     const indentRmTill = list.getIndent().length;
-    const diff = indentRmTill - indentRmFrom;
 
-    list.unindent(indentRmFrom, indentRmTill);
+    parent.removeChild(list);
+    grandParent.addAfter(parent, list);
+    list.unindentContent(indentRmFrom, indentRmTill);
 
-    this.cursor.line = this.getContentLinesRangeOf(list)[0];
-    this.cursor.ch -= diff;
+    const listStartLineAfter = this.getContentLinesRangeOf(list)[0];
+    const lineDiff = listStartLineAfter - listStartLineBefore;
+    const chDiff = indentRmTill - indentRmFrom;
+
+    this.cursor.line += lineDiff;
+    this.cursor.ch -= chDiff;
 
     return true;
   }

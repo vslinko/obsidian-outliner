@@ -96,6 +96,23 @@ describe("parseListNew", () => {
       `Unable to parse list: expected indent "T", got "S"`
     );
   });
+
+  test("should error if note indent is not match", () => {
+    const logger = makeLogger();
+    const listUtils = makeListUtils({ logger });
+    const editor = makeEditor({
+      text: "- one\n\t- two\n  three",
+      cursor: { line: 0, ch: 0 },
+    });
+
+    const list = listUtils.parseListNew(editor as any);
+
+    expect(list).toBeNull();
+    expect(logger.log).toBeCalledWith(
+      "parseListNew",
+      `Unable to parse list: expected indent "T", got "SS"`
+    );
+  });
 });
 
 describe("parseList", () => {

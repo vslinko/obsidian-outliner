@@ -121,7 +121,8 @@ export class ListUtils {
     const root = new NewRoot(
       { line: listStartLine, ch: 0 },
       { line: listEndLine, ch: editor.getLine(listEndLine).length },
-      { line: cursor.line, ch: cursor.ch }
+      { line: cursor.line, ch: cursor.ch },
+      this.getDefaultIndentChars()
     );
 
     let currentParent: IParseListList = root;
@@ -174,6 +175,18 @@ export class ListUtils {
         if (!currentList) {
           return error(
             `Unable to parse list: expected list item, got empty line`
+          );
+        }
+
+        if (!this.isEmptyLine(line) && line.indexOf(currentIndent) !== 0) {
+          const expected = currentIndent.replace(/ /g, "S").replace(/\t/g, "T");
+          const got = line
+            .match(/^[ \t]*/)[0]
+            .replace(/ /g, "S")
+            .replace(/\t/g, "T");
+
+          return error(
+            `Unable to parse list: expected indent "${expected}", got "${got}"`
           );
         }
 
@@ -330,6 +343,12 @@ export class ListUtils {
         (editor as any).foldCode(l - 1);
       }
     }
+  }
+
+  private getDefaultIndentChars() {
+    const { useTab, tabSize } = this.obsidianUtils.getObsidianTabsSettigns();
+
+    return useTab ? "\t" : new Array(tabSize).fill(" ").join("");
   }
 
   private isEmptyLine(line: string) {
