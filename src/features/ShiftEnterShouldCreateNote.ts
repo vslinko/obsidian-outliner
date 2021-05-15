@@ -53,10 +53,17 @@ export class ShiftEnterShouldCreateNote implements IFeature {
     const list = root.getListUnderCursor();
     const contentStart = list.getContentRange()[0];
 
-    const indent =
-      cursor.line === contentStart.line
-        ? list.getIndent() + this.listsUtils.getDefaultIndentChars()
-        : cm.getLine(cursor.line).match(/^[ \t]*/)[0];
+    let indent = "";
+
+    if (cursor.line === contentStart.line) {
+      if (list.isEmpty()) {
+        indent = list.getIndent() + this.listsUtils.getDefaultIndentChars();
+      } else {
+        indent = list.getChildren()[0].getIndent();
+      }
+    } else {
+      indent = cm.getLine(cursor.line).match(/^[ \t]*/)[0];
+    }
 
     e.preventDefault();
     e.stopPropagation();
