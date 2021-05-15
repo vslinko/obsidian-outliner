@@ -2,7 +2,7 @@ import { Plugin_2 } from "obsidian";
 import { EditorUtils } from "src/editor_utils";
 import { IFeature } from "src/feature";
 import { ListUtils } from "src/list_utils";
-import { Root } from "src/root";
+import { NewRoot } from "src/root";
 import { Settings } from "src/settings";
 
 export class DeleteShouldIgnoreBulletsFeature implements IFeature {
@@ -37,54 +37,56 @@ export class DeleteShouldIgnoreBulletsFeature implements IFeature {
       return;
     }
 
-    const root = this.listsUtils.parseList(cm);
+    const root = this.listsUtils.parseListNew(cm);
 
     if (!root) {
       return;
     }
 
     const list = root.getListUnderCursor();
-    const listContentStartCh = list.getContentStartCh();
-    const listContentEndCh = list.getContentEndCh();
+    const [contentStart, contentEnd] = list.getContentRange();
 
-    if (this.isBackspaceOnContentStart(changeObj, listContentStartCh)) {
+    if (this.isBackspaceOnContentStart(changeObj, contentStart)) {
       this.deleteItemAndMergeContentWithPreviousLine(cm, root, changeObj);
-    } else if (this.isDeletionIncludesBullet(changeObj, listContentStartCh)) {
-      this.limitDeleteRangeToContentRange(changeObj, listContentStartCh);
-    } else if (this.isDeleteOnLineEnd(changeObj, listContentEndCh)) {
+    } else if (this.isDeletionIncludesBullet(changeObj, contentStart)) {
+      this.limitDeleteRangeToContentRange(changeObj, contentStart.ch);
+    } else if (this.isDeleteOnLineEnd(changeObj, contentEnd)) {
       this.deleteNextItemAndMergeContentWithCurrentLine(cm, root, changeObj);
     }
   };
 
   private isDeleteOnLineEnd(
     changeObj: CodeMirror.EditorChangeCancellable,
-    listContentEndCh: number
+    contentEnd: CodeMirror.Position
   ) {
     return (
-      changeObj.from.line + 1 === changeObj.to.line &&
-      changeObj.from.ch === listContentEndCh &&
+      changeObj.from.line === contentEnd.line &&
+      changeObj.from.ch === contentEnd.ch &&
+      changeObj.to.line === changeObj.from.line + 1 &&
       changeObj.to.ch === 0
     );
   }
 
   private isDeletionIncludesBullet(
     changeObj: CodeMirror.EditorChangeCancellable,
-    listContentStartCh: number
+    contentStart: CodeMirror.Position
   ) {
     return (
       changeObj.from.line === changeObj.to.line &&
-      changeObj.from.ch < listContentStartCh
+      changeObj.from.line === contentStart.line &&
+      changeObj.from.ch < contentStart.ch
     );
   }
 
   private isBackspaceOnContentStart(
     changeObj: CodeMirror.EditorChangeCancellable,
-    listContentStartCh: number
+    contentStart: CodeMirror.Position
   ) {
     return (
       changeObj.from.line === changeObj.to.line &&
-      changeObj.from.ch === listContentStartCh - 1 &&
-      changeObj.to.ch === listContentStartCh
+      changeObj.from.line === contentStart.line &&
+      changeObj.from.ch === contentStart.ch - 1 &&
+      changeObj.to.ch === contentStart.ch
     );
   }
 
@@ -101,14 +103,12 @@ export class DeleteShouldIgnoreBulletsFeature implements IFeature {
 
   private deleteItemAndMergeContentWithPreviousLine(
     editor: CodeMirror.Editor,
-    root: Root,
+    root: NewRoot,
     changeObj: CodeMirror.EditorChangeCancellable
   ) {
     const list = root.getListUnderCursor();
-    if (
-      root.getListStartPosition().line === root.getLineNumberOf(list) &&
-      list.getChildren().length === 0
-    ) {
+
+    if (root.getChildren()[0] === list && list.getChildren().length === 0) {
       return false;
     }
 
@@ -124,16 +124,11 @@ export class DeleteShouldIgnoreBulletsFeature implements IFeature {
 
   private deleteNextItemAndMergeContentWithCurrentLine(
     editor: CodeMirror.Editor,
-    root: Root,
+    root: NewRoot,
     changeObj: CodeMirror.EditorChangeCancellable
   ) {
-    const list = root.getListUnderCursor();
     const nextLineNo = root.getCursor().line + 1;
     const nextList = root.getListUnderLine(nextLineNo);
-
-    if (!nextList || root.getCursor().ch !== list.getContentEndCh()) {
-      return false;
-    }
 
     root.replaceCursor({
       line: nextLineNo,

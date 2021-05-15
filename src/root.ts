@@ -224,6 +224,10 @@ export class NewRoot {
     return this.cursor;
   }
 
+  replaceCursor(cursor: CodeMirror.Position) {
+    this.cursor = cursor;
+  }
+
   getIndent() {
     return this.rootList.getIndent();
   }
@@ -242,6 +246,50 @@ export class NewRoot {
 
   getListUnderCursor(): NewList {
     return this.getListUnderLine(this.cursor.line);
+  }
+
+  deleteAndMergeWithPrevious() {
+    const list = this.getListUnderCursor();
+
+    const contentStart = list.getContentRange()[0];
+
+    if (
+      this.cursor.ch !== contentStart.ch ||
+      this.cursor.line !== contentStart.line
+    ) {
+      return false;
+    }
+
+    const prev = this.getListUnderLine(this.cursor.line - 1);
+
+    if (!prev) {
+      return true;
+    }
+
+    const bothAreEmpty = prev.isEmpty() && list.isEmpty();
+    const prevIsEmptyAndSameLevel =
+      prev.isEmpty() && !list.isEmpty() && prev.getLevel() == list.getLevel();
+    const listIsEmptyAndPrevIsParent =
+      list.isEmpty() && prev.getLevel() == list.getLevel() - 1;
+
+    if (bothAreEmpty || prevIsEmptyAndSameLevel || listIsEmptyAndPrevIsParent) {
+      const parent = list.getParent();
+      const prevEnd = prev.getContentRange()[1];
+
+      list.unindentContent(prev.getIndent().length, list.getIndent().length);
+
+      prev.appendContent(list.getContent());
+      parent.removeChild(list);
+      for (const c of list.getChildren()) {
+        list.removeChild(c);
+        prev.addAfterAll(c);
+      }
+
+      this.cursor.line = prevEnd.line;
+      this.cursor.ch = prevEnd.ch;
+    }
+
+    return true;
   }
 
   moveUp() {
