@@ -1,6 +1,6 @@
 import { Logger } from "./logger";
 import { ObsidianUtils } from "./obsidian_utils";
-import { NewList, NewRoot } from "./root";
+import { List, Root } from "./root";
 
 const bulletSign = "-*+";
 
@@ -49,7 +49,7 @@ export class ListUtils {
   parseList(
     editor: CodeMirror.Editor,
     cursor = editor.getCursor()
-  ): NewRoot | null {
+  ): Root | null {
     const d = this.logger.bind("parseList");
     const error = (msg: string): null => {
       d(msg);
@@ -115,7 +115,7 @@ export class ListUtils {
       return null;
     }
 
-    const root = new NewRoot(
+    const root = new Root(
       { line: listStartLine, ch: 0 },
       { line: listEndLine, ch: editor.getLine(listEndLine).length },
       { line: cursor.line, ch: cursor.ch },
@@ -166,7 +166,7 @@ export class ListUtils {
           ch: 0,
         });
 
-        currentList = new NewList(root, indent, bullet, content, folded);
+        currentList = new List(root, indent, bullet, content, folded);
         currentParent.addAfterAll(currentList);
       } else if (this.isEmptyLineOrNote(line)) {
         if (!currentList) {

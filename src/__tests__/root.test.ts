@@ -3,7 +3,7 @@ import { Logger } from "../logger";
 import { ObsidianUtils } from "../obsidian_utils";
 import { makeEditor, makeLogger, makeObsidianUtils } from "../test_utils";
 
-export function makeNewRoot(options: {
+export function makeRoot(options: {
   editor: CodeMirror.Editor;
   logger?: Logger;
   obsidianUtils?: ObsidianUtils;
@@ -19,10 +19,10 @@ export function makeNewRoot(options: {
   return listUtils.parseList(editor);
 }
 
-describe("NewRoot", () => {
+describe("Root", () => {
   describe("getListUnderLine", () => {
     test("should return list under line", () => {
-      const root = makeNewRoot({
+      const root = makeRoot({
         editor: makeEditor({
           text: "- one\n\t- two\n- three",
           cursor: { line: 0, ch: 0 },
@@ -36,7 +36,7 @@ describe("NewRoot", () => {
     });
 
     test("should return list under line when line is note", () => {
-      const root = makeNewRoot({
+      const root = makeRoot({
         editor: makeEditor({
           text: "- one\n\tnote1\n\t- two\n\t\tnote2\n- three",
           cursor: { line: 0, ch: 0 },
@@ -52,7 +52,7 @@ describe("NewRoot", () => {
 
   describe("getContentLinesRangeOf", () => {
     test("should return range of list", () => {
-      const root = makeNewRoot({
+      const root = makeRoot({
         editor: makeEditor({
           text: "- one\n\t- two\n- three",
           cursor: { line: 0, ch: 0 },
@@ -67,7 +67,7 @@ describe("NewRoot", () => {
     });
 
     test("should return range of list when list has notes", () => {
-      const root = makeNewRoot({
+      const root = makeRoot({
         editor: makeEditor({
           text: "- one\n\tnote1\n\t- two\n\t\tnote2\n- three",
           cursor: { line: 0, ch: 0 },

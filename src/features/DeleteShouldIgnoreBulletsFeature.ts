@@ -2,7 +2,7 @@ import { Plugin_2 } from "obsidian";
 import { EditorUtils } from "src/editor_utils";
 import { IFeature } from "src/feature";
 import { ListUtils } from "src/list_utils";
-import { NewRoot } from "src/root";
+import { Root } from "src/root";
 import { Settings } from "src/settings";
 
 export class DeleteShouldIgnoreBulletsFeature implements IFeature {
@@ -103,7 +103,7 @@ export class DeleteShouldIgnoreBulletsFeature implements IFeature {
 
   private deleteItemAndMergeContentWithPreviousLine(
     editor: CodeMirror.Editor,
-    root: NewRoot,
+    root: Root,
     changeObj: CodeMirror.EditorChangeCancellable
   ) {
     const list = root.getListUnderCursor();
@@ -124,7 +124,7 @@ export class DeleteShouldIgnoreBulletsFeature implements IFeature {
 
   private deleteNextItemAndMergeContentWithCurrentLine(
     editor: CodeMirror.Editor,
-    root: NewRoot,
+    root: Root,
     changeObj: CodeMirror.EditorChangeCancellable
   ) {
     const nextLineNo = root.getCursor().line + 1;
