@@ -200,7 +200,7 @@ export class NewRoot {
     }
 
     let result: NewList = null;
-    let index: number = 0;
+    let index: number = this.start.line;
 
     const visitArr = (ll: NewList[]) => {
       for (const l of ll) {
