@@ -43,13 +43,18 @@ export class SelectionShouldIgnoreBulletsFeature implements IFeature {
       return;
     }
 
-    const root = this.listsUtils.parseList(cm);
+    const root = this.listsUtils.parseListNew(cm);
 
     if (!root) {
       return;
     }
 
     const list = root.getListUnderCursor();
+
+    if (range.from().line !== root.getContentLinesRangeOf(list)[0]) {
+      return;
+    }
+
     const listContentStartCh = list.getContentStartCh();
 
     if (range.from().ch < listContentStartCh) {
