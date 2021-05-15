@@ -52,6 +52,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       new EnterShouldCreateNewlineOnChildLevelFeature(
         this,
         this.settings,
+        this.editorUtils,
         this.listsUtils
       ),
       new EnsureCursorInListContentFeature(

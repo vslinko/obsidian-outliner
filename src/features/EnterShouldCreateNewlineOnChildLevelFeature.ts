@@ -1,74 +1,60 @@
 import { Plugin_2 } from "obsidian";
+import { EditorUtils } from "src/editor_utils";
 import { IFeature } from "../feature";
 import { ListUtils } from "../list_utils";
 import { Settings } from "../settings";
+
+function isEnter(e: KeyboardEvent) {
+  return (
+    (e.keyCode === 13 || e.code === "Enter") &&
+    e.shiftKey === false &&
+    e.metaKey === false &&
+    e.altKey === false &&
+    e.ctrlKey === false
+  );
+}
 
 export class EnterShouldCreateNewlineOnChildLevelFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
     private settings: Settings,
+    private editorUtils: EditorUtils,
     private listUtils: ListUtils
   ) {}
 
   async load() {
     this.plugin.registerCodeMirror((cm) => {
-      cm.on("beforeChange", this.onBeforeChange);
+      cm.on("keydown", this.onKeyDown);
     });
   }
 
   async unload() {
     this.plugin.app.workspace.iterateCodeMirrors((cm) => {
-      cm.off("beforeChange", this.onBeforeChange);
+      cm.off("keydown", this.onKeyDown);
     });
   }
 
-  private onBeforeChange = (
-    cm: CodeMirror.Editor,
-    changeObj: CodeMirror.EditorChangeCancellable
-  ) => {
-    if (!this.settings.betterEnter) {
+  private onKeyDown = (cm: CodeMirror.Editor, e: KeyboardEvent) => {
+    if (
+      !this.settings.betterEnter ||
+      !isEnter(e) ||
+      !this.editorUtils.containsSingleCursor(cm)
+    ) {
       return;
     }
 
-    const { listUtils } = this;
+    const root = this.listUtils.parseList(cm);
 
-    const currentLine = cm.getLine(changeObj.from.line);
-    const nextLine = cm.getLine(changeObj.from.line + 1);
-
-    if (!currentLine || !nextLine) {
+    if (!root) {
       return;
     }
 
-    const indentSign = listUtils.detectListIndentSign(cm, changeObj.from);
+    const worked = root.createNewlineOnChildLevel();
 
-    if (indentSign === null) {
-      return;
-    }
-
-    const currentLineInfo = listUtils.getListLineInfo(currentLine, indentSign);
-    const nextLineInfo = listUtils.getListLineInfo(nextLine, indentSign);
-
-    if (!currentLineInfo || !nextLineInfo) {
-      return;
-    }
-
-    const changeIsNewline =
-      changeObj.text.length === 2 &&
-      changeObj.text[0] === "" &&
-      !!listUtils.getListLineInfo(changeObj.text[1], indentSign);
-
-    const nexlineLevelIsBigger =
-      currentLineInfo.indentLevel + 1 == nextLineInfo.indentLevel;
-
-    const nextLineIsEmpty =
-      cm.getRange(changeObj.from, {
-        line: changeObj.from.line,
-        ch: changeObj.from.ch + 1,
-      }).length === 0;
-
-    if (changeIsNewline && nexlineLevelIsBigger && nextLineIsEmpty) {
-      changeObj.text[1] = indentSign + changeObj.text[1];
-      changeObj.update(changeObj.from, changeObj.to, changeObj.text);
+    if (worked) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.listUtils.applyChanges(cm, root);
     }
   };
 }

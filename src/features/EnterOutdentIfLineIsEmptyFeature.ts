@@ -6,7 +6,7 @@ import { Settings } from "../settings";
 
 function isEnter(e: KeyboardEvent) {
   return (
-    e.code === "Enter" &&
+    (e.keyCode === 13 || e.code === "Enter") &&
     e.shiftKey === false &&
     e.metaKey === false &&
     e.altKey === false &&

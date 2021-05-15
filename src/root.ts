@@ -129,6 +129,25 @@ export class List implements IList {
     return res;
   }
 
+  copy(
+    override: {
+      indentSign?: string;
+      bullet?: string;
+      content?: string;
+      folded?: boolean;
+    } = {}
+  ) {
+    const { indentSign, bullet, content, folded } = {
+      indentSign: this.indentSign,
+      bullet: this.bullet,
+      content: this.content,
+      folded: this.folded,
+      ...override,
+    };
+
+    return new List(indentSign, bullet, content, folded);
+  }
+
   private getFullContent() {
     return (
       new Array(this.getLevel() - 1).fill(this.indentSign).join("") +
@@ -280,6 +299,27 @@ export class Root implements IList {
       parent.addBefore(prev, list);
       this.cursor.line = this.getLineNumberOf(list);
     }
+
+    return true;
+  }
+
+  createNewlineOnChildLevel() {
+    const list = this.getListUnderCursor();
+
+    if (list.isEmpty()) {
+      return false;
+    }
+
+    if (this.cursor.ch !== list.getContentEndCh()) {
+      return false;
+    }
+
+    const newList = list.getChildren()[0].copy({ content: "", folded: false });
+
+    list.addBeforeAll(newList);
+
+    this.cursor.line = this.getLineNumberOf(newList);
+    this.cursor.ch = newList.getContentStartCh();
 
     return true;
   }
