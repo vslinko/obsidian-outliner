@@ -1,4 +1,3 @@
-import { diffLines } from "diff";
 import { Logger } from "./logger";
 import { ObsidianUtils } from "./obsidian_utils";
 import { IList, List, Root } from "./root";
@@ -115,24 +114,42 @@ export class ListUtils {
       (editor as any).foldCode(l, null, "unfold");
     }
 
-    const diff = diffLines(oldString, newString);
-    let l = root.getListStartPosition().line;
-    for (const change of diff) {
-      if (change.added) {
-        editor.replaceRange(change.value, { line: l, ch: 0 });
-        l += change.count;
-      } else if (change.removed) {
-        const withNewline = /\n$/.test(change.value);
-        const tillLine = withNewline ? l + change.count : l + change.count - 1;
-        const tillCh = withNewline ? 0 : editor.getLine(tillLine).length;
-        editor.replaceRange(
-          "",
-          { line: l, ch: 0 },
-          { line: tillLine, ch: tillCh }
-        );
-      } else {
-        l += change.count;
+    let changeFrom = root.getListStartPosition();
+    let changeTo = root.getListEndPosition();
+    let oldTmp = oldString;
+    let newTmp = newString;
+
+    while (true) {
+      const nlIndex = oldTmp.indexOf("\n");
+      if (nlIndex < 0) {
+        break;
       }
+      const oldLine = oldTmp.slice(0, nlIndex + 1);
+      const newLine = newTmp.slice(0, oldLine.length);
+      if (oldLine !== newLine) {
+        break;
+      }
+      changeFrom.line++;
+      oldTmp = oldTmp.slice(oldLine.length);
+      newTmp = newTmp.slice(oldLine.length);
+    }
+    while (true) {
+      const nlIndex = oldTmp.lastIndexOf("\n");
+      if (nlIndex < 0) {
+        break;
+      }
+      const oldLine = oldTmp.slice(nlIndex);
+      const newLine = newTmp.slice(-oldLine.length);
+      if (oldLine !== newLine) {
+        break;
+      }
+      changeTo.line--;
+      oldTmp = oldTmp.slice(0, -oldLine.length);
+      newTmp = newTmp.slice(0, -oldLine.length);
+    }
+
+    if (oldTmp !== newTmp) {
+      editor.replaceRange(newTmp, changeFrom, changeTo);
     }
 
     const oldCursor = editor.getCursor();
