@@ -61,8 +61,8 @@ test("enter should create new item on the child level if child exists and curren
   await expect(await getCurrentState()).toEqualEditorState([
     "- one",
     "\t- two",
+    "\t- |",
     "\t\tnote",
-    "\t\t- |",
     "\t\t- three",
   ]);
 });

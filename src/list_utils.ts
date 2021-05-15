@@ -270,7 +270,7 @@ export class ListUtils {
     }
   }
 
-  private getDefaultIndentChars() {
+  getDefaultIndentChars() {
     const { useTab, tabSize } = this.obsidianUtils.getObsidianTabsSettigns();
 
     return useTab ? "\t" : new Array(tabSize).fill(" ").join("");

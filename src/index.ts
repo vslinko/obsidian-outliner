@@ -16,6 +16,7 @@ import { ZoomFeature } from "./features/ZoomFeature";
 import { FoldFeature } from "./features/FoldFeature";
 import { SelectAllFeature } from "./features/SelectAllFeature";
 import { MoveItemsFeature } from "./features/MoveItemsFeature";
+import { ShiftEnterShouldCreateNote } from "./features/ShiftEnterShouldCreateNote";
 
 export default class ObsidianOutlinerPlugin extends Plugin {
   private features: IFeature[];
@@ -81,6 +82,12 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       new FoldFeature(this, this.obsidianUtils, this.listsUtils),
       new SelectAllFeature(this, this.settings, this.listsUtils),
       new MoveItemsFeature(this, this.obsidianUtils, this.listsUtils),
+      new ShiftEnterShouldCreateNote(
+        this,
+        this.settings,
+        this.listsUtils,
+        this.editorUtils
+      ),
     ];
 
     for (const feature of this.features) {

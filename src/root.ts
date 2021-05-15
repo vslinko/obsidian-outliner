@@ -479,23 +479,42 @@ export class Root {
     return res.replace(/\n$/, "");
   }
 
-  private enterOnItem(list: List) {
-    const indent = list.isEmpty()
-      ? list.getIndent()
-      : list.getChildren()[0].getIndent();
+  enter() {
+    const list = this.getListUnderCursor();
+    const content = list.getContent();
 
-    const bullet = list.isEmpty()
-      ? list.getBullet()
-      : list.getChildren()[0].getBullet();
+    if (content === "") {
+      return false;
+    }
 
-    const fullContent = list.getContent();
-    const newlineIndex = fullContent.indexOf("\n");
-    const itemContent = fullContent.slice(0, newlineIndex);
-    const notesContent = fullContent.slice(newlineIndex);
+    const endPos = list.getContentRange()[1];
+    const onChildLevel =
+      !list.isEmpty() &&
+      this.cursor.line === endPos.line &&
+      this.cursor.ch === endPos.ch;
 
-    const diff = this.cursor.ch - list.getContentStartCh();
-    const oldListContent = diff > 0 ? itemContent.slice(0, diff) : itemContent;
-    const newListContent = diff > 0 ? itemContent.slice(diff) : "";
+    const indent = onChildLevel
+      ? list.getChildren()[0].getIndent()
+      : list.getIndent();
+
+    const bullet = onChildLevel
+      ? list.getChildren()[0].getBullet()
+      : list.getBullet();
+
+    const lines = content.split("\n");
+    const lineDiff = this.cursor.line - this.getContentLinesRangeOf(list)[0];
+    const chDiff =
+      lineDiff === 0
+        ? this.cursor.ch - list.getContentStartCh()
+        : this.cursor.ch;
+
+    let index = chDiff;
+    for (let i = 0; i < lineDiff; i++) {
+      index += lines[i].length + 1;
+    }
+
+    const oldListContent = content.slice(0, index);
+    const newListContent = content.slice(index);
 
     const newList = new List(
       list.getRoot(),
@@ -505,33 +524,23 @@ export class Root {
       list.isFolded()
     );
 
-    if (list.isEmpty()) {
-      list.getParent().addAfter(list, newList);
-    } else {
+    if (onChildLevel) {
       list.addBeforeAll(newList);
+    } else {
+      const children = list.getChildren();
+      for (const child of children) {
+        list.removeChild(child);
+        newList.addAfterAll(child);
+      }
+
+      list.getParent().addAfter(list, newList);
     }
 
-    list.setContent(oldListContent + notesContent);
+    list.setContent(oldListContent);
 
     this.cursor.line = this.getContentLinesRangeOf(newList)[0];
     this.cursor.ch = newList.getContentStartCh();
 
     return true;
-  }
-
-  enter() {
-    const list = this.getListUnderCursor();
-
-    if (list.getContent() === "") {
-      return false;
-    }
-
-    const listStartLine = this.getContentLinesRangeOf(list)[0];
-
-    if (listStartLine === this.cursor.line) {
-      return this.enterOnItem(list);
-    }
-
-    return false;
   }
 }

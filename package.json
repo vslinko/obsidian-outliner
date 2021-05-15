@@ -7,7 +7,7 @@
     "dev": "rollup --config rollup.config.js -w --configWithTests",
     "build-with-tests": "rollup --config rollup.config.js --configWithTests",
     "build": "rollup --config rollup.config.js",
-    "test": "jest"
+    "test": "killall Obsidian; jest"
   },
   "author": "Viacheslav Slinko",
   "license": "MIT",
