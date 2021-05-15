@@ -243,8 +243,7 @@ export class ZoomFeature implements IFeature {
     editor: CodeMirror.Editor,
     cursor: CodeMirror.Position = editor.getCursor()
   ) {
-    const lineNo = cursor.line;
-    const root = this.listsUtils.parseList(editor, cursor);
+    const root = this.listsUtils.parseListNew(editor, cursor);
 
     if (!root) {
       return false;
@@ -252,7 +251,9 @@ export class ZoomFeature implements IFeature {
 
     this.zoomOut(editor);
 
-    const indentLevel = root.getListUnderLine(lineNo).getLevel();
+    const listUnderCursor = root.getListUnderLine(cursor.line);
+    const lineNo = root.getContentLinesRangeOf(listUnderCursor)[0];
+    const indentLevel = listUnderCursor.getLevel();
 
     let after = false;
     for (let i = editor.firstLine(), l = editor.lastLine(); i <= l; i++) {
@@ -260,7 +261,10 @@ export class ZoomFeature implements IFeature {
         editor.addLineClass(i, "wrap", "outliner-plugin-hidden-row");
       } else if (i > lineNo && !after) {
         const afterLineList = root.getListUnderLine(i);
-        after = !afterLineList || afterLineList.getLevel() <= indentLevel;
+        after =
+          !afterLineList ||
+          (afterLineList !== listUnderCursor &&
+            afterLineList.getLevel() <= indentLevel);
       }
 
       if (after) {
@@ -293,11 +297,11 @@ export class ZoomFeature implements IFeature {
       const div = document.createElement("div");
       div.className = "outliner-plugin-zoom-header";
 
-      let list = root.getListUnderLine(lineNo).getParent();
+      let list = listUnderCursor.getParent();
       while (list && list.getParent()) {
-        const lineNo = root.getLineNumberOf(list);
+        const lineNo = root.getContentLinesRangeOf(list)[0];
         div.prepend(
-          createTitle(list.getContent(), () =>
+          createTitle(list.getContent().split("\n")[0], () =>
             this.zoomIn(editor, { line: lineNo, ch: 0 })
           )
         );
