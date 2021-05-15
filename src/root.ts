@@ -20,11 +20,16 @@ export class NewList {
   private children: NewList[] = [];
 
   constructor(
+    private root: NewRoot,
     private indent: string,
     private bullet: string,
     private content: string,
     private folded: boolean
   ) {}
+
+  getRoot() {
+    return this.root;
+  }
 
   getChildren() {
     return this.children.concat();
@@ -32,6 +37,21 @@ export class NewList {
 
   getContent() {
     return this.content;
+  }
+
+  getContentRange() {
+    const [startLine, endLine] = this.root.getContentLinesRangeOf(this);
+    const startCh = this.getContentStartCh();
+    const lines = this.content.split("\n");
+    const endCh =
+      lines.length === 1
+        ? startCh + lines[0].length
+        : lines[lines.length - 1].length;
+
+    return [
+      { line: startLine, ch: startCh },
+      { line: endLine, ch: endCh },
+    ];
   }
 
   getContentStartCh() {
@@ -177,7 +197,7 @@ export class NewList {
 }
 
 export class NewRoot {
-  private rootList = new NewList("", "", "", false);
+  private rootList = new NewList(this, "", "", "", false);
 
   constructor(
     private start: CodeMirror.Position,
@@ -186,10 +206,16 @@ export class NewRoot {
     private defaultIndentChars: string
   ) {}
 
+  getRange() {
+    return [this.start, this.end];
+  }
+
+  // TODO: replace by getRange
   getListStartPosition() {
     return this.start;
   }
 
+  // TODO: replace by getRange
   getListEndPosition() {
     return this.end;
   }
@@ -430,6 +456,7 @@ export class NewRoot {
     const newListContent = diff > 0 ? itemContent.slice(diff) : "";
 
     const newList = new NewList(
+      list.getRoot(),
       indent,
       bullet,
       newListContent,

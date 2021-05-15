@@ -169,7 +169,7 @@ export class ListUtils {
           ch: 0,
         });
 
-        currentList = new NewList(indent, bullet, content, folded);
+        currentList = new NewList(root, indent, bullet, content, folded);
         currentParent.addAfterAll(currentList);
       } else if (this.isEmptyLineOrNote(line)) {
         if (!currentList) {

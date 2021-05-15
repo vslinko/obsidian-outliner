@@ -68,38 +68,51 @@ export class SelectAllFeature implements IFeature {
 
     const selection = selections[0];
 
-    if (selection.anchor.line !== selection.head.line) {
-      return false;
-    }
-
-    const root = this.listsUtils.parseList(editor, selection.anchor);
+    const root = this.listsUtils.parseListNew(editor, selection.anchor);
 
     if (!root) {
       return false;
     }
 
-    const list = root.getListUnderCursor();
-    const startCh = list.getContentStartCh();
-    const endCh = list.getContentEndCh();
+    const [rootStart, rootEnd] = root.getRange();
 
-    if (selection.from().ch === startCh && selection.to().ch === endCh) {
+    if (
+      selection.from().line < rootStart.line ||
+      selection.to().line > rootEnd.line
+    ) {
+      return false;
+    }
+
+    if (
+      selection.from().line === rootStart.line &&
+      selection.from().ch === rootStart.ch &&
+      selection.to().line === rootEnd.line &&
+      selection.to().ch === rootEnd.ch
+    ) {
+      return false;
+    }
+
+    const list = root.getListUnderCursor();
+    const [contentStart, contentEnd] = list.getContentRange();
+
+    if (
+      selection.from().line < contentStart.line ||
+      selection.to().line > contentEnd.line
+    ) {
+      return false;
+    }
+
+    if (
+      selection.from().line === contentStart.line &&
+      selection.from().ch === contentStart.ch &&
+      selection.to().line === contentEnd.line &&
+      selection.to().ch === contentEnd.ch
+    ) {
       // select all list
-      editor.setSelection(
-        root.getListStartPosition(),
-        root.getListEndPosition()
-      );
+      editor.setSelection(rootStart, rootEnd);
     } else {
       // select all line
-      editor.setSelection(
-        {
-          line: selection.anchor.line,
-          ch: startCh,
-        },
-        {
-          line: selection.anchor.line,
-          ch: endCh,
-        }
-      );
+      editor.setSelection(contentStart, contentEnd);
     }
 
     return true;
