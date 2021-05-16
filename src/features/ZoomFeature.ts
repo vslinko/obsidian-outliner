@@ -301,7 +301,7 @@ export class ZoomFeature implements IFeature {
       while (list && list.getParent()) {
         const lineNo = root.getContentLinesRangeOf(list)[0];
         div.prepend(
-          createTitle(list.getContent().split("\n")[0], () =>
+          createTitle(list.getLines()[0], () =>
             this.zoomIn(editor, { line: lineNo, ch: 0 })
           )
         );

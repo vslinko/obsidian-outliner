@@ -21,7 +21,14 @@ describe("parseList", () => {
   test("should parse list with notes and sublists", () => {
     const listUtils = makeListUtils();
     const editor = makeEditor({
-      text: "- one\n  side\n\t- two\n\t\t- three\n\t- four",
+      text: `
+- one
+  side
+\t- two
+\t\t- three
+\t\t\tnote
+\t- four
+`.trim(),
       cursor: { line: 0, ch: 0 },
     });
 
@@ -35,24 +42,28 @@ describe("parseList", () => {
             expect.objectContaining({
               indent: "",
               bullet: "-",
-              content: "one\n  side",
+              notesIndent: "  ",
+              lines: ["one", "side"],
               children: [
                 expect.objectContaining({
                   indent: "\t",
                   bullet: "-",
-                  content: "two",
+                  notesIndent: null,
+                  lines: ["two"],
                   children: [
                     expect.objectContaining({
                       indent: "\t\t",
                       bullet: "-",
-                      content: "three",
+                      notesIndent: "\t\t\t",
+                      lines: ["three", "note"],
                     }),
                   ],
                 }),
                 expect.objectContaining({
                   indent: "\t",
                   bullet: "-",
-                  content: "four",
+                  notesIndent: null,
+                  lines: ["four"],
                 }),
               ],
             }),
@@ -60,7 +71,9 @@ describe("parseList", () => {
         }),
       })
     );
-    expect(list.print()).toBe("- one\n  side\n\t- two\n\t\t- three\n\t- four");
+    expect(list.print()).toBe(
+      "- one\n  side\n\t- two\n\t\t- three\n\t\t\tnote\n\t- four"
+    );
   });
 
   test("should error if indent is not match 1", () => {

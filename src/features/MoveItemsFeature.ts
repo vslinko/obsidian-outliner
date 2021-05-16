@@ -1,8 +1,11 @@
 import { Plugin_2 } from "obsidian";
 import { ListUtils } from "src/list_utils";
+import { MoveLeftOperation } from "src/root/MoveLeftOperation";
 import { ObsidianUtils } from "src/obsidian_utils";
-import { Root } from "src/root";
 import { IFeature } from "../feature";
+import { MoveRightOperation } from "src/root/MoveRightOperation";
+import { MoveDownOperation } from "src/root/MoveDownOperation";
+import { MoveUpOperation } from "src/root/MoveUpOperation";
 
 export class MoveItemsFeature implements IFeature {
   constructor(
@@ -71,38 +74,36 @@ export class MoveItemsFeature implements IFeature {
 
   async unload() {}
 
-  private execute(
-    editor: CodeMirror.Editor,
-    cb: (root: Root) => boolean
-  ): boolean {
-    const root = this.listsUtils.parseList(editor);
-
-    if (!root) {
-      return false;
-    }
-
-    const result = cb(root);
-
-    if (result) {
-      this.listsUtils.applyChanges(editor, root);
-    }
-
-    return result;
-  }
-
   private moveListElementDown(editor: CodeMirror.Editor) {
-    return this.execute(editor, (root) => root.moveDown());
+    const { shouldStopPropagation } = this.listsUtils.performOperation(
+      (root) => new MoveDownOperation(root),
+      editor
+    );
+    return shouldStopPropagation;
   }
 
   private moveListElementUp(editor: CodeMirror.Editor) {
-    return this.execute(editor, (root) => root.moveUp());
+    const { shouldStopPropagation } = this.listsUtils.performOperation(
+      (root) => new MoveUpOperation(root),
+      editor
+    );
+    return shouldStopPropagation;
   }
 
   private moveListElementRight(editor: CodeMirror.Editor) {
-    return this.execute(editor, (root) => root.moveRight());
+    const { shouldStopPropagation } = this.listsUtils.performOperation(
+      (root) =>
+        new MoveRightOperation(root, this.listsUtils.getDefaultIndentChars()),
+      editor
+    );
+    return shouldStopPropagation;
   }
 
   private moveListElementLeft(editor: CodeMirror.Editor) {
-    return this.execute(editor, (root) => root.moveLeft());
+    const { shouldStopPropagation } = this.listsUtils.performOperation(
+      (root) => new MoveLeftOperation(root),
+      editor
+    );
+    return shouldStopPropagation;
   }
 }

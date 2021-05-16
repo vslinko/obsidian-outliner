@@ -7,7 +7,7 @@ import { ListUtils } from "./list_utils";
 import { Logger } from "./logger";
 import { ListsStylesFeature } from "./features/ListsStylesFeature";
 import { EnterOutdentIfLineIsEmptyFeature } from "./features/EnterOutdentIfLineIsEmptyFeature";
-import { EnterShouldCreateNewItemOnChildLevelFeature } from "./features/EnterShouldCreateNewItemOnChildLevelFeature";
+import { EnterShouldCreateNewItemFeature } from "./features/EnterShouldCreateNewItemOnChildLevelFeature";
 import { MoveCursorToPreviousUnfoldedLineFeature } from "./features/MoveCursorToPreviousUnfoldedLineFeature";
 import { EnsureCursorInListContentFeature } from "./features/EnsureCursorInListContentFeature";
 import { DeleteShouldIgnoreBulletsFeature } from "./features/DeleteShouldIgnoreBulletsFeature";
@@ -16,7 +16,7 @@ import { ZoomFeature } from "./features/ZoomFeature";
 import { FoldFeature } from "./features/FoldFeature";
 import { SelectAllFeature } from "./features/SelectAllFeature";
 import { MoveItemsFeature } from "./features/MoveItemsFeature";
-import { ShiftEnterShouldCreateNote } from "./features/ShiftEnterShouldCreateNote";
+import { ShiftEnterShouldCreateNoteFeature } from "./features/ShiftEnterShouldCreateNoteFeature";
 
 export default class ObsidianOutlinerPlugin extends Plugin {
   private features: IFeature[];
@@ -50,7 +50,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this.editorUtils,
         this.listsUtils
       ),
-      new EnterShouldCreateNewItemOnChildLevelFeature(
+      new EnterShouldCreateNewItemFeature(
         this,
         this.settings,
         this.editorUtils,
@@ -79,10 +79,10 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this.listsUtils
       ),
       new ZoomFeature(this, this.settings, this.obsidianUtils, this.listsUtils),
-      new FoldFeature(this, this.obsidianUtils, this.listsUtils),
+      new FoldFeature(this, this.obsidianUtils),
       new SelectAllFeature(this, this.settings, this.listsUtils),
       new MoveItemsFeature(this, this.obsidianUtils, this.listsUtils),
-      new ShiftEnterShouldCreateNote(
+      new ShiftEnterShouldCreateNoteFeature(
         this,
         this.settings,
         this.listsUtils,

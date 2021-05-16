@@ -93,7 +93,8 @@ export class SelectAllFeature implements IFeature {
     }
 
     const list = root.getListUnderCursor();
-    const [contentStart, contentEnd] = list.getContentRange();
+    const contentStart = list.getFirstLineContentStart();
+    const contentEnd = list.getLastLineContentEnd();
 
     if (
       selection.from().line < contentStart.line ||

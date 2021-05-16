@@ -1,5 +1,6 @@
 import { Plugin_2 } from "obsidian";
 import { EditorUtils } from "src/editor_utils";
+import { CreateNoteLineOperation } from "src/root/CreateNoteLineOperation";
 import { IFeature } from "../feature";
 import { ListUtils } from "../list_utils";
 import { Settings } from "../settings";
@@ -14,7 +15,7 @@ function isShiftEnter(e: KeyboardEvent) {
   );
 }
 
-export class ShiftEnterShouldCreateNote implements IFeature {
+export class ShiftEnterShouldCreateNoteFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
     private settings: Settings,
@@ -43,35 +44,18 @@ export class ShiftEnterShouldCreateNote implements IFeature {
       return;
     }
 
-    const cursor = cm.getCursor();
-    const root = this.listsUtils.parseList(cm, cursor);
+    const { shouldStopPropagation } = this.listsUtils.performOperation(
+      (root) =>
+        new CreateNoteLineOperation(
+          root,
+          this.listsUtils.getDefaultIndentChars()
+        ),
+      cm
+    );
 
-    if (!root) {
-      return;
+    if (shouldStopPropagation) {
+      e.preventDefault();
+      e.stopPropagation();
     }
-
-    const list = root.getListUnderCursor();
-    const contentStart = list.getContentRange()[0];
-
-    let indent = "";
-
-    if (cursor.line === contentStart.line) {
-      if (list.isEmpty()) {
-        indent = list.getIndent() + this.listsUtils.getDefaultIndentChars();
-      } else {
-        indent = list.getChildren()[0].getIndent();
-      }
-    } else {
-      indent = cm.getLine(cursor.line).match(/^[ \t]*/)[0];
-    }
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    cm.replaceRange(`\n${indent}`, cursor);
-    cm.setCursor({
-      line: cursor.line + 1,
-      ch: indent.length,
-    });
   };
 }

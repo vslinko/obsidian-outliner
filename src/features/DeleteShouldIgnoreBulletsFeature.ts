@@ -2,8 +2,29 @@ import { Plugin_2 } from "obsidian";
 import { EditorUtils } from "src/editor_utils";
 import { IFeature } from "src/feature";
 import { ListUtils } from "src/list_utils";
-import { Root } from "src/root";
+import { DeleteAndMergeWithNextLineOperation } from "src/root/DeleteAndMergeWithNextLineOperation";
+import { DeleteAndMergeWithPreviousLineOperation } from "src/root/DeleteAndMergeWithPreviousLineOperation";
 import { Settings } from "src/settings";
+
+function isBackspace(e: KeyboardEvent) {
+  return (
+    (e.keyCode === 8 || e.code === "Backspace") &&
+    e.shiftKey === false &&
+    e.metaKey === false &&
+    e.altKey === false &&
+    e.ctrlKey === false
+  );
+}
+
+function isDelete(e: KeyboardEvent) {
+  return (
+    (e.keyCode === 46 || e.code === "Delete") &&
+    e.shiftKey === false &&
+    e.metaKey === false &&
+    e.altKey === false &&
+    e.ctrlKey === false
+  );
+}
 
 export class DeleteShouldIgnoreBulletsFeature implements IFeature {
   constructor(
@@ -16,14 +37,49 @@ export class DeleteShouldIgnoreBulletsFeature implements IFeature {
   async load() {
     this.plugin.registerCodeMirror((cm) => {
       cm.on("beforeChange", this.handleBeforeChange);
+      cm.on("keydown", this.onKeyDown);
     });
   }
 
   async unload() {
     this.plugin.app.workspace.iterateCodeMirrors((cm) => {
+      cm.off("keydown", this.onKeyDown);
       cm.off("beforeChange", this.handleBeforeChange);
     });
   }
+
+  onKeyDown = (cm: CodeMirror.Editor, event: KeyboardEvent) => {
+    if (
+      !this.settings.stickCursor ||
+      !this.editorUtils.containsSingleCursor(cm)
+    ) {
+      return;
+    }
+
+    if (isBackspace(event)) {
+      const { shouldStopPropagation } = this.listsUtils.performOperation(
+        (root) => new DeleteAndMergeWithPreviousLineOperation(root),
+        cm
+      );
+
+      if (shouldStopPropagation) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }
+
+    if (isDelete(event)) {
+      const { shouldStopPropagation } = this.listsUtils.performOperation(
+        (root) => new DeleteAndMergeWithNextLineOperation(root),
+        cm
+      );
+
+      if (shouldStopPropagation) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }
+  };
 
   private handleBeforeChange = (
     cm: CodeMirror.Editor,
@@ -44,28 +100,15 @@ export class DeleteShouldIgnoreBulletsFeature implements IFeature {
     }
 
     const list = root.getListUnderCursor();
-    const [contentStart, contentEnd] = list.getContentRange();
+    const contentStart = list.getFirstLineContentStart();
 
-    if (this.isBackspaceOnContentStart(changeObj, contentStart)) {
-      this.deleteItemAndMergeContentWithPreviousLine(cm, root, changeObj);
-    } else if (this.isDeletionIncludesBullet(changeObj, contentStart)) {
+    if (
+      !this.isBackspaceOnContentStart(changeObj, contentStart) &&
+      this.isDeletionIncludesBullet(changeObj, contentStart)
+    ) {
       this.limitDeleteRangeToContentRange(changeObj, contentStart.ch);
-    } else if (this.isDeleteOnLineEnd(changeObj, contentEnd)) {
-      this.deleteNextItemAndMergeContentWithCurrentLine(cm, root, changeObj);
     }
   };
-
-  private isDeleteOnLineEnd(
-    changeObj: CodeMirror.EditorChangeCancellable,
-    contentEnd: CodeMirror.Position
-  ) {
-    return (
-      changeObj.from.line === contentEnd.line &&
-      changeObj.from.ch === contentEnd.ch &&
-      changeObj.to.line === changeObj.from.line + 1 &&
-      changeObj.to.ch === 0
-    );
-  }
 
   private isDeletionIncludesBullet(
     changeObj: CodeMirror.EditorChangeCancellable,
@@ -99,50 +142,5 @@ export class DeleteShouldIgnoreBulletsFeature implements IFeature {
       ch: listContentStartCh,
     };
     changeObj.update(from, changeObj.to, changeObj.text);
-  }
-
-  private deleteItemAndMergeContentWithPreviousLine(
-    editor: CodeMirror.Editor,
-    root: Root,
-    changeObj: CodeMirror.EditorChangeCancellable
-  ) {
-    const list = root.getListUnderCursor();
-
-    if (root.getChildren()[0] === list && list.getChildren().length === 0) {
-      return false;
-    }
-
-    const res = root.deleteAndMergeWithPrevious();
-
-    if (res) {
-      changeObj.cancel();
-      this.listsUtils.applyChanges(editor, root);
-    }
-
-    return res;
-  }
-
-  private deleteNextItemAndMergeContentWithCurrentLine(
-    editor: CodeMirror.Editor,
-    root: Root,
-    changeObj: CodeMirror.EditorChangeCancellable
-  ) {
-    const nextLineNo = root.getCursor().line + 1;
-    const nextList = root.getListUnderLine(nextLineNo);
-
-    root.replaceCursor({
-      line: nextLineNo,
-      ch: nextList.getContentStartCh(),
-    });
-
-    const res = root.deleteAndMergeWithPrevious();
-    const reallyChanged = root.getCursor().line !== nextLineNo;
-
-    if (reallyChanged) {
-      changeObj.cancel();
-      this.listsUtils.applyChanges(editor, root);
-    }
-
-    return res;
   }
 }

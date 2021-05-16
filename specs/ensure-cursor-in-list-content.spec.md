@@ -1,6 +1,3 @@
-
-
-
 # cursor should be moved to list content
 
 ```md
@@ -18,7 +15,7 @@
 |
 ```
 
-- keydown: `Up`
+- keydown: `ArrowUp`
 
 ```md
 - |one
@@ -32,7 +29,7 @@
 - two
 ```
 
-- keydown: `Right`
+- keydown: `ArrowRight`
 
 ```md
 - one
@@ -46,7 +43,7 @@
 - |two
 ```
 
-- keydown: `Left`
+- keydown: `ArrowLeft`
 
 ```md
 - one|
@@ -61,7 +58,7 @@
   - |two
 ```
 
-- keydown: `Left`
+- keydown: `ArrowLeft`
 
 ```md
 - one

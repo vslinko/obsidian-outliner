@@ -2,6 +2,17 @@ import { MarkdownView } from "obsidian";
 import * as assert from "assert";
 import ObsidianOutlinerPlugin from ".";
 
+const keysMap: { [key: string]: number } = {
+  Backspace: 8,
+  Enter: 13,
+  ArrowLeft: 37,
+  ArrowUp: 38,
+  ArrowRight: 39,
+  ArrowDown: 40,
+  Delete: 46,
+  KeyA: 65,
+};
+
 export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlugin {
   private editor: CodeMirror.Editor;
 
@@ -54,11 +65,8 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       }
     }
 
-    for (const c in (window.CodeMirror as any).keyNames) {
-      if ((window.CodeMirror as any).keyNames[c] == e.code) {
-        e.keyCode = Number(c);
-        break;
-      }
+    if (e.code in keysMap) {
+      e.keyCode = keysMap[e.code];
     }
 
     if (e.keyCode == 0) {

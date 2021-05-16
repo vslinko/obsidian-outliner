@@ -50,15 +50,14 @@ export class SelectionShouldIgnoreBulletsFeature implements IFeature {
     }
 
     const list = root.getListUnderCursor();
+    const contentStart = list.getFirstLineContentStart();
 
-    if (range.from().line !== root.getContentLinesRangeOf(list)[0]) {
+    if (range.from().line !== contentStart.line) {
       return;
     }
 
-    const listContentStartCh = list.getContentStartCh();
-
-    if (range.from().ch < listContentStartCh) {
-      range.from().ch = listContentStartCh;
+    if (range.from().ch < contentStart.ch) {
+      range.from().ch = contentStart.ch;
       changeObj.update([range]);
     }
   };

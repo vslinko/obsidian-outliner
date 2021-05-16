@@ -1,14 +1,9 @@
 import { Notice, Plugin_2 } from "obsidian";
-import { ListUtils } from "src/list_utils";
 import { ObsidianUtils } from "src/obsidian_utils";
 import { IFeature } from "../feature";
 
 export class FoldFeature implements IFeature {
-  constructor(
-    private plugin: Plugin_2,
-    private obsidianUtils: ObsidianUtils,
-    private listsUtils: ListUtils
-  ) {}
+  constructor(private plugin: Plugin_2, private obsidianUtils: ObsidianUtils) {}
 
   async load() {
     this.plugin.addCommand({
@@ -41,10 +36,6 @@ export class FoldFeature implements IFeature {
   async unload() {}
 
   private setFold(editor: CodeMirror.Editor, type: "fold" | "unfold") {
-    if (!this.listsUtils.isCursorInList(editor)) {
-      return false;
-    }
-
     if (!this.obsidianUtils.getObsidianFoldSettigns().foldIndent) {
       new Notice(
         `Unable to ${type} because folding is disabled. Please enable "Fold indent" in Obsidian settings.`,

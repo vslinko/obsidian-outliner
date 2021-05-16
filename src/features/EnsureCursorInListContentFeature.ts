@@ -2,6 +2,8 @@ import { Plugin_2 } from "obsidian";
 import { EditorUtils } from "src/editor_utils";
 import { IFeature } from "src/feature";
 import { ListUtils } from "src/list_utils";
+import { EnsureCursorInListContentOperation } from "src/root/EnsureCursorInListContentOperation";
+import { EnsureCursorIsInUnfoldedLineOperation } from "src/root/EnsureCursorIsInUnfoldedLineOperation";
 import { Settings } from "src/settings";
 
 export class EnsureCursorInListContentFeature implements IFeature {
@@ -24,61 +26,22 @@ export class EnsureCursorInListContentFeature implements IFeature {
     });
   }
 
-  private ensureCursorInListContent(editor: CodeMirror.Editor) {
-    const cursor = editor.getCursor();
-    const root = this.listsUtils.parseList(editor, cursor);
-
-    if (!root) {
-      return;
-    }
-
-    const list = root.getListUnderCursor();
-    const linePrefix =
-      list.getContentRange()[0].line === cursor.line
-        ? list.getContentStartCh()
-        : editor.getLine(cursor.line).match(/^[ \t]*/)[0].length;
-
-    if (cursor.ch < linePrefix) {
-      editor.setCursor({
-        line: cursor.line,
-        ch: linePrefix,
-      });
-    }
-  }
-
-  private ensureCursorIsInUnfoldedLine(editor: CodeMirror.Editor) {
-    const cursor = editor.getCursor();
-
-    const mark = editor.findMarksAt(cursor).find((m) => (m as any).__isFold);
-
-    if (!mark) {
-      return;
-    }
-
-    const firstFoldingLine: CodeMirror.LineHandle = (mark as any).lines[0];
-
-    if (!firstFoldingLine) {
-      return;
-    }
-
-    const lineNo = editor.getLineNumber(firstFoldingLine);
-
-    if (lineNo !== cursor.line) {
-      editor.setCursor({
-        line: lineNo,
-        ch: editor.getLine(lineNo).length,
-      });
-    }
-  }
-
   private handleCursorActivity = (cm: CodeMirror.Editor) => {
     if (
-      this.settings.stickCursor &&
-      this.editorUtils.containsSingleCursor(cm) &&
-      this.listsUtils.isCursorInList(cm)
+      !this.settings.stickCursor ||
+      !this.editorUtils.containsSingleCursor(cm)
     ) {
-      this.ensureCursorIsInUnfoldedLine(cm);
-      this.ensureCursorInListContent(cm);
+      return;
     }
+
+    this.listsUtils.performOperation(
+      (root) => new EnsureCursorIsInUnfoldedLineOperation(root),
+      cm
+    );
+
+    this.listsUtils.performOperation(
+      (root) => new EnsureCursorInListContentOperation(root),
+      cm
+    );
   };
 }

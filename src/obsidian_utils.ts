@@ -41,9 +41,13 @@ export class ObsidianUtils {
 
       const editor = view.sourceMode.cmEditor;
 
-      const worked = cb(editor);
+      const shouldStopPropagation = cb(editor);
 
-      if (!worked && window.event && window.event.type === "keydown") {
+      if (
+        !shouldStopPropagation &&
+        window.event &&
+        window.event.type === "keydown"
+      ) {
         (editor as any).triggerOnKeyDown(window.event);
       }
     };

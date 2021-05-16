@@ -1,4 +1,5 @@
 import { Plugin_2 } from "obsidian";
+import { OutdentIfLineIsEmptyOperation } from "src/root/OutdentIfLineIsEmptyOperation";
 import { EditorUtils } from "../editor_utils";
 import { IFeature } from "../feature";
 import { ListUtils } from "../list_utils";
@@ -34,38 +35,21 @@ export class EnterOutdentIfLineIsEmptyFeature implements IFeature {
     });
   }
 
-  private outdentIfLineIsEmpty(editor: CodeMirror.Editor) {
-    if (!this.editorUtils.containsSingleCursor(editor)) {
-      return false;
-    }
-
-    const root = this.listUtils.parseList(editor);
-
-    if (!root) {
-      return false;
-    }
-
-    const list = root.getListUnderCursor();
-
-    if (list.getContent().length > 0 || list.getLevel() === 1) {
-      return false;
-    }
-
-    root.moveLeft();
-
-    this.listUtils.applyChanges(editor, root);
-
-    return true;
-  }
-
   private onKeyDown = (cm: CodeMirror.Editor, e: KeyboardEvent) => {
-    if (!this.settings.betterEnter || !isEnter(e)) {
+    if (
+      !this.settings.betterEnter ||
+      !isEnter(e) ||
+      !this.editorUtils.containsSingleCursor(cm)
+    ) {
       return;
     }
 
-    const worked = this.outdentIfLineIsEmpty(cm);
+    const { shouldStopPropagation } = this.listUtils.performOperation(
+      (root) => new OutdentIfLineIsEmptyOperation(root),
+      cm
+    );
 
-    if (worked) {
+    if (shouldStopPropagation) {
       e.preventDefault();
       e.stopPropagation();
     }

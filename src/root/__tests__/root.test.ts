@@ -1,7 +1,7 @@
-import { ListUtils } from "../list_utils";
-import { Logger } from "../logger";
-import { ObsidianUtils } from "../obsidian_utils";
-import { makeEditor, makeLogger, makeObsidianUtils } from "../test_utils";
+import { ListUtils } from "../../list_utils";
+import { Logger } from "../../logger";
+import { ObsidianUtils } from "../../obsidian_utils";
+import { makeEditor, makeLogger, makeObsidianUtils } from "../../test_utils";
 
 export function makeRoot(options: {
   editor: CodeMirror.Editor;

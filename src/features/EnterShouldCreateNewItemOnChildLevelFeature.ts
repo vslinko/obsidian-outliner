@@ -1,5 +1,6 @@
 import { Plugin_2 } from "obsidian";
 import { EditorUtils } from "src/editor_utils";
+import { CreateNewItemOperation } from "src/root/CreateNewItemOperation";
 import { IFeature } from "../feature";
 import { ListUtils } from "../list_utils";
 import { Settings } from "../settings";
@@ -14,7 +15,7 @@ function isEnter(e: KeyboardEvent) {
   );
 }
 
-export class EnterShouldCreateNewItemOnChildLevelFeature implements IFeature {
+export class EnterShouldCreateNewItemFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
     private settings: Settings,
@@ -43,18 +44,14 @@ export class EnterShouldCreateNewItemOnChildLevelFeature implements IFeature {
       return;
     }
 
-    const root = this.listUtils.parseList(cm);
+    const { shouldStopPropagation } = this.listUtils.performOperation(
+      (root) => new CreateNewItemOperation(root),
+      cm
+    );
 
-    if (!root) {
-      return;
-    }
-
-    const worked = root.enter();
-
-    if (worked) {
+    if (shouldStopPropagation) {
       e.preventDefault();
       e.stopPropagation();
-      this.listUtils.applyChanges(cm, root);
     }
   };
 }

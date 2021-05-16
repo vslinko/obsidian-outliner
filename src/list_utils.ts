@@ -1,6 +1,7 @@
 import { Logger } from "./logger";
 import { ObsidianUtils } from "./obsidian_utils";
 import { List, Root } from "./root";
+import { IOperation } from "./root/IOperation";
 
 const bulletSign = "-*+";
 
@@ -14,16 +15,17 @@ export interface IApplyChangesList {
 }
 
 export interface IApplyChangesRoot {
-  getListStartPosition(): CodeMirror.Position;
-  getListEndPosition(): CodeMirror.Position;
+  getRange(): [CodeMirror.Position, CodeMirror.Position];
   getCursor(): CodeMirror.Position;
   print(): string;
   getListUnderLine(l: number): IApplyChangesList;
 }
 
 interface IParseListList {
-  getIndent(): string;
-  appendContent(content: string): void;
+  getFirstLineIndent(): string;
+  setNotesIndent(notesIndent: string): void;
+  getNotesIndent(): string | null;
+  addLine(text: string): void;
   getParent(): IParseListList | null;
   addAfterAll(list: IParseListList): void;
 }
@@ -31,19 +33,33 @@ interface IParseListList {
 export class ListUtils {
   constructor(private logger: Logger, private obsidianUtils: ObsidianUtils) {}
 
-  getListItemBulletPrefixLength(line: string) {
-    const prefixRe = new RegExp(`^[ \t]*[${bulletSign}] `);
-    const matches = prefixRe.exec(line);
+  evalOperation(root: Root, op: IOperation, editor: CodeMirror.Editor) {
+    op.perform();
 
-    if (!matches) {
-      return null;
+    if (op.shouldUpdate()) {
+      this.applyChanges(editor, root);
     }
 
-    return matches[0].length;
+    return {
+      shouldUpdate: op.shouldUpdate(),
+      shouldStopPropagation: op.shouldStopPropagation(),
+    };
   }
 
-  isCursorInList(editor: CodeMirror.Editor, cursor = editor.getCursor()) {
-    return !!this.parseList(editor, cursor);
+  performOperation(
+    cb: (root: Root) => IOperation,
+    editor: CodeMirror.Editor,
+    cursor = editor.getCursor()
+  ) {
+    const root = this.parseList(editor, cursor);
+
+    if (!root) {
+      return { shouldUpdate: false, shouldStopPropagation: false };
+    }
+
+    const op = cb(root);
+
+    return this.evalOperation(root, op, editor);
   }
 
   parseList(
@@ -118,11 +134,10 @@ export class ListUtils {
     const root = new Root(
       { line: listStartLine, ch: 0 },
       { line: listEndLine, ch: editor.getLine(listEndLine).length },
-      { line: cursor.line, ch: cursor.ch },
-      this.getDefaultIndentChars()
+      { line: cursor.line, ch: cursor.ch }
     );
 
-    let currentParent: IParseListList = root;
+    let currentParent: IParseListList = root.getRootList();
     let currentList: IParseListList | null = null;
     let currentIndent = "";
 
@@ -153,16 +168,16 @@ export class ListUtils {
           currentIndent = indent;
         } else if (indent.length < currentIndent.length) {
           while (
-            currentParent.getIndent().length >= indent.length &&
+            currentParent.getFirstLineIndent().length >= indent.length &&
             currentParent.getParent()
           ) {
             currentParent = currentParent.getParent();
           }
-          currentIndent = currentParent.getIndent();
+          currentIndent = currentParent.getFirstLineIndent();
         }
 
-        const folded = (editor as any).isFolded({
-          line: l,
+        const folded = !!(editor as any).isFolded({
+          line: Math.min(l + 1, listEndLine),
           ch: 0,
         });
 
@@ -175,8 +190,10 @@ export class ListUtils {
           );
         }
 
-        if (!this.isEmptyLine(line) && line.indexOf(currentIndent) !== 0) {
-          const expected = currentIndent.replace(/ /g, "S").replace(/\t/g, "T");
+        const indentToCheck = currentList.getNotesIndent() || currentIndent;
+
+        if (line.indexOf(indentToCheck) !== 0) {
+          const expected = indentToCheck.replace(/ /g, "S").replace(/\t/g, "T");
           const got = line
             .match(/^[ \t]*/)[0]
             .replace(/ /g, "S")
@@ -187,7 +204,19 @@ export class ListUtils {
           );
         }
 
-        currentList.appendContent("\n" + line);
+        if (!currentList.getNotesIndent()) {
+          const matches = line.match(/^[ \t]+/);
+
+          if (!matches || matches[0].length <= currentIndent.length) {
+            return error(
+              `Unable to parse list: expected some indent, got no indent`
+            );
+          }
+
+          currentList.setNotesIndent(matches[0]);
+        }
+
+        currentList.addLine(line.slice(currentList.getNotesIndent().length));
       } else {
         return error(
           `Unable to parse list: expected list item or empty line, got "${line}"`
@@ -198,22 +227,20 @@ export class ListUtils {
     return root;
   }
 
-  applyChanges(editor: CodeMirror.Editor, root: IApplyChangesRoot) {
-    const oldString = editor.getRange(
-      root.getListStartPosition(),
-      root.getListEndPosition()
-    );
+  private applyChanges(editor: CodeMirror.Editor, root: IApplyChangesRoot) {
+    const rootRange = root.getRange();
+    const oldString = editor.getRange(rootRange[0], rootRange[1]);
     const newString = root.print();
 
-    const fromLine = root.getListStartPosition().line;
-    const toLine = root.getListEndPosition().line;
+    const fromLine = rootRange[0].line;
+    const toLine = rootRange[1].line;
 
     for (let l = fromLine; l <= toLine; l++) {
       (editor as any).foldCode(l, null, "unfold");
     }
 
-    let changeFrom = root.getListStartPosition();
-    let changeTo = root.getListEndPosition();
+    let changeFrom = { ...rootRange[0] };
+    let changeTo = { ...rootRange[1] };
     let oldTmp = oldString;
     let newTmp = newString;
 
@@ -261,11 +288,11 @@ export class ListUtils {
       editor.setCursor(newCursor);
     }
 
+    // TODO: lines could be different because of deletetion
     for (let l = fromLine; l <= toLine; l++) {
       const line = root.getListUnderLine(l);
       if (line && line.isFoldRoot()) {
-        // TODO: why working only with -1?
-        (editor as any).foldCode(l - 1);
+        (editor as any).foldCode(l);
       }
     }
   }

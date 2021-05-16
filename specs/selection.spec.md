@@ -5,7 +5,7 @@
   - two|
 ```
 
-- keydown: `Cmd-A`
+- keydown: `Cmd-KeyA`
 
 ```md
 - one
@@ -21,8 +21,8 @@ a
 b
 ```
 
-- keydown: `Cmd-A`
-- keydown: `Cmd-A`
+- keydown: `Cmd-KeyA`
+- keydown: `Cmd-KeyA`
 
 
 ```md
@@ -38,7 +38,7 @@ b
 - one|
 ```
 
-- keydown: `Cmd-Shift-Left`
+- keydown: `Cmd-Shift-ArrowLeft`
 
 ```md
 - |one|
