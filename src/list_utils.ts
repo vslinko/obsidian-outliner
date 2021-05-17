@@ -143,9 +143,13 @@ export class ListUtils {
       if (oldLine !== newLine) {
         break;
       }
-      changeTo.line--;
       oldTmp = oldTmp.slice(0, -oldLine.length);
       newTmp = newTmp.slice(0, -oldLine.length);
+
+      const nlIndex2 = oldTmp.lastIndexOf("\n");
+      changeTo.ch =
+        nlIndex2 >= 0 ? oldTmp.length - nlIndex2 - 1 : oldTmp.length;
+      changeTo.line--;
     }
 
     if (oldTmp !== newTmp) {
