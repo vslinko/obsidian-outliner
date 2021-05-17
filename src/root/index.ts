@@ -1,7 +1,29 @@
+export function cmpPos(a: IPosition, b: IPosition) {
+  return a.line - b.line || a.ch - b.ch;
+}
+
+export function maxPos(a: IPosition, b: IPosition) {
+  return cmpPos(a, b) < 0 ? b : a;
+}
+
+export function minPos(a: IPosition, b: IPosition) {
+  return cmpPos(a, b) < 0 ? a : b;
+}
+
+export interface IPosition {
+  ch: number;
+  line: number;
+}
+
 export interface IListLine {
   text: string;
-  from: CodeMirror.Position;
-  to: CodeMirror.Position;
+  from: IPosition;
+  to: IPosition;
+}
+
+export interface IRange {
+  anchor: IPosition;
+  head: IPosition;
 }
 
 export class List {
@@ -246,31 +268,65 @@ export class List {
 
 export class Root {
   private rootList = new List(this, "", "", "", false);
+  private selections: IRange[] = [];
 
   constructor(
-    private start: CodeMirror.Position,
-    private end: CodeMirror.Position,
-    private cursor: CodeMirror.Position
-  ) {}
+    private start: IPosition,
+    private end: IPosition,
+    selections: IRange[]
+  ) {
+    this.replaceSelections(selections);
+  }
 
   getRootList() {
     return this.rootList;
   }
 
-  getRange(): [CodeMirror.Position, CodeMirror.Position] {
+  getRange(): [IPosition, IPosition] {
     return [{ ...this.start }, { ...this.end }];
   }
 
-  getCursor() {
-    return { ...this.cursor };
+  getSelections(): IRange[] {
+    return this.selections.map((s) => ({
+      anchor: { ...s.anchor },
+      head: { ...s.head },
+    }));
   }
 
-  replaceCursor(cursor: CodeMirror.Position) {
-    this.cursor = cursor;
+  hasSingleCursor() {
+    if (!this.hasSingleSelection()) {
+      return false;
+    }
+
+    const selection = this.selections[0];
+
+    return (
+      selection.anchor.line === selection.head.line &&
+      selection.anchor.ch === selection.head.ch
+    );
+  }
+
+  hasSingleSelection() {
+    return this.selections.length === 1;
+  }
+
+  getCursor() {
+    return { ...this.selections[this.selections.length - 1].head };
+  }
+
+  replaceCursor(cursor: IPosition) {
+    this.selections = [{ anchor: cursor, head: cursor }];
+  }
+
+  replaceSelections(selections: IRange[]) {
+    if (selections.length < 1) {
+      throw new Error(`Unable to create Root without selections`);
+    }
+    this.selections = selections;
   }
 
   getListUnderCursor(): List {
-    return this.getListUnderLine(this.cursor.line);
+    return this.getListUnderLine(this.getCursor().line);
   }
 
   getListUnderLine(line: number) {

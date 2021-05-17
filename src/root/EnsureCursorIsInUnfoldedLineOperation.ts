@@ -16,9 +16,14 @@ export class EnsureCursorIsInUnfoldedLineOperation implements IOperation {
   }
 
   perform() {
+    const { root } = this;
+
+    if (!root.hasSingleCursor()) {
+      return;
+    }
+
     this.stopPropagation = true;
 
-    const { root } = this;
     const cursor = root.getCursor();
 
     const list = root.getListUnderCursor();

@@ -17,6 +17,11 @@ export class CreateNewItemOperation implements IOperation {
 
   perform() {
     const { root } = this;
+
+    if (!root.hasSingleCursor()) {
+      return;
+    }
+
     const list = root.getListUnderCursor();
     const lines = list.getLinesInfo();
 

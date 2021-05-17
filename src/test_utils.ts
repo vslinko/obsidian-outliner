@@ -12,6 +12,7 @@ export function makeEditor(params: EditorMockParams): CodeMirror.Editor {
 
   const editor: any = {
     getCursor: () => cursor,
+    listSelections: () => [{ anchor: cursor, head: cursor }],
     getLine: (l: number) => text.split("\n")[l],
     firstLine: () => 0,
     lastLine: () => text.split("\n").length - 1,

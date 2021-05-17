@@ -1,5 +1,4 @@
 import { Plugin_2 } from "obsidian";
-import { EditorUtils } from "src/editor_utils";
 import { CreateNoteLineOperation } from "src/root/CreateNoteLineOperation";
 import { IFeature } from "../feature";
 import { ListUtils } from "../list_utils";
@@ -19,8 +18,7 @@ export class ShiftEnterShouldCreateNoteFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
     private settings: Settings,
-    private listsUtils: ListUtils,
-    private editorUtils: EditorUtils
+    private listsUtils: ListUtils
   ) {}
 
   async load() {
@@ -36,11 +34,7 @@ export class ShiftEnterShouldCreateNoteFeature implements IFeature {
   }
 
   private onKeyDown = (cm: CodeMirror.Editor, e: KeyboardEvent) => {
-    if (
-      !this.settings.betterEnter ||
-      !isShiftEnter(e) ||
-      !this.editorUtils.containsSingleCursor(cm)
-    ) {
+    if (!this.settings.betterEnter || !isShiftEnter(e)) {
       return;
     }
 

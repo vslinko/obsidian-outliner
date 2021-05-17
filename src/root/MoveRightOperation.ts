@@ -16,9 +16,14 @@ export class MoveRightOperation implements IOperation {
   }
 
   perform() {
+    const { root } = this;
+
+    if (!root.hasSingleCursor()) {
+      return;
+    }
+
     this.stopPropagation = true;
 
-    const { root } = this;
     const list = root.getListUnderCursor();
     const parent = list.getParent();
     const prev = parent.getPrevSiblingOf(list);

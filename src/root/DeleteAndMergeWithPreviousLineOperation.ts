@@ -17,6 +17,11 @@ export class DeleteAndMergeWithPreviousLineOperation implements IOperation {
 
   perform() {
     const { root } = this;
+
+    if (!root.hasSingleCursor()) {
+      return;
+    }
+
     const list = root.getListUnderCursor();
 
     if (root.getChildren()[0] === list && list.getChildren().length === 0) {

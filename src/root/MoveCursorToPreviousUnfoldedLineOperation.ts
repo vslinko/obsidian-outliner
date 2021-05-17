@@ -18,6 +18,10 @@ export class MoveCursorToPreviousUnfoldedLineOperation implements IOperation {
   perform() {
     const { root } = this;
 
+    if (!root.hasSingleCursor()) {
+      return;
+    }
+
     const list = this.root.getListUnderCursor();
     const cursor = this.root.getCursor();
     const contentStart = list.getFirstLineContentStart();

@@ -16,7 +16,7 @@ export interface IApplyChangesList {
 
 export interface IApplyChangesRoot {
   getRange(): [CodeMirror.Position, CodeMirror.Position];
-  getCursor(): CodeMirror.Position;
+  getSelections(): { anchor: CodeMirror.Position; head: CodeMirror.Position }[];
   print(): string;
   getListUnderLine(l: number): IApplyChangesList;
 }
@@ -134,7 +134,10 @@ export class ListUtils {
     const root = new Root(
       { line: listStartLine, ch: 0 },
       { line: listEndLine, ch: editor.getLine(listEndLine).length },
-      { line: cursor.line, ch: cursor.ch }
+      editor.listSelections().map((r) => ({
+        anchor: { line: r.anchor.line, ch: r.anchor.ch },
+        head: { line: r.head.line, ch: r.head.ch },
+      }))
     );
 
     let currentParent: IParseListList = root.getRootList();
@@ -281,12 +284,7 @@ export class ListUtils {
       editor.replaceRange(newTmp, changeFrom, changeTo);
     }
 
-    const oldCursor = editor.getCursor();
-    const newCursor = root.getCursor();
-
-    if (oldCursor.line != newCursor.line || oldCursor.ch != newCursor.ch) {
-      editor.setCursor(newCursor);
-    }
+    editor.setSelections(root.getSelections());
 
     // TODO: lines could be different because of deletetion
     for (let l = fromLine; l <= toLine; l++) {

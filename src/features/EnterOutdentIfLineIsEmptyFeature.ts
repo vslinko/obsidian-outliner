@@ -1,6 +1,5 @@
 import { Plugin_2 } from "obsidian";
 import { OutdentIfLineIsEmptyOperation } from "src/root/OutdentIfLineIsEmptyOperation";
-import { EditorUtils } from "../editor_utils";
 import { IFeature } from "../feature";
 import { ListUtils } from "../list_utils";
 import { Settings } from "../settings";
@@ -19,7 +18,6 @@ export class EnterOutdentIfLineIsEmptyFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
     private settings: Settings,
-    private editorUtils: EditorUtils,
     private listUtils: ListUtils
   ) {}
 
@@ -36,11 +34,7 @@ export class EnterOutdentIfLineIsEmptyFeature implements IFeature {
   }
 
   private onKeyDown = (cm: CodeMirror.Editor, e: KeyboardEvent) => {
-    if (
-      !this.settings.betterEnter ||
-      !isEnter(e) ||
-      !this.editorUtils.containsSingleCursor(cm)
-    ) {
+    if (!this.settings.betterEnter || !isEnter(e)) {
       return;
     }
 

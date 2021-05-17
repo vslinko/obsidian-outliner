@@ -18,7 +18,13 @@ export class OutdentIfLineIsEmptyOperation implements IOperation {
   }
 
   perform() {
-    const list = this.root.getListUnderCursor();
+    const { root } = this;
+
+    if (!root.hasSingleCursor()) {
+      return;
+    }
+
+    const list = root.getListUnderCursor();
     const lines = list.getLines();
 
     if (lines.length > 1 || lines[0].length > 0 || list.getLevel() === 1) {

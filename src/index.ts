@@ -47,19 +47,12 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       new EnterOutdentIfLineIsEmptyFeature(
         this,
         this.settings,
-        this.editorUtils,
         this.listsUtils
       ),
-      new EnterShouldCreateNewItemFeature(
-        this,
-        this.settings,
-        this.editorUtils,
-        this.listsUtils
-      ),
+      new EnterShouldCreateNewItemFeature(this, this.settings, this.listsUtils),
       new EnsureCursorInListContentFeature(
         this,
         this.settings,
-        this.editorUtils,
         this.listsUtils
       ),
       new MoveCursorToPreviousUnfoldedLineFeature(
@@ -85,8 +78,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       new ShiftEnterShouldCreateNoteFeature(
         this,
         this.settings,
-        this.listsUtils,
-        this.editorUtils
+        this.listsUtils
       ),
     ];
 

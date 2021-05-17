@@ -20,6 +20,11 @@ export class DeleteAndMergeWithNextLineOperation implements IOperation {
 
   perform() {
     const { root } = this;
+
+    if (!root.hasSingleCursor()) {
+      return;
+    }
+
     const list = root.getListUnderCursor();
     const cursor = root.getCursor();
     const contentEnd = list.getLastLineContentEnd();

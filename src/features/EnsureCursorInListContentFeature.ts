@@ -1,5 +1,4 @@
 import { Plugin_2 } from "obsidian";
-import { EditorUtils } from "src/editor_utils";
 import { IFeature } from "src/feature";
 import { ListUtils } from "src/list_utils";
 import { EnsureCursorInListContentOperation } from "src/root/EnsureCursorInListContentOperation";
@@ -10,7 +9,6 @@ export class EnsureCursorInListContentFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
     private settings: Settings,
-    private editorUtils: EditorUtils,
     private listsUtils: ListUtils
   ) {}
 
@@ -27,10 +25,7 @@ export class EnsureCursorInListContentFeature implements IFeature {
   }
 
   private handleCursorActivity = (cm: CodeMirror.Editor) => {
-    if (
-      !this.settings.stickCursor ||
-      !this.editorUtils.containsSingleCursor(cm)
-    ) {
+    if (!this.settings.stickCursor) {
       return;
     }
 

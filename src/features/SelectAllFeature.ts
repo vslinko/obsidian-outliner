@@ -1,5 +1,6 @@
 import { Plugin_2 } from "obsidian";
 import { ListUtils } from "src/list_utils";
+import { SelectAllOperation } from "src/root/SelectAllOperation";
 import { Settings } from "src/settings";
 import { IFeature } from "../feature";
 
@@ -51,71 +52,14 @@ export class SelectAllFeature implements IFeature {
       return;
     }
 
-    const worked = this.selectAll(cm);
+    const { shouldStopPropagation } = this.listsUtils.performOperation(
+      (root) => new SelectAllOperation(root),
+      cm
+    );
 
-    if (worked) {
+    if (shouldStopPropagation) {
       event.preventDefault();
       event.stopPropagation();
     }
   };
-
-  private selectAll(editor: CodeMirror.Editor) {
-    const selections = editor.listSelections();
-
-    if (selections.length !== 1) {
-      return false;
-    }
-
-    const selection = selections[0];
-
-    const root = this.listsUtils.parseList(editor, selection.anchor);
-
-    if (!root) {
-      return false;
-    }
-
-    const [rootStart, rootEnd] = root.getRange();
-
-    if (
-      selection.from().line < rootStart.line ||
-      selection.to().line > rootEnd.line
-    ) {
-      return false;
-    }
-
-    if (
-      selection.from().line === rootStart.line &&
-      selection.from().ch === rootStart.ch &&
-      selection.to().line === rootEnd.line &&
-      selection.to().ch === rootEnd.ch
-    ) {
-      return false;
-    }
-
-    const list = root.getListUnderCursor();
-    const contentStart = list.getFirstLineContentStart();
-    const contentEnd = list.getLastLineContentEnd();
-
-    if (
-      selection.from().line < contentStart.line ||
-      selection.to().line > contentEnd.line
-    ) {
-      return false;
-    }
-
-    if (
-      selection.from().line === contentStart.line &&
-      selection.from().ch === contentStart.ch &&
-      selection.to().line === contentEnd.line &&
-      selection.to().ch === contentEnd.ch
-    ) {
-      // select all list
-      editor.setSelection(rootStart, rootEnd);
-    } else {
-      // select all line
-      editor.setSelection(contentStart, contentEnd);
-    }
-
-    return true;
-  }
 }

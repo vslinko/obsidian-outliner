@@ -5,7 +5,7 @@ export class EditorUtils {
     return selections.length === 1 && this.rangeIsCursor(selections[0]);
   }
 
-  rangeIsCursor(selection: CodeMirror.Range) {
+  private rangeIsCursor(selection: CodeMirror.Range) {
     return (
       selection.anchor.line === selection.head.line &&
       selection.anchor.ch === selection.head.ch

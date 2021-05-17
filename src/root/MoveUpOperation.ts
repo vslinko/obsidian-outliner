@@ -16,9 +16,14 @@ export class MoveUpOperation implements IOperation {
   }
 
   perform() {
+    const { root } = this;
+
+    if (!root.hasSingleCursor()) {
+      return;
+    }
+
     this.stopPropagation = true;
 
-    const { root } = this;
     const list = root.getListUnderCursor();
     const parent = list.getParent();
     const grandParent = parent.getParent();

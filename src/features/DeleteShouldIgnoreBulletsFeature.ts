@@ -49,10 +49,7 @@ export class DeleteShouldIgnoreBulletsFeature implements IFeature {
   }
 
   onKeyDown = (cm: CodeMirror.Editor, event: KeyboardEvent) => {
-    if (
-      !this.settings.stickCursor ||
-      !this.editorUtils.containsSingleCursor(cm)
-    ) {
+    if (!this.settings.stickCursor) {
       return;
     }
 

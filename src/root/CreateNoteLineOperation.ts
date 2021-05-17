@@ -16,10 +16,15 @@ export class CreateNoteLineOperation implements IOperation {
   }
 
   perform() {
+    const { root } = this;
+
+    if (!root.hasSingleCursor()) {
+      return;
+    }
+
     this.stopPropagation = true;
     this.updated = true;
 
-    const { root } = this;
     const cursor = root.getCursor();
     const list = root.getListUnderCursor();
 

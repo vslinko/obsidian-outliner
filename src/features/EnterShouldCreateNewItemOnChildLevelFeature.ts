@@ -1,5 +1,4 @@
 import { Plugin_2 } from "obsidian";
-import { EditorUtils } from "src/editor_utils";
 import { CreateNewItemOperation } from "src/root/CreateNewItemOperation";
 import { IFeature } from "../feature";
 import { ListUtils } from "../list_utils";
@@ -19,7 +18,6 @@ export class EnterShouldCreateNewItemFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
     private settings: Settings,
-    private editorUtils: EditorUtils,
     private listUtils: ListUtils
   ) {}
 
@@ -36,11 +34,7 @@ export class EnterShouldCreateNewItemFeature implements IFeature {
   }
 
   private onKeyDown = (cm: CodeMirror.Editor, e: KeyboardEvent) => {
-    if (
-      !this.settings.betterEnter ||
-      !isEnter(e) ||
-      !this.editorUtils.containsSingleCursor(cm)
-    ) {
+    if (!this.settings.betterEnter || !isEnter(e)) {
       return;
     }
 
