@@ -23,6 +23,10 @@ function stateToString(state) {
       }
     }
 
+    if (state.folds.includes(l)) {
+      res += " #folded";
+    }
+
     res += "\n";
   }
 

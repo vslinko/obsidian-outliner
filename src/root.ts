@@ -207,15 +207,15 @@ export class Root implements IList {
   }
 
   getListStartPosition() {
-    return this.start;
+    return { ...this.start };
   }
 
   getListEndPosition() {
-    return this.end;
+    return { ...this.end };
   }
 
   getCursor() {
-    return this.cursor;
+    return { ...this.cursor };
   }
 
   getListUnderCursor(): List {

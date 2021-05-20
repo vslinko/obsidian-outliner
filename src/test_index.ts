@@ -103,9 +103,8 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     }
     await this.wait(1000);
 
-    this.editor = this.app.workspace.getActiveViewOfType(
-      MarkdownView
-    ).sourceMode.cmEditor;
+    this.editor =
+      this.app.workspace.getActiveViewOfType(MarkdownView).sourceMode.cmEditor;
   }
 
   async connect() {
@@ -156,6 +155,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       state = this.parseState(state);
     }
 
+    this.editor.setValue("");
     this.editor.setValue(state.value);
     this.editor.setSelections(
       state.selections.map((s) => ({
@@ -163,27 +163,30 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
         head: s.to,
       }))
     );
-  }
-
-  assertCurrentState(expectedState: string[]): void;
-  assertCurrentState(expectedState: string): void;
-  assertCurrentState(expectedState: IState): void;
-  assertCurrentState(expectedState: IState | string | string[]) {
-    if (typeof expectedState === "string") {
-      expectedState = expectedState.split("\n");
+    for (let l of state.folds) {
+      (this.editor as any).foldCode({ line: l, ch: 0 }, null, "fold");
     }
-    if (Array.isArray(expectedState)) {
-      expectedState = this.parseState(expectedState);
-    }
-
-    const currentState = this.getCurrentState();
-
-    assert.strictEqual(currentState.value, expectedState.value);
-    assert.deepStrictEqual(currentState.selections, expectedState.selections);
   }
 
   getCurrentState(): IState {
+    const folds = new Set<number>();
+    for (let l = this.editor.firstLine(); l <= this.editor.lastLine(); l++) {
+      const mark = this.editor
+        .findMarksAt({ line: l, ch: 0 })
+        .find((m) => (m as any).__isFold);
+      if (!mark) {
+        continue;
+      }
+      const firstFoldingLine: CodeMirror.LineHandle = (mark as any).lines[0];
+      if (!firstFoldingLine) {
+        continue;
+      }
+      const lineNo = this.editor.getLineNumber(firstFoldingLine);
+      folds.add(lineNo);
+    }
+
     return {
+      folds: Array.from(folds.values()),
       selections: this.editor.listSelections().map((range) => ({
         from: {
           line: range.from().line,
@@ -207,6 +210,11 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
 
     const acc = content.reduce(
       (acc, line, lineNo) => {
+        if (line.includes("#folded")) {
+          line = line.replace("#folded", "").trim();
+          acc.folds.push(lineNo);
+        }
+
         if (!acc.from) {
           const dashIndex = line.indexOf("|");
           if (dashIndex >= 0) {
@@ -237,6 +245,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
         from: null as CodeMirror.Position | null,
         to: null as CodeMirror.Position | null,
         lines: [] as string[],
+        folds: [] as number[],
       }
     );
     if (!acc.from) {
@@ -247,6 +256,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     }
 
     return {
+      folds: acc.folds,
       selections: [{ from: acc.from, to: acc.to }],
       value: acc.lines.join("\n"),
     };

@@ -16,6 +16,7 @@ interface ISelection {
 }
 
 interface IState {
+  folds: number[];
   selections: ISelection[];
   value: string;
 }
