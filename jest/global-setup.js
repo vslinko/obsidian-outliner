@@ -80,6 +80,7 @@ async function prepareVault() {
   if (!vaultConfig.enabledPlugins) {
     vaultConfig.enabledPlugins = [];
   }
+  vaultConfig.foldIndent = true;
   if (!vaultConfig.enabledPlugins.includes("obsidian-outliner")) {
     debug(`  Enabling obsidian-outliner plugin`);
     vaultConfig.enabledPlugins.push("obsidian-outliner");
