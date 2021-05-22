@@ -1,7 +1,18 @@
-import { Plugin_2 } from "obsidian";
+import { Platform, Plugin_2 } from "obsidian";
 import { ListUtils } from "src/list_utils";
+import { SelectTillLineStartOperation } from "src/root/SelectTillLineStartOperation";
 import { IFeature } from "../feature";
 import { Settings } from "../settings";
+
+function isCmdShiftLeft(e: KeyboardEvent) {
+  return (
+    (e.keyCode === 37 || e.code === "ArrowLeft") &&
+    e.shiftKey === true &&
+    e.metaKey === true &&
+    e.altKey === false &&
+    e.ctrlKey === false
+  );
+}
 
 export class SelectionShouldIgnoreBulletsFeature implements IFeature {
   constructor(
@@ -12,53 +23,31 @@ export class SelectionShouldIgnoreBulletsFeature implements IFeature {
 
   async load() {
     this.plugin.registerCodeMirror((cm) => {
-      cm.on("beforeSelectionChange", this.handleBeforeSelectionChange);
+      cm.on("keydown", this.onKeyDown);
     });
   }
 
   async unload() {
     this.plugin.app.workspace.iterateCodeMirrors((cm) => {
-      cm.off("beforeSelectionChange", this.handleBeforeSelectionChange);
+      cm.off("keydown", this.onKeyDown);
     });
   }
 
-  private handleBeforeSelectionChange = (
-    cm: CodeMirror.Editor,
-    changeObj: CodeMirror.EditorSelectionChange
-  ) => {
-    if (
-      !this.settings.stickCursor ||
-      changeObj.origin !== "+move" ||
-      changeObj.ranges.length > 1
-    ) {
+  private onKeyDown = (cm: CodeMirror.Editor, event: KeyboardEvent) => {
+    if (!this.settings.stickCursor) {
       return;
     }
 
-    const range = changeObj.ranges[0];
+    if (Platform.isMacOS && isCmdShiftLeft(event)) {
+      const { shouldStopPropagation } = this.listsUtils.performOperation(
+        (root) => new SelectTillLineStartOperation(root),
+        cm
+      );
 
-    if (
-      range.anchor.line !== range.head.line ||
-      range.anchor.ch === range.head.ch
-    ) {
-      return;
-    }
-
-    const root = this.listsUtils.parseList(cm);
-
-    if (!root) {
-      return;
-    }
-
-    const list = root.getListUnderCursor();
-    const contentStart = list.getFirstLineContentStart();
-
-    if (range.from().line !== contentStart.line) {
-      return;
-    }
-
-    if (range.from().ch < contentStart.ch) {
-      range.from().ch = contentStart.ch;
-      changeObj.update([range]);
+      if (shouldStopPropagation) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
     }
   };
 }

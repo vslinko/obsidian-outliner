@@ -63,6 +63,32 @@
 - one|
 ```
 
+# backspace should remove note line if it's empty
+
+```md
+- one
+  |
+```
+
+- keydown: `Backspace`
+
+```md
+- one|
+```
+
+# backspace should remove note line if it isn't empty and cursor on the line start
+
+```md
+- one
+  |two
+```
+
+- keydown: `Backspace`
+
+```md
+- one|two
+```
+
 # cmd+backspace should remove content only
 
 ```md
@@ -78,6 +104,21 @@
 - |
 ```
 
+# cmd+backspace should remove content only in notes
+
+```md
+- one
+  two|
+```
+
+- keydown: `Cmd-Backspace`
+- keydown: `Cmd-Backspace`
+
+```md
+- one
+  |
+```
+
 # delete should remove next item if cursor is on the end
 
 ```md
@@ -89,4 +130,34 @@
 
 ```md
 - qwe|ee
+```
+
+# delete should remove next item if cursor is on the end and have notes
+
+```md
+- qwe
+  notes|
+  - ee
+```
+
+- keydown: `Delete`
+
+```md
+- qwe
+  notes|ee
+```
+
+# delete should remove next line if cursor is on the end and have notes
+
+```md
+- qwe|
+  notes
+  - ee
+```
+
+- keydown: `Delete`
+
+```md
+- qwe|notes
+  - ee
 ```

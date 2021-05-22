@@ -302,7 +302,7 @@ export class ListUtils {
   }
 
   private isEmptyLine(line: string) {
-    return line.trim().length === 0;
+    return line.length === 0;
   }
 
   private isEmptyLineOrNote(line: string) {

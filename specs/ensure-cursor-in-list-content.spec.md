@@ -65,3 +65,31 @@
   note|
   - two
 ```
+
+# cursor should be moved to previous note line
+
+```md
+- one
+  |note
+```
+
+- keydown: `ArrowLeft`
+
+```md
+- one|
+  note
+```
+
+# cursor should be moved to next note line
+
+```md
+- one|
+  note
+```
+
+- keydown: `ArrowRight`
+
+```md
+- one
+  |note
+```

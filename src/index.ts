@@ -2,7 +2,6 @@ import { Plugin } from "obsidian";
 import { ObsidianOutlinerPluginSettingTab, Settings } from "./settings";
 import { IFeature } from "./feature";
 import { ObsidianUtils } from "./obsidian_utils";
-import { EditorUtils } from "./editor_utils";
 import { ListUtils } from "./list_utils";
 import { Logger } from "./logger";
 import { ListsStylesFeature } from "./features/ListsStylesFeature";
@@ -23,7 +22,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   private settings: Settings;
   private logger: Logger;
   private obsidianUtils: ObsidianUtils;
-  private editorUtils: EditorUtils;
   private listsUtils: ListUtils;
 
   async onload() {
@@ -35,7 +33,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     this.logger = new Logger(this.settings);
 
     this.obsidianUtils = new ObsidianUtils(this.app);
-    this.editorUtils = new EditorUtils();
     this.listsUtils = new ListUtils(this.logger, this.obsidianUtils);
 
     this.addSettingTab(
@@ -63,7 +60,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       new DeleteShouldIgnoreBulletsFeature(
         this,
         this.settings,
-        this.editorUtils,
         this.listsUtils
       ),
       new SelectionShouldIgnoreBulletsFeature(

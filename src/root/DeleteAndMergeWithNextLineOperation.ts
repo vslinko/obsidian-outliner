@@ -27,15 +27,20 @@ export class DeleteAndMergeWithNextLineOperation implements IOperation {
 
     const list = root.getListUnderCursor();
     const cursor = root.getCursor();
-    const contentEnd = list.getLastLineContentEnd();
+    const lines = list.getLinesInfo();
 
-    if (cursor.ch !== contentEnd.ch || cursor.line !== contentEnd.line) {
-      return;
+    const lineNo = lines.findIndex(
+      (l) => cursor.ch === l.to.ch && cursor.line === l.to.line
+    );
+
+    if (lineNo === lines.length - 1) {
+      const nextLine = lines[lineNo].to.line + 1;
+      const nextList = root.getListUnderLine(nextLine);
+      root.replaceCursor(nextList.getFirstLineContentStart());
+      this.deleteAndMergeWithPrevious.perform();
+    } else if (lineNo >= 0) {
+      root.replaceCursor(lines[lineNo + 1].from);
+      this.deleteAndMergeWithPrevious.perform();
     }
-
-    const nextLineNo = root.getCursor().line + 1;
-    const nextList = root.getListUnderLine(nextLineNo);
-    root.replaceCursor(nextList.getFirstLineContentStart());
-    this.deleteAndMergeWithPrevious.perform();
   }
 }

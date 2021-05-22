@@ -12,6 +12,22 @@
   - |two|
 ```
 
+# cmd-a should select list item content with notes
+
+```md
+- one
+  - two|
+    notes
+```
+
+- keydown: `Cmd-KeyA`
+
+```md
+- one
+  - |two
+    notes|
+```
+
 # cmd-a should select list whole list after second invoke
 
 ```md
@@ -42,4 +58,18 @@ b
 
 ```md
 - |one|
+```
+
+# Cmd-Shift-Left should select one note line only
+
+```md
+- one
+  note|
+```
+
+- keydown: `Cmd-Shift-ArrowLeft`
+
+```md
+- one
+  |note|
 ```

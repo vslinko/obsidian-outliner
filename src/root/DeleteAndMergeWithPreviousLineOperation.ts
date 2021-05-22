@@ -1,4 +1,4 @@
-import { Root } from ".";
+import { IListLine, List, Root } from ".";
 import { IOperation } from "./IOperation";
 
 export class DeleteAndMergeWithPreviousLineOperation implements IOperation {
@@ -23,19 +23,50 @@ export class DeleteAndMergeWithPreviousLineOperation implements IOperation {
     }
 
     const list = root.getListUnderCursor();
+    const cursor = root.getCursor();
+    const lines = list.getLinesInfo();
 
+    const lineNo = lines.findIndex(
+      (l) => cursor.ch === l.from.ch && cursor.line === l.from.line
+    );
+
+    if (lineNo === 0) {
+      this.mergeWithPreviousItem(root, cursor, list);
+    } else if (lineNo > 0) {
+      this.mergeNotes(root, cursor, list, lines, lineNo);
+    }
+  }
+
+  private mergeNotes(
+    root: Root,
+    cursor: IPosition,
+    list: List,
+    lines: IListLine[],
+    lineNo: number
+  ) {
+    this.stopPropagation = true;
+    this.updated = true;
+
+    const prevLineNo = lineNo - 1;
+
+    root.replaceCursor({
+      line: cursor.line - 1,
+      ch: lines[prevLineNo].text.length + lines[prevLineNo].from.ch,
+    });
+
+    lines[prevLineNo].text += lines[lineNo].text;
+    lines.splice(lineNo, 1);
+
+    list.replaceLines(lines.map((l) => l.text));
+  }
+
+  private mergeWithPreviousItem(root: Root, cursor: IPosition, list: List) {
     if (root.getChildren()[0] === list && list.getChildren().length === 0) {
       return;
     }
 
-    const cursor = root.getCursor();
-    const contentStart = list.getFirstLineContentStart();
-
-    if (cursor.ch !== contentStart.ch || cursor.line !== contentStart.line) {
-      return;
-    }
-
     this.stopPropagation = true;
+
     const prev = root.getListUnderLine(cursor.line - 1);
 
     if (!prev) {
