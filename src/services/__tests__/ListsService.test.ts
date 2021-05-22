@@ -1,25 +1,32 @@
-import { ListUtils } from "../list_utils";
-import { Logger } from "../logger";
-import { ObsidianUtils } from "../obsidian_utils";
-import { makeEditor, makeLogger, makeObsidianUtils } from "../test_utils";
+import { ListsService } from "../ListsService";
+import { LoggerService } from "../LoggerService";
+import { ObsidianService } from "../ObsidianService";
+import {
+  makeEditor,
+  makeLoggerService,
+  makeObsidianService,
+} from "../../__mocks__";
 
-export function makeListUtils(
-  options: { logger?: Logger; obsidianUtils?: ObsidianUtils } = {}
+export function makeListsService(
+  options: {
+    loggerService?: LoggerService;
+    obsidianService?: ObsidianService;
+  } = {}
 ) {
-  const { logger, obsidianUtils } = {
-    logger: makeLogger(),
-    obsidianUtils: makeObsidianUtils(),
+  const { loggerService, obsidianService } = {
+    loggerService: makeLoggerService(),
+    obsidianService: makeObsidianService(),
     ...options,
   };
 
-  const listUtils = new ListUtils(logger, obsidianUtils);
+  const listsService = new ListsService(loggerService, obsidianService);
 
-  return listUtils;
+  return listsService;
 }
 
 describe("parseList", () => {
   test("should parse list with notes and sublists", () => {
-    const listUtils = makeListUtils();
+    const listsService = makeListsService();
     const editor = makeEditor({
       text: `
 - one
@@ -32,7 +39,7 @@ describe("parseList", () => {
       cursor: { line: 0, ch: 0 },
     });
 
-    const list = listUtils.parseList(editor as any);
+    const list = listsService.parseList(editor as any);
 
     expect(list).toBeDefined();
     expect(list).toMatchObject(
@@ -77,51 +84,51 @@ describe("parseList", () => {
   });
 
   test("should error if indent is not match 1", () => {
-    const logger = makeLogger();
-    const listUtils = makeListUtils({ logger });
+    const loggerService = makeLoggerService();
+    const listsService = makeListsService({ loggerService });
     const editor = makeEditor({
       text: "- one\n  - two\n\t- three",
       cursor: { line: 0, ch: 0 },
     });
 
-    const list = listUtils.parseList(editor as any);
+    const list = listsService.parseList(editor as any);
 
     expect(list).toBeNull();
-    expect(logger.log).toBeCalledWith(
+    expect(loggerService.log).toBeCalledWith(
       "parseList",
       `Unable to parse list: expected indent "S", got "T"`
     );
   });
 
   test("should error if indent is not match 2", () => {
-    const logger = makeLogger();
-    const listUtils = makeListUtils({ logger });
+    const loggerService = makeLoggerService();
+    const listsService = makeListsService({ loggerService });
     const editor = makeEditor({
       text: "- one\n\t- two\n  - three",
       cursor: { line: 0, ch: 0 },
     });
 
-    const list = listUtils.parseList(editor as any);
+    const list = listsService.parseList(editor as any);
 
     expect(list).toBeNull();
-    expect(logger.log).toBeCalledWith(
+    expect(loggerService.log).toBeCalledWith(
       "parseList",
       `Unable to parse list: expected indent "T", got "S"`
     );
   });
 
   test("should error if note indent is not match", () => {
-    const logger = makeLogger();
-    const listUtils = makeListUtils({ logger });
+    const loggerService = makeLoggerService();
+    const listsService = makeListsService({ loggerService });
     const editor = makeEditor({
       text: "- one\n\t- two\n  three",
       cursor: { line: 0, ch: 0 },
     });
 
-    const list = listUtils.parseList(editor as any);
+    const list = listsService.parseList(editor as any);
 
     expect(list).toBeNull();
-    expect(logger.log).toBeCalledWith(
+    expect(loggerService.log).toBeCalledWith(
       "parseList",
       `Unable to parse list: expected indent "T", got "SS"`
     );

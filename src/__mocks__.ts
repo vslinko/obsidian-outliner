@@ -1,5 +1,5 @@
-import { Logger } from "./logger";
-import { ObsidianUtils } from "./obsidian_utils";
+import { LoggerService } from "./services/LoggerService";
+import { ObsidianService } from "./services/ObsidianService";
 
 export interface EditorMockParams {
   text: string;
@@ -23,23 +23,23 @@ export function makeEditor(params: EditorMockParams): CodeMirror.Editor {
   return editor;
 }
 
-export function makeObsidianUtils(
+export function makeObsidianService(
   options: { useTab?: boolean; tabSize?: number } = {}
-): ObsidianUtils {
+): ObsidianService {
   const { useTab, tabSize } = {
     useTab: true,
     tabSize: 4,
     ...options,
   };
 
-  const obsidianUtils: any = {
+  const obsidianService: any = {
     getObsidianTabsSettigns: jest.fn().mockReturnValue({ useTab, tabSize }),
   };
 
-  return obsidianUtils;
+  return obsidianService;
 }
 
-export function makeLogger(): Logger {
+export function makeLoggerService(): LoggerService {
   const log = jest.fn();
 
   const logger: any = {

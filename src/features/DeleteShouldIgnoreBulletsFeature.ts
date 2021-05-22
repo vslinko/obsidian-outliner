@@ -1,10 +1,10 @@
 import { Platform, Plugin_2 } from "obsidian";
-import { IFeature } from "src/feature";
-import { ListUtils } from "src/list_utils";
-import { DeleteAndMergeWithNextLineOperation } from "src/root/DeleteAndMergeWithNextLineOperation";
-import { DeleteAndMergeWithPreviousLineOperation } from "src/root/DeleteAndMergeWithPreviousLineOperation";
-import { DeleteTillLineStartOperation } from "src/root/DeleteTillLineStartOperation";
-import { Settings } from "src/settings";
+import { IFeature } from "./IFeature";
+import { ListsService } from "../services/ListsService";
+import { DeleteAndMergeWithNextLineOperation } from "../operations/DeleteAndMergeWithNextLineOperation";
+import { DeleteAndMergeWithPreviousLineOperation } from "../operations/DeleteAndMergeWithPreviousLineOperation";
+import { DeleteTillLineStartOperation } from "../operations/DeleteTillLineStartOperation";
+import { SettingsService } from "../services/SettingsService";
 
 function isBackspace(e: KeyboardEvent) {
   return (
@@ -39,8 +39,8 @@ function isDelete(e: KeyboardEvent) {
 export class DeleteShouldIgnoreBulletsFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
-    private settings: Settings,
-    private listsUtils: ListUtils
+    private settingsService: SettingsService,
+    private listsService: ListsService
   ) {}
 
   async load() {
@@ -55,13 +55,13 @@ export class DeleteShouldIgnoreBulletsFeature implements IFeature {
     });
   }
 
-  onKeyDown = (cm: CodeMirror.Editor, event: KeyboardEvent) => {
-    if (!this.settings.stickCursor) {
+  private onKeyDown = (cm: CodeMirror.Editor, event: KeyboardEvent) => {
+    if (!this.settingsService.stickCursor) {
       return;
     }
 
     if (isBackspace(event)) {
-      const { shouldStopPropagation } = this.listsUtils.performOperation(
+      const { shouldStopPropagation } = this.listsService.performOperation(
         (root) => new DeleteAndMergeWithPreviousLineOperation(root),
         cm
       );
@@ -73,7 +73,7 @@ export class DeleteShouldIgnoreBulletsFeature implements IFeature {
     }
 
     if (Platform.isMacOS && isCmdBackspace(event)) {
-      const { shouldStopPropagation } = this.listsUtils.performOperation(
+      const { shouldStopPropagation } = this.listsService.performOperation(
         (root) => new DeleteTillLineStartOperation(root),
         cm
       );
@@ -85,7 +85,7 @@ export class DeleteShouldIgnoreBulletsFeature implements IFeature {
     }
 
     if (isDelete(event)) {
-      const { shouldStopPropagation } = this.listsUtils.performOperation(
+      const { shouldStopPropagation } = this.listsService.performOperation(
         (root) => new DeleteAndMergeWithNextLineOperation(root),
         cm
       );

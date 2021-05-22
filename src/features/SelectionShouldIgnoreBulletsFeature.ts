@@ -1,8 +1,8 @@
 import { Platform, Plugin_2 } from "obsidian";
-import { ListUtils } from "src/list_utils";
-import { SelectTillLineStartOperation } from "src/root/SelectTillLineStartOperation";
-import { IFeature } from "../feature";
-import { Settings } from "../settings";
+import { ListsService } from "../services/ListsService";
+import { SelectTillLineStartOperation } from "../operations/SelectTillLineStartOperation";
+import { IFeature } from "./IFeature";
+import { SettingsService } from "../services/SettingsService";
 
 function isCmdShiftLeft(e: KeyboardEvent) {
   return (
@@ -17,8 +17,8 @@ function isCmdShiftLeft(e: KeyboardEvent) {
 export class SelectionShouldIgnoreBulletsFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
-    private settings: Settings,
-    private listsUtils: ListUtils
+    private settingsService: SettingsService,
+    private listsService: ListsService
   ) {}
 
   async load() {
@@ -34,12 +34,12 @@ export class SelectionShouldIgnoreBulletsFeature implements IFeature {
   }
 
   private onKeyDown = (cm: CodeMirror.Editor, event: KeyboardEvent) => {
-    if (!this.settings.stickCursor) {
+    if (!this.settingsService.stickCursor) {
       return;
     }
 
     if (Platform.isMacOS && isCmdShiftLeft(event)) {
-      const { shouldStopPropagation } = this.listsUtils.performOperation(
+      const { shouldStopPropagation } = this.listsService.performOperation(
         (root) => new SelectTillLineStartOperation(root),
         cm
       );

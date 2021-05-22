@@ -9,7 +9,7 @@ export interface IObsidianFoldSettigns {
   foldIndent: boolean;
 }
 
-export class ObsidianUtils {
+export class ObsidianService {
   constructor(private app: App) {}
 
   getObsidianTabsSettigns(): IObsidianTabsSettigns {

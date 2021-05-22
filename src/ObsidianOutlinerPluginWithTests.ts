@@ -1,6 +1,5 @@
 import { MarkdownView } from "obsidian";
-import * as assert from "assert";
-import ObsidianOutlinerPlugin from ".";
+import ObsidianOutlinerPlugin from "./ObsidianOutlinerPlugin";
 
 const keysMap: { [key: string]: number } = {
   Backspace: 8,

@@ -1,4 +1,4 @@
-import { List, Root } from ".";
+import { List, Root } from "../root";
 import { IOperation } from "./IOperation";
 
 export class CreateNewItemOperation implements IOperation {

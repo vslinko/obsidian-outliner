@@ -1,7 +1,7 @@
-import { Root } from ".";
+import { Root } from "../root";
 import { IOperation } from "./IOperation";
 
-export class DeleteTillLineStartOperation implements IOperation {
+export class SelectTillLineStartOperation implements IOperation {
   private stopPropagation = false;
   private updated = false;
 
@@ -30,11 +30,6 @@ export class DeleteTillLineStartOperation implements IOperation {
     const lines = list.getLinesInfo();
     const lineNo = lines.findIndex((l) => l.from.line === cursor.line);
 
-    lines[lineNo].text = lines[lineNo].text.slice(
-      cursor.ch - lines[lineNo].from.ch
-    );
-
-    list.replaceLines(lines.map((l) => l.text));
-    root.replaceCursor(lines[lineNo].from);
+    root.replaceSelections([{ head: lines[lineNo].from, anchor: cursor }]);
   }
 }

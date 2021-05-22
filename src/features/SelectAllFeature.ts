@@ -1,8 +1,8 @@
 import { Platform, Plugin_2 } from "obsidian";
-import { ListUtils } from "src/list_utils";
-import { SelectAllOperation } from "src/root/SelectAllOperation";
-import { Settings } from "src/settings";
-import { IFeature } from "../feature";
+import { ListsService } from "../services/ListsService";
+import { SelectAllOperation } from "../operations/SelectAllOperation";
+import { SettingsService } from "../services/SettingsService";
+import { IFeature } from "./IFeature";
 
 function isCmdA(e: KeyboardEvent) {
   return (
@@ -31,8 +31,8 @@ function isSelectAll(e: KeyboardEvent) {
 export class SelectAllFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
-    private settings: Settings,
-    private listsUtils: ListUtils
+    private settingsService: SettingsService,
+    private listsService: ListsService
   ) {}
 
   async load() {
@@ -47,12 +47,12 @@ export class SelectAllFeature implements IFeature {
     });
   }
 
-  onKeyDown = (cm: CodeMirror.Editor, event: KeyboardEvent) => {
-    if (!this.settings.selectAll || !isSelectAll(event)) {
+  private onKeyDown = (cm: CodeMirror.Editor, event: KeyboardEvent) => {
+    if (!this.settingsService.selectAll || !isSelectAll(event)) {
       return;
     }
 
-    const { shouldStopPropagation } = this.listsUtils.performOperation(
+    const { shouldStopPropagation } = this.listsService.performOperation(
       (root) => new SelectAllOperation(root),
       cm
     );

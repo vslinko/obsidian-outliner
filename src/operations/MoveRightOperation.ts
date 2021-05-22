@@ -1,4 +1,4 @@
-import { Root } from ".";
+import { Root } from "../root";
 import { IOperation } from "./IOperation";
 
 export class MoveRightOperation implements IOperation {

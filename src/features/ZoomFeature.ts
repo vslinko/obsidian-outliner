@@ -1,8 +1,8 @@
 import { Plugin_2 } from "obsidian";
-import { ListUtils } from "src/list_utils";
-import { ObsidianUtils } from "src/obsidian_utils";
-import { Settings } from "src/settings";
-import { IFeature } from "../feature";
+import { ListsService } from "../services/ListsService";
+import { ObsidianService } from "../services/ObsidianService";
+import { SettingsService } from "../services/SettingsService";
+import { IFeature } from "./IFeature";
 
 class ZoomState {
   constructor(public line: CodeMirror.LineHandle, public header: HTMLElement) {}
@@ -13,9 +13,9 @@ export class ZoomFeature implements IFeature {
 
   constructor(
     private plugin: Plugin_2,
-    private settings: Settings,
-    private obsidianUtils: ObsidianUtils,
-    private listsUtils: ListUtils
+    private settingsService: SettingsService,
+    private obsidianService: ObsidianService,
+    private listsService: ListsService
   ) {
     this.zoomStates = new WeakMap();
   }
@@ -32,7 +32,7 @@ export class ZoomFeature implements IFeature {
     this.plugin.addCommand({
       id: "zoom-in",
       name: "Zoom in to the current list item",
-      callback: this.obsidianUtils.createCommandCallback(
+      callback: this.obsidianService.createCommandCallback(
         this.zoomIn.bind(this)
       ),
       hotkeys: [
@@ -46,7 +46,7 @@ export class ZoomFeature implements IFeature {
     this.plugin.addCommand({
       id: "zoom-out",
       name: "Zoom out the entire document",
-      callback: this.obsidianUtils.createCommandCallback(
+      callback: this.obsidianService.createCommandCallback(
         this.zoomOut.bind(this)
       ),
       hotkeys: [
@@ -71,7 +71,7 @@ export class ZoomFeature implements IFeature {
 
     if (
       !target ||
-      !this.settings.zoomOnClick ||
+      !this.settingsService.zoomOnClick ||
       !target.classList.contains("cm-formatting-list-ul")
     ) {
       return;
@@ -243,7 +243,7 @@ export class ZoomFeature implements IFeature {
     editor: CodeMirror.Editor,
     cursor: CodeMirror.Position = editor.getCursor()
   ) {
-    const root = this.listsUtils.parseList(editor, cursor);
+    const root = this.listsService.parseList(editor, cursor);
 
     if (!root) {
       return false;
@@ -310,7 +310,7 @@ export class ZoomFeature implements IFeature {
       }
 
       div.prepend(
-        createTitle(this.obsidianUtils.getActiveLeafDisplayText(), () =>
+        createTitle(this.obsidianService.getActiveLeafDisplayText(), () =>
           this.zoomOut(editor)
         )
       );

@@ -1,4 +1,4 @@
-import { IListLine, Root } from ".";
+import { IListLine, Root } from "../root";
 import { IOperation } from "./IOperation";
 
 export class MoveCursorToPreviousUnfoldedLineOperation implements IOperation {

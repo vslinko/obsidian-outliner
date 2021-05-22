@@ -1,10 +1,10 @@
-import { Settings } from "./settings";
+import { SettingsService } from "./SettingsService";
 
-export class Logger {
-  constructor(private settings: Settings) {}
+export class LoggerService {
+  constructor(private settingsService: SettingsService) {}
 
   log(method: string, ...args: any[]) {
-    if (!this.settings.debug) {
+    if (!this.settingsService.debug) {
       return;
     }
 

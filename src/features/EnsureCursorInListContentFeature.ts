@@ -1,15 +1,15 @@
 import { Plugin_2 } from "obsidian";
-import { IFeature } from "src/feature";
-import { ListUtils } from "src/list_utils";
-import { EnsureCursorInListContentOperation } from "src/root/EnsureCursorInListContentOperation";
-import { EnsureCursorIsInUnfoldedLineOperation } from "src/root/EnsureCursorIsInUnfoldedLineOperation";
-import { Settings } from "src/settings";
+import { IFeature } from "./IFeature";
+import { ListsService } from "../services/ListsService";
+import { EnsureCursorInListContentOperation } from "../operations/EnsureCursorInListContentOperation";
+import { EnsureCursorIsInUnfoldedLineOperation } from "../operations/EnsureCursorIsInUnfoldedLineOperation";
+import { SettingsService } from "../services/SettingsService";
 
 export class EnsureCursorInListContentFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
-    private settings: Settings,
-    private listsUtils: ListUtils
+    private settingsService: SettingsService,
+    private listsService: ListsService
   ) {}
 
   async load() {
@@ -25,16 +25,16 @@ export class EnsureCursorInListContentFeature implements IFeature {
   }
 
   private handleCursorActivity = (cm: CodeMirror.Editor) => {
-    if (!this.settings.stickCursor) {
+    if (!this.settingsService.stickCursor) {
       return;
     }
 
-    this.listsUtils.performOperation(
+    this.listsService.performOperation(
       (root) => new EnsureCursorIsInUnfoldedLineOperation(root),
       cm
     );
 
-    this.listsUtils.performOperation(
+    this.listsService.performOperation(
       (root) => new EnsureCursorInListContentOperation(root),
       cm
     );

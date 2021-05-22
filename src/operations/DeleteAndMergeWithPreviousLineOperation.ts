@@ -1,4 +1,4 @@
-import { IListLine, List, Root } from ".";
+import { IListLine, List, Root } from "../root";
 import { IOperation } from "./IOperation";
 
 export class DeleteAndMergeWithPreviousLineOperation implements IOperation {

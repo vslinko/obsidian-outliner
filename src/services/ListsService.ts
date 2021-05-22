@@ -1,7 +1,7 @@
-import { Logger } from "./logger";
-import { ObsidianUtils } from "./obsidian_utils";
-import { List, Root } from "./root";
-import { IOperation } from "./root/IOperation";
+import { LoggerService } from "./LoggerService";
+import { ObsidianService } from "./ObsidianService";
+import { List, Root } from "../root";
+import { IOperation } from "../operations/IOperation";
 
 const bulletSign = "-*+";
 
@@ -30,8 +30,11 @@ interface IParseListList {
   addAfterAll(list: IParseListList): void;
 }
 
-export class ListUtils {
-  constructor(private logger: Logger, private obsidianUtils: ObsidianUtils) {}
+export class ListsService {
+  constructor(
+    private loggerService: LoggerService,
+    private obsidianService: ObsidianService
+  ) {}
 
   evalOperation(root: Root, op: IOperation, editor: CodeMirror.Editor) {
     op.perform();
@@ -66,7 +69,7 @@ export class ListUtils {
     editor: CodeMirror.Editor,
     cursor = editor.getCursor()
   ): Root | null {
-    const d = this.logger.bind("parseList");
+    const d = this.loggerService.bind("parseList");
     const error = (msg: string): null => {
       d(msg);
       return null;
@@ -296,7 +299,7 @@ export class ListUtils {
   }
 
   getDefaultIndentChars() {
-    const { useTab, tabSize } = this.obsidianUtils.getObsidianTabsSettigns();
+    const { useTab, tabSize } = this.obsidianService.getObsidianTabsSettigns();
 
     return useTab ? "\t" : new Array(tabSize).fill(" ").join("");
   }

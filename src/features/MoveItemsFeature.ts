@@ -1,24 +1,24 @@
 import { Plugin_2 } from "obsidian";
-import { ListUtils } from "src/list_utils";
-import { MoveLeftOperation } from "src/root/MoveLeftOperation";
-import { ObsidianUtils } from "src/obsidian_utils";
-import { IFeature } from "../feature";
-import { MoveRightOperation } from "src/root/MoveRightOperation";
-import { MoveDownOperation } from "src/root/MoveDownOperation";
-import { MoveUpOperation } from "src/root/MoveUpOperation";
+import { ListsService } from "../services/ListsService";
+import { MoveLeftOperation } from "../operations/MoveLeftOperation";
+import { ObsidianService } from "../services/ObsidianService";
+import { IFeature } from "./IFeature";
+import { MoveRightOperation } from "../operations/MoveRightOperation";
+import { MoveDownOperation } from "../operations/MoveDownOperation";
+import { MoveUpOperation } from "../operations/MoveUpOperation";
 
 export class MoveItemsFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
-    private obsidianUtils: ObsidianUtils,
-    private listsUtils: ListUtils
+    private obsidianService: ObsidianService,
+    private listsService: ListsService
   ) {}
 
   async load() {
     this.plugin.addCommand({
       id: "move-list-item-up",
       name: "Move list and sublists up",
-      callback: this.obsidianUtils.createCommandCallback(
+      callback: this.obsidianService.createCommandCallback(
         this.moveListElementUp.bind(this)
       ),
       hotkeys: [
@@ -32,7 +32,7 @@ export class MoveItemsFeature implements IFeature {
     this.plugin.addCommand({
       id: "move-list-item-down",
       name: "Move list and sublists down",
-      callback: this.obsidianUtils.createCommandCallback(
+      callback: this.obsidianService.createCommandCallback(
         this.moveListElementDown.bind(this)
       ),
       hotkeys: [
@@ -46,7 +46,7 @@ export class MoveItemsFeature implements IFeature {
     this.plugin.addCommand({
       id: "indent-list",
       name: "Indent the list and sublists",
-      callback: this.obsidianUtils.createCommandCallback(
+      callback: this.obsidianService.createCommandCallback(
         this.moveListElementRight.bind(this)
       ),
       hotkeys: [
@@ -60,7 +60,7 @@ export class MoveItemsFeature implements IFeature {
     this.plugin.addCommand({
       id: "outdent-list",
       name: "Outdent the list and sublists",
-      callback: this.obsidianUtils.createCommandCallback(
+      callback: this.obsidianService.createCommandCallback(
         this.moveListElementLeft.bind(this)
       ),
       hotkeys: [
@@ -75,7 +75,7 @@ export class MoveItemsFeature implements IFeature {
   async unload() {}
 
   private moveListElementDown(editor: CodeMirror.Editor) {
-    const { shouldStopPropagation } = this.listsUtils.performOperation(
+    const { shouldStopPropagation } = this.listsService.performOperation(
       (root) => new MoveDownOperation(root),
       editor
     );
@@ -83,7 +83,7 @@ export class MoveItemsFeature implements IFeature {
   }
 
   private moveListElementUp(editor: CodeMirror.Editor) {
-    const { shouldStopPropagation } = this.listsUtils.performOperation(
+    const { shouldStopPropagation } = this.listsService.performOperation(
       (root) => new MoveUpOperation(root),
       editor
     );
@@ -91,16 +91,16 @@ export class MoveItemsFeature implements IFeature {
   }
 
   private moveListElementRight(editor: CodeMirror.Editor) {
-    const { shouldStopPropagation } = this.listsUtils.performOperation(
+    const { shouldStopPropagation } = this.listsService.performOperation(
       (root) =>
-        new MoveRightOperation(root, this.listsUtils.getDefaultIndentChars()),
+        new MoveRightOperation(root, this.listsService.getDefaultIndentChars()),
       editor
     );
     return shouldStopPropagation;
   }
 
   private moveListElementLeft(editor: CodeMirror.Editor) {
-    const { shouldStopPropagation } = this.listsUtils.performOperation(
+    const { shouldStopPropagation } = this.listsService.performOperation(
       (root) => new MoveLeftOperation(root),
       editor
     );

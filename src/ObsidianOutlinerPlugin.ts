@@ -1,9 +1,12 @@
 import { Plugin } from "obsidian";
-import { ObsidianOutlinerPluginSettingTab, Settings } from "./settings";
-import { IFeature } from "./feature";
-import { ObsidianUtils } from "./obsidian_utils";
-import { ListUtils } from "./list_utils";
-import { Logger } from "./logger";
+import {
+  ObsidianOutlinerPluginSettingTab,
+  SettingsService,
+} from "./services/SettingsService";
+import { IFeature } from "./features/IFeature";
+import { ObsidianService } from "./services/ObsidianService";
+import { ListsService } from "./services/ListsService";
+import { LoggerService } from "./services/LoggerService";
 import { ListsStylesFeature } from "./features/ListsStylesFeature";
 import { EnterOutdentIfLineIsEmptyFeature } from "./features/EnterOutdentIfLineIsEmptyFeature";
 import { EnterShouldCreateNewItemFeature } from "./features/EnterShouldCreateNewItemOnChildLevelFeature";
@@ -19,62 +22,74 @@ import { ShiftEnterShouldCreateNoteFeature } from "./features/ShiftEnterShouldCr
 
 export default class ObsidianOutlinerPlugin extends Plugin {
   private features: IFeature[];
-  private settings: Settings;
-  private logger: Logger;
-  private obsidianUtils: ObsidianUtils;
-  private listsUtils: ListUtils;
+  private settingsService: SettingsService;
+  private loggerService: LoggerService;
+  private obsidianService: ObsidianService;
+  private listsService: ListsService;
 
   async onload() {
     console.log(`Loading obsidian-outliner`);
 
-    this.settings = new Settings(this);
-    await this.settings.load();
+    this.settingsService = new SettingsService(this);
+    await this.settingsService.load();
 
-    this.logger = new Logger(this.settings);
+    this.loggerService = new LoggerService(this.settingsService);
 
-    this.obsidianUtils = new ObsidianUtils(this.app);
-    this.listsUtils = new ListUtils(this.logger, this.obsidianUtils);
+    this.obsidianService = new ObsidianService(this.app);
+    this.listsService = new ListsService(
+      this.loggerService,
+      this.obsidianService
+    );
 
     this.addSettingTab(
-      new ObsidianOutlinerPluginSettingTab(this.app, this, this.settings)
+      new ObsidianOutlinerPluginSettingTab(this.app, this, this.settingsService)
     );
 
     this.features = [
-      new ListsStylesFeature(this, this.settings, this.obsidianUtils),
+      new ListsStylesFeature(this, this.settingsService, this.obsidianService),
       new EnterOutdentIfLineIsEmptyFeature(
         this,
-        this.settings,
-        this.listsUtils
+        this.settingsService,
+        this.listsService
       ),
-      new EnterShouldCreateNewItemFeature(this, this.settings, this.listsUtils),
+      new EnterShouldCreateNewItemFeature(
+        this,
+        this.settingsService,
+        this.listsService
+      ),
       new EnsureCursorInListContentFeature(
         this,
-        this.settings,
-        this.listsUtils
+        this.settingsService,
+        this.listsService
       ),
       new MoveCursorToPreviousUnfoldedLineFeature(
         this,
-        this.settings,
-        this.listsUtils
+        this.settingsService,
+        this.listsService
       ),
       new DeleteShouldIgnoreBulletsFeature(
         this,
-        this.settings,
-        this.listsUtils
+        this.settingsService,
+        this.listsService
       ),
       new SelectionShouldIgnoreBulletsFeature(
         this,
-        this.settings,
-        this.listsUtils
+        this.settingsService,
+        this.listsService
       ),
-      new ZoomFeature(this, this.settings, this.obsidianUtils, this.listsUtils),
-      new FoldFeature(this, this.obsidianUtils),
-      new SelectAllFeature(this, this.settings, this.listsUtils),
-      new MoveItemsFeature(this, this.obsidianUtils, this.listsUtils),
+      new ZoomFeature(
+        this,
+        this.settingsService,
+        this.obsidianService,
+        this.listsService
+      ),
+      new FoldFeature(this, this.obsidianService),
+      new SelectAllFeature(this, this.settingsService, this.listsService),
+      new MoveItemsFeature(this, this.obsidianService, this.listsService),
       new ShiftEnterShouldCreateNoteFeature(
         this,
-        this.settings,
-        this.listsUtils
+        this.settingsService,
+        this.listsService
       ),
     ];
 

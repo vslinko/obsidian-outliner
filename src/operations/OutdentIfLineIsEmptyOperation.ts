@@ -1,4 +1,4 @@
-import { Root } from ".";
+import { Root } from "../root";
 import { MoveLeftOperation } from "./MoveLeftOperation";
 import { IOperation } from "./IOperation";
 

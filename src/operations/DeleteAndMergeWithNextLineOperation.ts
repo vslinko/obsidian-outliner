@@ -1,4 +1,4 @@
-import { Root } from ".";
+import { Root } from "../root";
 import { DeleteAndMergeWithPreviousLineOperation } from "./DeleteAndMergeWithPreviousLineOperation";
 import { IOperation } from "./IOperation";
 

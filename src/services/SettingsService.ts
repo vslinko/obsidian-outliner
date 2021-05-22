@@ -27,7 +27,7 @@ type K = keyof ObsidianOutlinerPluginSettings;
 type V<T extends K> = ObsidianOutlinerPluginSettings[T];
 type Callback<T extends K> = (cb: V<T>) => void;
 
-export class Settings implements ObsidianOutlinerPluginSettings {
+export class SettingsService implements ObsidianOutlinerPluginSettings {
   private storage: Storage;
   private values: ObsidianOutlinerPluginSettings;
   private handlers: Map<K, Set<Callback<K>>>;
@@ -122,7 +122,7 @@ export class Settings implements ObsidianOutlinerPluginSettings {
 }
 
 export class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
-  constructor(app: App, plugin: Plugin_2, private settings: Settings) {
+  constructor(app: App, plugin: Plugin_2, private settings: SettingsService) {
     super(app, plugin);
   }
 

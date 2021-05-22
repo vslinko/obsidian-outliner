@@ -1,7 +1,7 @@
-import { Root } from ".";
+import { Root } from "../root";
 import { IOperation } from "./IOperation";
 
-export class MoveLeftOperation implements IOperation {
+export class MoveUpOperation implements IOperation {
   private stopPropagation = false;
   private updated = false;
 
@@ -27,29 +27,35 @@ export class MoveLeftOperation implements IOperation {
     const list = root.getListUnderCursor();
     const parent = list.getParent();
     const grandParent = parent.getParent();
+    const prev = parent.getPrevSiblingOf(list);
 
-    if (!grandParent) {
+    const listStartLineBefore = root.getContentLinesRangeOf(list)[0];
+
+    if (!prev && grandParent) {
+      const newParent = grandParent.getPrevSiblingOf(parent);
+
+      if (newParent) {
+        this.updated = true;
+        parent.removeChild(list);
+        newParent.addAfterAll(list);
+      }
+    } else if (prev) {
+      this.updated = true;
+      parent.removeChild(list);
+      parent.addBefore(prev, list);
+    }
+
+    if (!this.updated) {
       return;
     }
 
-    this.updated = true;
-
-    const listStartLineBefore = root.getContentLinesRangeOf(list)[0];
-    const indentRmFrom = parent.getFirstLineIndent().length;
-    const indentRmTill = list.getFirstLineIndent().length;
-
-    parent.removeChild(list);
-    grandParent.addAfter(parent, list);
-    list.unindentContent(indentRmFrom, indentRmTill);
-
     const listStartLineAfter = root.getContentLinesRangeOf(list)[0];
     const lineDiff = listStartLineAfter - listStartLineBefore;
-    const chDiff = indentRmTill - indentRmFrom;
 
     const cursor = root.getCursor();
     root.replaceCursor({
       line: cursor.line + lineDiff,
-      ch: cursor.ch - chDiff,
+      ch: cursor.ch,
     });
   }
 }

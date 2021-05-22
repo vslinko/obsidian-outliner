@@ -1,8 +1,8 @@
 import { Plugin_2 } from "obsidian";
-import { OutdentIfLineIsEmptyOperation } from "src/root/OutdentIfLineIsEmptyOperation";
-import { IFeature } from "../feature";
-import { ListUtils } from "../list_utils";
-import { Settings } from "../settings";
+import { OutdentIfLineIsEmptyOperation } from "../operations/OutdentIfLineIsEmptyOperation";
+import { IFeature } from "./IFeature";
+import { ListsService } from "../services/ListsService";
+import { SettingsService } from "../services/SettingsService";
 
 function isEnter(e: KeyboardEvent) {
   return (
@@ -17,8 +17,8 @@ function isEnter(e: KeyboardEvent) {
 export class EnterOutdentIfLineIsEmptyFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
-    private settings: Settings,
-    private listUtils: ListUtils
+    private settingsService: SettingsService,
+    private listsService: ListsService
   ) {}
 
   async load() {
@@ -34,11 +34,11 @@ export class EnterOutdentIfLineIsEmptyFeature implements IFeature {
   }
 
   private onKeyDown = (cm: CodeMirror.Editor, e: KeyboardEvent) => {
-    if (!this.settings.betterEnter || !isEnter(e)) {
+    if (!this.settingsService.betterEnter || !isEnter(e)) {
       return;
     }
 
-    const { shouldStopPropagation } = this.listUtils.performOperation(
+    const { shouldStopPropagation } = this.listsService.performOperation(
       (root) => new OutdentIfLineIsEmptyOperation(root),
       cm
     );

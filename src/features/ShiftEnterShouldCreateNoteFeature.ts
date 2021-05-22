@@ -1,8 +1,8 @@
 import { Plugin_2 } from "obsidian";
-import { CreateNoteLineOperation } from "src/root/CreateNoteLineOperation";
-import { IFeature } from "../feature";
-import { ListUtils } from "../list_utils";
-import { Settings } from "../settings";
+import { CreateNoteLineOperation } from "../operations/CreateNoteLineOperation";
+import { IFeature } from "./IFeature";
+import { ListsService } from "../services/ListsService";
+import { SettingsService } from "../services/SettingsService";
 
 function isShiftEnter(e: KeyboardEvent) {
   return (
@@ -17,8 +17,8 @@ function isShiftEnter(e: KeyboardEvent) {
 export class ShiftEnterShouldCreateNoteFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
-    private settings: Settings,
-    private listsUtils: ListUtils
+    private settingsService: SettingsService,
+    private listsService: ListsService
   ) {}
 
   async load() {
@@ -34,15 +34,15 @@ export class ShiftEnterShouldCreateNoteFeature implements IFeature {
   }
 
   private onKeyDown = (cm: CodeMirror.Editor, e: KeyboardEvent) => {
-    if (!this.settings.betterEnter || !isShiftEnter(e)) {
+    if (!this.settingsService.betterEnter || !isShiftEnter(e)) {
       return;
     }
 
-    const { shouldStopPropagation } = this.listsUtils.performOperation(
+    const { shouldStopPropagation } = this.listsService.performOperation(
       (root) =>
         new CreateNoteLineOperation(
           root,
-          this.listsUtils.getDefaultIndentChars()
+          this.listsService.getDefaultIndentChars()
         ),
       cm
     );

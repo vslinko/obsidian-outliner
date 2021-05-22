@@ -1,22 +1,26 @@
-import { ListUtils } from "../../list_utils";
-import { Logger } from "../../logger";
-import { ObsidianUtils } from "../../obsidian_utils";
-import { makeEditor, makeLogger, makeObsidianUtils } from "../../test_utils";
+import { ListsService } from "../../services/ListsService";
+import { LoggerService } from "../../services/LoggerService";
+import { ObsidianService } from "../../services/ObsidianService";
+import {
+  makeEditor,
+  makeLoggerService,
+  makeObsidianService,
+} from "../../__mocks__";
 
 export function makeRoot(options: {
   editor: CodeMirror.Editor;
-  logger?: Logger;
-  obsidianUtils?: ObsidianUtils;
+  loggerService?: LoggerService;
+  obsidianService?: ObsidianService;
 }) {
-  const { logger, obsidianUtils, editor } = {
-    logger: makeLogger(),
-    obsidianUtils: makeObsidianUtils(),
+  const { loggerService, obsidianService, editor } = {
+    loggerService: makeLoggerService(),
+    obsidianService: makeObsidianService(),
     ...options,
   };
 
-  const listUtils = new ListUtils(logger, obsidianUtils);
+  const listsService = new ListsService(loggerService, obsidianService);
 
-  return listUtils.parseList(editor);
+  return listsService.parseList(editor);
 }
 
 describe("Root", () => {

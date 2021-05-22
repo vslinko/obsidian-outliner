@@ -1,8 +1,8 @@
 import { Platform, Plugin_2 } from "obsidian";
-import { IFeature } from "src/feature";
-import { ListUtils } from "src/list_utils";
-import { MoveCursorToPreviousUnfoldedLineOperation } from "src/root/MoveCursorToPreviousUnfoldedLineOperation";
-import { Settings } from "src/settings";
+import { IFeature } from "./IFeature";
+import { ListsService } from "../services/ListsService";
+import { MoveCursorToPreviousUnfoldedLineOperation } from "../operations/MoveCursorToPreviousUnfoldedLineOperation";
+import { SettingsService } from "../services/SettingsService";
 
 function isArrowLeft(e: KeyboardEvent) {
   return (
@@ -27,8 +27,8 @@ function isCtrlArrowLeft(e: KeyboardEvent) {
 export class MoveCursorToPreviousUnfoldedLineFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
-    private settings: Settings,
-    private listsUtils: ListUtils
+    private settingsService: SettingsService,
+    private listsService: ListsService
   ) {}
 
   async load() {
@@ -43,13 +43,13 @@ export class MoveCursorToPreviousUnfoldedLineFeature implements IFeature {
     });
   }
 
-  onKeyDown = (cm: CodeMirror.Editor, event: KeyboardEvent) => {
-    if (!this.settings.stickCursor) {
+  private onKeyDown = (cm: CodeMirror.Editor, event: KeyboardEvent) => {
+    if (!this.settingsService.stickCursor) {
       return;
     }
 
     if (isArrowLeft(event) || (!Platform.isMacOS && isCtrlArrowLeft(event))) {
-      const { shouldStopPropagation } = this.listsUtils.performOperation(
+      const { shouldStopPropagation } = this.listsService.performOperation(
         (root) => new MoveCursorToPreviousUnfoldedLineOperation(root),
         cm
       );

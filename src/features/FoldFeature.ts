@@ -1,15 +1,20 @@
 import { Notice, Plugin_2 } from "obsidian";
-import { ObsidianUtils } from "src/obsidian_utils";
-import { IFeature } from "../feature";
+import { ObsidianService } from "../services/ObsidianService";
+import { IFeature } from "./IFeature";
 
 export class FoldFeature implements IFeature {
-  constructor(private plugin: Plugin_2, private obsidianUtils: ObsidianUtils) {}
+  constructor(
+    private plugin: Plugin_2,
+    private obsidianService: ObsidianService
+  ) {}
 
   async load() {
     this.plugin.addCommand({
       id: "fold",
       name: "Fold the list",
-      callback: this.obsidianUtils.createCommandCallback(this.fold.bind(this)),
+      callback: this.obsidianService.createCommandCallback(
+        this.fold.bind(this)
+      ),
       hotkeys: [
         {
           modifiers: ["Mod"],
@@ -21,7 +26,7 @@ export class FoldFeature implements IFeature {
     this.plugin.addCommand({
       id: "unfold",
       name: "Unfold the list",
-      callback: this.obsidianUtils.createCommandCallback(
+      callback: this.obsidianService.createCommandCallback(
         this.unfold.bind(this)
       ),
       hotkeys: [
@@ -36,7 +41,7 @@ export class FoldFeature implements IFeature {
   async unload() {}
 
   private setFold(editor: CodeMirror.Editor, type: "fold" | "unfold") {
-    if (!this.obsidianUtils.getObsidianFoldSettigns().foldIndent) {
+    if (!this.obsidianService.getObsidianFoldSettigns().foldIndent) {
       new Notice(
         `Unable to ${type} because folding is disabled. Please enable "Fold indent" in Obsidian settings.`,
         5000

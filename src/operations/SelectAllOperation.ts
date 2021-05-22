@@ -1,4 +1,4 @@
-import { maxPos, minPos, Root } from ".";
+import { maxPos, minPos, Root } from "../root";
 import { IOperation } from "./IOperation";
 
 export class SelectAllOperation implements IOperation {

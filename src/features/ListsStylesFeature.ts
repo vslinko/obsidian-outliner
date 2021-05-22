@@ -1,7 +1,7 @@
-import { Settings } from "../settings";
+import { SettingsService } from "../services/SettingsService";
 import { Plugin_2 } from "obsidian";
-import { IFeature } from "../feature";
-import { ObsidianUtils } from "../obsidian_utils";
+import { IFeature } from "./IFeature";
+import { ObsidianService } from "../services/ObsidianService";
 
 const text = (size: number) =>
   `Outliner styles doesn't work with ${size}-spaces-tabs. Please check your Obsidian settings.`;
@@ -12,20 +12,23 @@ export class ListsStylesFeature implements IFeature {
 
   constructor(
     private plugin: Plugin_2,
-    private settings: Settings,
-    private obsidianUtils: ObsidianUtils
+    private settingsService: SettingsService,
+    private obsidianService: ObsidianService
   ) {}
 
   async load() {
-    if (this.settings.styleLists) {
+    if (this.settingsService.styleLists) {
       this.addListsStyles();
     }
-    if (this.settings.zoomOnClick) {
+    if (this.settingsService.zoomOnClick) {
       this.addZoomStyles();
     }
 
-    this.settings.onChange("styleLists", this.onStyleListsSettingChange);
-    this.settings.onChange("zoomOnClick", this.onZoomOnClickSettingChange);
+    this.settingsService.onChange("styleLists", this.onStyleListsSettingChange);
+    this.settingsService.onChange(
+      "zoomOnClick",
+      this.onZoomOnClickSettingChange
+    );
 
     this.addStatusBarText();
     this.startStatusBarInterval();
@@ -36,11 +39,14 @@ export class ListsStylesFeature implements IFeature {
     if (this.statusBarText.parentElement) {
       this.statusBarText.parentElement.removeChild(this.statusBarText);
     }
-    this.settings.removeCallback(
+    this.settingsService.removeCallback(
       "zoomOnClick",
       this.onZoomOnClickSettingChange
     );
-    this.settings.removeCallback("styleLists", this.onStyleListsSettingChange);
+    this.settingsService.removeCallback(
+      "styleLists",
+      this.onStyleListsSettingChange
+    );
     this.removeListsStyles();
   }
 
@@ -48,10 +54,11 @@ export class ListsStylesFeature implements IFeature {
     let visible: number | null = null;
 
     this.interval = window.setInterval(() => {
-      const { useTab, tabSize } = this.obsidianUtils.getObsidianTabsSettigns();
+      const { useTab, tabSize } =
+        this.obsidianService.getObsidianTabsSettigns();
 
       const shouldBeVisible =
-        this.settings.styleLists && useTab && tabSize !== 4;
+        this.settingsService.styleLists && useTab && tabSize !== 4;
 
       if (shouldBeVisible && visible !== tabSize) {
         this.statusBarText.style.display = "block";
