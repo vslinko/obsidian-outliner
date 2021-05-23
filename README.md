@@ -59,7 +59,7 @@ Move lists with children wherever you want without breaking the structure.
 
 ### Stick the cursor to the content
 
-Don't let the cursor move to the bullet position.
+Don't let the cursor move to the bullet position. Affects cursor movement, text deletion, text selection.
 
 | Setting                         | Default value |
 | ------------------------------- | :-----------: |
@@ -71,6 +71,7 @@ Make the Enter key behave the same as other outliners:
 
 - Enter outdents list item if it's empty.
 - Enter creates new line on children level if there are any children.
+- Shift-Enter creates a new note line.
 
 [More info](https://github.com/vslinko/obsidian-outliner/discussions/98#discussioncomment-649514)
 
@@ -118,7 +119,6 @@ Open DevTools (Command+Option+I or Control+Shift+I) to copy the debug logs.
 
 ## Unsupported (yet) features
 
-- [Soft line break](https://github.com/vslinko/obsidian-outliner/issues/38)
 - [Manipulation with multiple lines](https://github.com/vslinko/obsidian-outliner/issues/3)
 - [Numbered lists](https://github.com/vslinko/obsidian-outliner/issues/46)
 - [Zoom in on Headings](https://github.com/vslinko/obsidian-outliner/issues/99)
