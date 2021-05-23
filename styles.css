@@ -40,31 +40,3 @@
   position: relative;
   overflow: hidden;
 }
-
-/* zoom */
-.outliner-plugin-hidden-row {
-  display: none;
-}
-
-.outliner-plugin-zoom-header {
-  padding: 20px 0 0 20px;
-}
-
-.outliner-plugin-zoom-title {
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.outliner-plugin-bls.outliner-plugin-bls-zoom
-  .cm-s-obsidian
-  span.cm-formatting-list-ul:before {
-  cursor: pointer;
-}
-
-.outliner-plugin-bls.outliner-plugin-bls-zoom
-  .cm-s-obsidian
-  span.cm-formatting-list-ul:hover:before {
-  font-size: 42px;
-  margin-left: -8px;
-  margin-top: -21px;
-}

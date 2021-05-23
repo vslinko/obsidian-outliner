@@ -9,6 +9,8 @@
 ⚙️ [Follow the development process](https://github.com/vslinko/obsidian-outliner/projects/1)<br>
 🐛 [Report issues](https://github.com/vslinko/obsidian-outliner/issues)
 
+Compatible with [Obsidian Zoom plugin](https://github.com/vslinko/obsidian-zoom).
+
 ## Demo
 
 ![Demo](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/demo.gif)
@@ -94,21 +96,6 @@ Press the hotkey once to select the current list item. Press the hotkey twice to
 | ------------------------------------ | :-----------: |
 | Enhance the Ctrl+A or Cmd+A behavior |    `true`     |
 
-### Zoom in to a specific list item
-
-Hide everything except the list and its children.
-
-![Zoom Demo](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/demo2.gif)
-
-| Command                          |       Default hotkey (Windows/Linux)        |             Default hotkey (MacOS)             |
-| -------------------------------- | :-----------------------------------------: | :--------------------------------------------: |
-| Zoom in to the current list item |         <kbd>Ctrl</kbd><kbd>.</kbd>         |         <kbd>Command</kbd><kbd>.</kbd>         |
-| Zoom out the entire document     | <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>.</kbd> | <kbd>Command</kbd><kbd>Shift</kbd><kbd>.</kbd> |
-
-| Setting                                | Default value |
-| -------------------------------------- | :-----------: |
-| Zooming in when clicking on the bullet |    `true`     |
-
 ### Debug mode
 
 Open DevTools (Command+Option+I or Control+Shift+I) to copy the debug logs.
@@ -121,7 +108,6 @@ Open DevTools (Command+Option+I or Control+Shift+I) to copy the debug logs.
 
 - [Manipulation with multiple lines](https://github.com/vslinko/obsidian-outliner/issues/3)
 - [Numbered lists](https://github.com/vslinko/obsidian-outliner/issues/46)
-- [Zoom in on Headings](https://github.com/vslinko/obsidian-outliner/issues/99)
 
 ## Pricing
 

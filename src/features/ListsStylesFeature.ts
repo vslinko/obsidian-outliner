@@ -20,15 +20,8 @@ export class ListsStylesFeature implements IFeature {
     if (this.settingsService.styleLists) {
       this.addListsStyles();
     }
-    if (this.settingsService.zoomOnClick) {
-      this.addZoomStyles();
-    }
 
     this.settingsService.onChange("styleLists", this.onStyleListsSettingChange);
-    this.settingsService.onChange(
-      "zoomOnClick",
-      this.onZoomOnClickSettingChange
-    );
 
     this.addStatusBarText();
     this.startStatusBarInterval();
@@ -39,10 +32,6 @@ export class ListsStylesFeature implements IFeature {
     if (this.statusBarText.parentElement) {
       this.statusBarText.parentElement.removeChild(this.statusBarText);
     }
-    this.settingsService.removeCallback(
-      "zoomOnClick",
-      this.onZoomOnClickSettingChange
-    );
     this.settingsService.removeCallback(
       "styleLists",
       this.onStyleListsSettingChange
@@ -79,14 +68,6 @@ export class ListsStylesFeature implements IFeature {
     }
   };
 
-  private onZoomOnClickSettingChange = (zoomOnClick: boolean) => {
-    if (zoomOnClick) {
-      this.addZoomStyles();
-    } else {
-      this.removeZoomStyles();
-    }
-  };
-
   private addStatusBarText() {
     this.statusBarText = this.plugin.addStatusBarItem();
     this.statusBarText.style.color = "red";
@@ -99,13 +80,5 @@ export class ListsStylesFeature implements IFeature {
 
   private removeListsStyles() {
     document.body.classList.remove("outliner-plugin-bls");
-  }
-
-  private addZoomStyles() {
-    document.body.classList.add("outliner-plugin-bls-zoom");
-  }
-
-  private removeZoomStyles() {
-    document.body.classList.remove("outliner-plugin-bls-zoom");
   }
 }

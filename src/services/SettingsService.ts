@@ -6,7 +6,7 @@ export interface ObsidianOutlinerPluginSettings {
   stickCursor: boolean;
   betterEnter: boolean;
   selectAll: boolean;
-  zoomOnClick: boolean;
+  disableZoomNotification: boolean;
 }
 
 const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
@@ -15,7 +15,7 @@ const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
   stickCursor: true,
   betterEnter: true,
   selectAll: true,
-  zoomOnClick: true,
+  disableZoomNotification: false,
 };
 
 export interface Storage {
@@ -72,11 +72,11 @@ export class SettingsService implements ObsidianOutlinerPluginSettings {
     this.set("selectAll", value);
   }
 
-  get zoomOnClick() {
-    return this.values.zoomOnClick;
+  get disableZoomNotification() {
+    return this.values.disableZoomNotification;
   }
-  set zoomOnClick(value: boolean) {
-    this.set("zoomOnClick", value);
+  set disableZoomNotification(value: boolean) {
+    this.set("disableZoomNotification", value);
   }
 
   onChange<T extends K>(key: T, cb: Callback<T>) {
@@ -176,12 +176,14 @@ export class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName("Zooming in when clicking on the bullet")
+      .setName("Disable notification about Obsidian Zoom plugin")
       .addToggle((toggle) => {
-        toggle.setValue(this.settings.zoomOnClick).onChange(async (value) => {
-          this.settings.zoomOnClick = value;
-          await this.settings.save();
-        });
+        toggle
+          .setValue(this.settings.disableZoomNotification)
+          .onChange(async (value) => {
+            this.settings.disableZoomNotification = value;
+            await this.settings.save();
+          });
       });
 
     new Setting(containerEl)
