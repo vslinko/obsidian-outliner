@@ -179,7 +179,7 @@ export class ListsService {
           ) {
             currentParent = currentParent.getParent();
           }
-          currentIndent = currentParent.getFirstLineIndent();
+          currentIndent = indent;
         }
 
         const folded = !!(editor as any).isFolded({
