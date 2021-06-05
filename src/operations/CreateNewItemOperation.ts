@@ -29,22 +29,7 @@ export class CreateNewItemOperation implements IOperation {
       return;
     }
 
-    this.stopPropagation = true;
-    this.updated = true;
-
     const cursor = root.getCursor();
-
-    const endPos = list.getLastLineContentEnd();
-    const onChildLevel =
-      !list.isEmpty() && cursor.line === endPos.line && cursor.ch === endPos.ch;
-
-    const indent = onChildLevel
-      ? list.getChildren()[0].getFirstLineIndent()
-      : list.getFirstLineIndent();
-
-    const bullet = onChildLevel
-      ? list.getChildren()[0].getBullet()
-      : list.getBullet();
 
     const { oldLines, newLines } = lines.reduce(
       (acc, line) => {
@@ -67,7 +52,30 @@ export class CreateNewItemOperation implements IOperation {
       }
     );
 
-    const prefix = oldLines[0].match(/^\[[ x]\]/) ? '[ ] ' : '';
+    const codeBlockBacticks = oldLines.join("\n").split("```").length - 1;
+    const isInsideCodeblock =
+      codeBlockBacticks > 0 && codeBlockBacticks % 2 !== 0;
+
+    if (isInsideCodeblock) {
+      return;
+    }
+
+    this.stopPropagation = true;
+    this.updated = true;
+
+    const endPos = list.getLastLineContentEnd();
+    const onChildLevel =
+      !list.isEmpty() && cursor.line === endPos.line && cursor.ch === endPos.ch;
+
+    const indent = onChildLevel
+      ? list.getChildren()[0].getFirstLineIndent()
+      : list.getFirstLineIndent();
+
+    const bullet = onChildLevel
+      ? list.getChildren()[0].getBullet()
+      : list.getBullet();
+
+    const prefix = oldLines[0].match(/^\[[ x]\]/) ? "[ ] " : "";
 
     const newList = new List(
       list.getRoot(),
@@ -101,7 +109,7 @@ export class CreateNewItemOperation implements IOperation {
     const newListStart = newList.getFirstLineContentStart();
     root.replaceCursor({
       line: newListStart.line,
-      ch: newListStart.ch + prefix.length
+      ch: newListStart.ch + prefix.length,
     });
   }
 }

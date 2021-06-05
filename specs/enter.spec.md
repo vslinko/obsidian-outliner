@@ -264,3 +264,24 @@
   no
   |te
 ```
+
+# enter should not create new item if cursor is inside code block
+
+```md
+- one
+  ```
+  code|
+  ```
+- two
+```
+
+- keydown: `Enter`
+
+```md
+- one
+  ```
+  code
+  |
+  ```
+- two
+```
