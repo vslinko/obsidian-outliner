@@ -151,6 +151,75 @@
 |
 ```
 
+# enter should create checkbox if current item contains checkbox
+
+```md
+- [ ] one|
+```
+
+- keydown: `Enter`
+
+```md
+- [ ] one
+- [ ] |
+```
+
+# enter should create unchecked checkbox if current item contains checked checkbox
+
+```md
+- [x] one|
+```
+
+- keydown: `Enter`
+
+```md
+- [x] one
+- [ ] |
+```
+
+# enter should create checkbox if current item contains checkbox and cursor on notes
+
+```md
+- [ ] one
+  qwe|
+```
+
+- keydown: `Enter`
+
+```md
+- [ ] one
+  qwe
+- [ ] |
+```
+
+# enter should create checkbox and split text if current item contains checkbox and cursor inside text
+
+```md
+- [ ] one
+  q|we
+```
+
+- keydown: `Enter`
+
+```md
+- [ ] one
+  q
+- [ ] |we
+```
+
+# enter should not create checkbox if current item contains checkbox but cursor inside checkbox
+
+```md
+- [| ] one
+```
+
+- keydown: `Enter`
+
+```md
+- [
+- | ] one
+```
+
 # shift-enter should create note
 
 ```md

@@ -67,11 +67,13 @@ export class CreateNewItemOperation implements IOperation {
       }
     );
 
+    const prefix = oldLines[0].match(/^\[[ x]\]/) ? '[ ] ' : '';
+
     const newList = new List(
       list.getRoot(),
       indent,
       bullet,
-      newLines.shift(),
+      prefix + newLines.shift(),
       false
     );
 
@@ -96,6 +98,10 @@ export class CreateNewItemOperation implements IOperation {
 
     list.replaceLines(oldLines);
 
-    root.replaceCursor(newList.getFirstLineContentStart());
+    const newListStart = newList.getFirstLineContentStart();
+    root.replaceCursor({
+      line: newListStart.line,
+      ch: newListStart.ch + prefix.length
+    });
   }
 }
