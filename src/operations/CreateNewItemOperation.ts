@@ -30,6 +30,11 @@ export class CreateNewItemOperation implements IOperation {
     }
 
     const cursor = root.getCursor();
+    const lineUnderCursor = lines.find((l) => l.from.line === cursor.line);
+
+    if (cursor.ch < lineUnderCursor.from.ch) {
+      return;
+    }
 
     const { oldLines, newLines } = lines.reduce(
       (acc, line) => {

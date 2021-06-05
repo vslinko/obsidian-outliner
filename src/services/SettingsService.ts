@@ -95,6 +95,12 @@ export class SettingsService implements ObsidianOutlinerPluginSettings {
     }
   }
 
+  reset() {
+    for (const [k, v] of Object.entries(DEFAULT_SETTINGS)) {
+      this.set(k, v);
+    }
+  }
+
   async load() {
     this.values = Object.assign(
       {},

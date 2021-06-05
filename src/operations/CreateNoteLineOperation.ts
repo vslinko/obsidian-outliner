@@ -22,11 +22,18 @@ export class CreateNoteLineOperation implements IOperation {
       return;
     }
 
-    this.stopPropagation = true;
-    this.updated = true;
-
     const cursor = root.getCursor();
     const list = root.getListUnderCursor();
+    const lineUnderCursor = list
+      .getLinesInfo()
+      .find((l) => l.from.line === cursor.line);
+
+    if (cursor.ch < lineUnderCursor.from.ch) {
+      return;
+    }
+
+    this.stopPropagation = true;
+    this.updated = true;
 
     if (!list.getNotesIndent()) {
       const indent = list.isEmpty()

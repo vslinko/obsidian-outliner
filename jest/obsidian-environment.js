@@ -25,6 +25,8 @@ module.exports = class CustomEnvironment extends NodeEnvironment {
       this.runCommand("simulateKeydown", data);
     this.global.executeCommandById = (data) =>
       this.runCommand("executeCommandById", data);
+    this.global.setSetting = (data) => this.runCommand("setSetting", data);
+    this.global.resetSettings = () => this.runCommand("resetSettings");
     this.global.parseState = (data) => this.runCommand("parseState", data);
     this.global.getCurrentState = () => this.runCommand("getCurrentState");
   }

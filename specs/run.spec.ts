@@ -16,12 +16,19 @@ interface IExecuteCommandById {
   command: string;
 }
 
+interface ISetSetting {
+  type: "setSetting";
+  k: string;
+  v: any;
+}
+
 type Action = ISimulateKeydown | IExecuteCommandById;
 
 interface ITestDesc {
   title: string;
   before: string[];
   actions: Action[];
+  settings: ISetSetting[];
   after: string[];
 }
 
@@ -30,6 +37,7 @@ function makeTestDesc(): ITestDesc {
     title: "",
     before: [],
     actions: [],
+    settings: [],
     after: [],
   };
 }
@@ -37,6 +45,10 @@ function makeTestDesc(): ITestDesc {
 function registerTest(desc: ITestDesc) {
   test(desc.title, async () => {
     // arrange
+    await resetSettings();
+    for (const action of desc.settings) {
+      await setSetting({ k: action.k, v: action.v });
+    }
     await applyState(desc.before);
 
     // act
@@ -94,6 +106,21 @@ for (const file of files) {
         desc.actions.push({
           type: "executeCommandById",
           command: line.replace(/^- execute: `/, "").slice(0, -1),
+        });
+      } else if (
+        sm === "looking-for-before" &&
+        /^- setting: `[^`]+`$/.test(line)
+      ) {
+        const content = line
+          .replace(/^- setting: `/, "")
+          .slice(0, -1)
+          .split("=", 2);
+        const k = content[0];
+        const v = JSON.parse(content[1]);
+        desc.settings.push({
+          type: "setSetting",
+          k,
+          v,
         });
       } else if (sm === "looking-for-actions" && line.startsWith("```")) {
         sm = "inside-after";

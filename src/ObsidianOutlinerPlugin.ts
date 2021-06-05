@@ -22,7 +22,7 @@ import { ShiftEnterShouldCreateNoteFeature } from "./features/ShiftEnterShouldCr
 
 export default class ObsidianOutlinerPlugin extends Plugin {
   private features: IFeature[];
-  private settingsService: SettingsService;
+  protected settingsService: SettingsService;
   private loggerService: LoggerService;
   private obsidianService: ObsidianService;
   private listsService: ListsService;

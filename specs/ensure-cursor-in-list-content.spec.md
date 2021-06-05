@@ -8,6 +8,18 @@
 - |one
 ```
 
+# cursor should not be moved to list content if stickCursor=false
+
+- setting: `stickCursor=false`
+
+```md
+|- one
+```
+
+```md
+|- one
+```
+
 # cursor should be moved to list content after arrowup
 
 ```md

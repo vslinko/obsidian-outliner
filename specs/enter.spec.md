@@ -285,3 +285,20 @@
   ```
 - two
 ```
+
+# enter should not create new item if cursor is before line start
+
+- setting: `stickCursor=false`
+
+```md
+- one
+|- two
+```
+
+- keydown: `Enter`
+
+```md
+- one
+
+|- two
+```

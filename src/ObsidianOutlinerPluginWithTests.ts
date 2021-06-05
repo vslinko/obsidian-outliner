@@ -1,5 +1,6 @@
 import { MarkdownView } from "obsidian";
 import ObsidianOutlinerPlugin from "./ObsidianOutlinerPlugin";
+import { ObsidianOutlinerPluginSettings } from "./services/SettingsService";
 
 const keysMap: { [key: string]: number } = {
   Backspace: 8,
@@ -21,6 +22,22 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
 
   executeCommandById(id: string) {
     (this.app as any).commands.executeCommandById(id);
+  }
+
+  async setSetting<T extends keyof ObsidianOutlinerPluginSettings>({
+    k,
+    v,
+  }: {
+    k: T;
+    v: ObsidianOutlinerPluginSettings[T];
+  }) {
+    this.settingsService[k] = v;
+    await this.settingsService.save();
+  }
+
+  async resetSettings() {
+    this.settingsService.reset();
+    await this.settingsService.save();
   }
 
   simulateKeydown(keys: string) {
@@ -119,7 +136,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
 
     const ws = new WebSocket("ws://127.0.0.1:8080/");
 
-    ws.addEventListener("message", (event) => {
+    ws.addEventListener("message", async (event) => {
       const { id, type, data } = JSON.parse(event.data);
 
       let result;
@@ -135,6 +152,12 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
             break;
           case "executeCommandById":
             this.executeCommandById(data);
+            break;
+          case "resetSettings":
+            await this.resetSettings();
+            break;
+          case "setSetting":
+            await this.setSetting(data);
             break;
           case "parseState":
             result = this.parseState(data);
