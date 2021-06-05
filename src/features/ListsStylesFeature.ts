@@ -3,8 +3,7 @@ import { Plugin_2 } from "obsidian";
 import { IFeature } from "./IFeature";
 import { ObsidianService } from "../services/ObsidianService";
 
-const text = (size: number) =>
-  `Outliner styles doesn't work with ${size}-spaces-tabs. Please check your Obsidian settings.`;
+const STATUS_BAR_TEXT = `Outliner styles only work with four-space tabs. Please check Obsidian settings.`;
 
 export class ListsStylesFeature implements IFeature {
   private statusBarText: HTMLElement;
@@ -40,22 +39,21 @@ export class ListsStylesFeature implements IFeature {
   }
 
   private startStatusBarInterval() {
-    let visible: number | null = null;
+    let visible: boolean = false;
 
     this.interval = window.setInterval(() => {
       const { useTab, tabSize } =
         this.obsidianService.getObsidianTabsSettigns();
 
       const shouldBeVisible =
-        this.settingsService.styleLists && useTab && tabSize !== 4;
+        this.settingsService.styleLists && !(useTab && tabSize === 4);
 
-      if (shouldBeVisible && visible !== tabSize) {
+      if (shouldBeVisible && !visible) {
         this.statusBarText.style.display = "block";
-        this.statusBarText.setText(text(tabSize));
-        visible = tabSize;
-      } else if (!shouldBeVisible && visible !== null) {
+        visible = true;
+      } else if (!shouldBeVisible && visible) {
         this.statusBarText.style.display = "none";
-        visible = null;
+        visible = false;
       }
     }, 1000);
   }
@@ -72,6 +70,7 @@ export class ListsStylesFeature implements IFeature {
     this.statusBarText = this.plugin.addStatusBarItem();
     this.statusBarText.style.color = "red";
     this.statusBarText.style.display = "none";
+    this.statusBarText.setText(STATUS_BAR_TEXT);
   }
 
   private addListsStyles() {
