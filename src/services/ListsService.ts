@@ -81,14 +81,14 @@ export class ListsService {
 
     if (this.isListItem(line)) {
       listLookingPos = cursor.line;
-    } else if (this.isEmptyLineOrNote(line)) {
+    } else if (this.isLineWithIndent(line)) {
       let listLookingPosSearch = cursor.line - 1;
       while (listLookingPosSearch >= editor.firstLine()) {
         const line = editor.getLine(listLookingPosSearch);
         if (this.isListItem(line)) {
           listLookingPos = listLookingPosSearch;
           break;
-        } else if (this.isEmptyLineOrNote(line)) {
+        } else if (this.isLineWithIndent(line)) {
           listLookingPosSearch--;
         } else {
           break;
@@ -104,7 +104,7 @@ export class ListsService {
     let listStartLineLookup = listLookingPos;
     while (listStartLineLookup >= editor.firstLine()) {
       const line = editor.getLine(listStartLineLookup);
-      if (!this.isListItem(line) && !this.isEmptyLineOrNote(line)) {
+      if (!this.isListItem(line) && !this.isLineWithIndent(line)) {
         break;
       }
       if (this.isListItemWithoutSpaces(line)) {
@@ -121,7 +121,7 @@ export class ListsService {
     let listEndLineLookup = listLookingPos;
     while (listEndLineLookup <= editor.lastLine()) {
       const line = editor.getLine(listEndLineLookup);
-      if (!this.isListItem(line) && !this.isEmptyLineOrNote(line)) {
+      if (!this.isListItem(line) && !this.isLineWithIndent(line)) {
         break;
       }
       if (!this.isEmptyLine(line)) {
@@ -189,7 +189,7 @@ export class ListsService {
 
         currentList = new List(root, indent, bullet, content, folded);
         currentParent.addAfterAll(currentList);
-      } else if (this.isEmptyLineOrNote(line)) {
+      } else if (this.isLineWithIndent(line)) {
         if (!currentList) {
           return error(
             `Unable to parse list: expected list item, got empty line`
@@ -225,7 +225,7 @@ export class ListsService {
         currentList.addLine(line.slice(currentList.getNotesIndent().length));
       } else {
         return error(
-          `Unable to parse list: expected list item or empty line, got "${line}"`
+          `Unable to parse list: expected list item or note, got "${line}"`
         );
       }
     }
@@ -308,8 +308,8 @@ export class ListsService {
     return line.length === 0;
   }
 
-  private isEmptyLineOrNote(line: string) {
-    return this.isEmptyLine(line) || stringWithSpacesRe.test(line);
+  private isLineWithIndent(line: string) {
+    return stringWithSpacesRe.test(line);
   }
 
   private isListItem(line: string) {

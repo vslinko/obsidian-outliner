@@ -83,6 +83,25 @@ describe("parseList", () => {
     );
   });
 
+  test("should parse second list", () => {
+    const listsService = makeListsService();
+    const editor = makeEditor({
+      text: `
+- one
+- two
+
+- three
+- four
+`.trim(),
+      cursor: { line: 3, ch: 3 },
+    });
+
+    const list = listsService.parseList(editor as any);
+
+    expect(list).toBeDefined();
+    expect(list.print()).toBe("- three\n- four");
+  });
+
   test("should error if indent is not match 1", () => {
     const loggerService = makeLoggerService();
     const listsService = makeListsService({ loggerService });
