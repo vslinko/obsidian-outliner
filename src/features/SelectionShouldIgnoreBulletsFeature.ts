@@ -3,6 +3,7 @@ import { ListsService } from "../services/ListsService";
 import { SelectTillLineStartOperation } from "../operations/SelectTillLineStartOperation";
 import { IFeature } from "./IFeature";
 import { SettingsService } from "../services/SettingsService";
+import { IMEService } from "src/services/IMEService";
 
 function isCmdShiftLeft(e: KeyboardEvent) {
   return (
@@ -18,7 +19,8 @@ export class SelectionShouldIgnoreBulletsFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
     private settingsService: SettingsService,
-    private listsService: ListsService
+    private listsService: ListsService,
+    private imeService: IMEService
   ) {}
 
   async load() {
@@ -34,7 +36,7 @@ export class SelectionShouldIgnoreBulletsFeature implements IFeature {
   }
 
   private onKeyDown = (cm: CodeMirror.Editor, event: KeyboardEvent) => {
-    if (!this.settingsService.stickCursor) {
+    if (!this.settingsService.stickCursor || this.imeService.isIMEOpened()) {
       return;
     }
 

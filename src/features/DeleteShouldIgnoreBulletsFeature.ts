@@ -5,6 +5,7 @@ import { DeleteAndMergeWithNextLineOperation } from "../operations/DeleteAndMerg
 import { DeleteAndMergeWithPreviousLineOperation } from "../operations/DeleteAndMergeWithPreviousLineOperation";
 import { DeleteTillLineStartOperation } from "../operations/DeleteTillLineStartOperation";
 import { SettingsService } from "../services/SettingsService";
+import { IMEService } from "src/services/IMEService";
 
 function isBackspace(e: KeyboardEvent) {
   return (
@@ -40,7 +41,8 @@ export class DeleteShouldIgnoreBulletsFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
     private settingsService: SettingsService,
-    private listsService: ListsService
+    private listsService: ListsService,
+    private imeService: IMEService
   ) {}
 
   async load() {
@@ -56,7 +58,7 @@ export class DeleteShouldIgnoreBulletsFeature implements IFeature {
   }
 
   private onKeyDown = (cm: CodeMirror.Editor, event: KeyboardEvent) => {
-    if (!this.settingsService.stickCursor) {
+    if (!this.settingsService.stickCursor || this.imeService.isIMEOpened()) {
       return;
     }
 

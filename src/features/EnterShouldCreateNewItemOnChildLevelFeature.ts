@@ -3,6 +3,7 @@ import { CreateNewItemOperation } from "../operations/CreateNewItemOperation";
 import { IFeature } from "./IFeature";
 import { ListsService } from "../services/ListsService";
 import { SettingsService } from "../services/SettingsService";
+import { IMEService } from "src/services/IMEService";
 
 function isEnter(e: KeyboardEvent) {
   return (
@@ -18,7 +19,8 @@ export class EnterShouldCreateNewItemFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
     private settingsService: SettingsService,
-    private listsService: ListsService
+    private listsService: ListsService,
+    private imeService: IMEService
   ) {}
 
   async load() {
@@ -34,7 +36,11 @@ export class EnterShouldCreateNewItemFeature implements IFeature {
   }
 
   private onKeyDown = (cm: CodeMirror.Editor, e: KeyboardEvent) => {
-    if (!this.settingsService.betterEnter || !isEnter(e)) {
+    if (
+      !this.settingsService.betterEnter ||
+      !isEnter(e) ||
+      this.imeService.isIMEOpened()
+    ) {
       return;
     }
 

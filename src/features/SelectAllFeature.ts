@@ -3,6 +3,7 @@ import { ListsService } from "../services/ListsService";
 import { SelectAllOperation } from "../operations/SelectAllOperation";
 import { SettingsService } from "../services/SettingsService";
 import { IFeature } from "./IFeature";
+import { IMEService } from "src/services/IMEService";
 
 function isCmdA(e: KeyboardEvent) {
   return (
@@ -32,7 +33,8 @@ export class SelectAllFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
     private settingsService: SettingsService,
-    private listsService: ListsService
+    private listsService: ListsService,
+    private imeService: IMEService
   ) {}
 
   async load() {
@@ -48,7 +50,11 @@ export class SelectAllFeature implements IFeature {
   }
 
   private onKeyDown = (cm: CodeMirror.Editor, event: KeyboardEvent) => {
-    if (!this.settingsService.selectAll || !isSelectAll(event)) {
+    if (
+      !this.settingsService.selectAll ||
+      !isSelectAll(event) ||
+      this.imeService.isIMEOpened()
+    ) {
       return;
     }
 

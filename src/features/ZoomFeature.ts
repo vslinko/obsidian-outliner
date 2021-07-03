@@ -1,4 +1,5 @@
 import { Notice, Platform, Plugin_2 } from "obsidian";
+import { IMEService } from "src/services/IMEService";
 import { SettingsService } from "src/services/SettingsService";
 import { IFeature } from "./IFeature";
 
@@ -29,7 +30,8 @@ function isModDotOrModShiftDot(e: KeyboardEvent) {
 export class ZoomFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
-    private settingsService: SettingsService
+    private settingsService: SettingsService,
+    private imeService: IMEService
   ) {}
 
   async load() {
@@ -48,7 +50,8 @@ export class ZoomFeature implements IFeature {
     if (
       (window as any).ObsidianZoomPlugin ||
       this.settingsService.disableZoomNotification ||
-      !isModDotOrModShiftDot(e)
+      !isModDotOrModShiftDot(e) ||
+      this.imeService.isIMEOpened()
     ) {
       return;
     }

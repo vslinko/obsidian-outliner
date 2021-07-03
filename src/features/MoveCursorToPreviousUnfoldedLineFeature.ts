@@ -3,6 +3,7 @@ import { IFeature } from "./IFeature";
 import { ListsService } from "../services/ListsService";
 import { MoveCursorToPreviousUnfoldedLineOperation } from "../operations/MoveCursorToPreviousUnfoldedLineOperation";
 import { SettingsService } from "../services/SettingsService";
+import { IMEService } from "src/services/IMEService";
 
 function isArrowLeft(e: KeyboardEvent) {
   return (
@@ -28,7 +29,8 @@ export class MoveCursorToPreviousUnfoldedLineFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
     private settingsService: SettingsService,
-    private listsService: ListsService
+    private listsService: ListsService,
+    private imeService: IMEService
   ) {}
 
   async load() {
@@ -44,7 +46,7 @@ export class MoveCursorToPreviousUnfoldedLineFeature implements IFeature {
   }
 
   private onKeyDown = (cm: CodeMirror.Editor, event: KeyboardEvent) => {
-    if (!this.settingsService.stickCursor) {
+    if (!this.settingsService.stickCursor || this.imeService.isIMEOpened()) {
       return;
     }
 

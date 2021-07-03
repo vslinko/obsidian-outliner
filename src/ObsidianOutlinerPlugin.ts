@@ -19,6 +19,7 @@ import { FoldFeature } from "./features/FoldFeature";
 import { SelectAllFeature } from "./features/SelectAllFeature";
 import { MoveItemsFeature } from "./features/MoveItemsFeature";
 import { ShiftEnterShouldCreateNoteFeature } from "./features/ShiftEnterShouldCreateNoteFeature";
+import { IMEService } from "./services/IMEService";
 
 export default class ObsidianOutlinerPlugin extends Plugin {
   private features: IFeature[];
@@ -26,6 +27,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   private loggerService: LoggerService;
   private obsidianService: ObsidianService;
   private listsService: ListsService;
+  private imeService: IMEService;
 
   async onload() {
     console.log(`Loading obsidian-outliner`);
@@ -41,6 +43,9 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       this.obsidianService
     );
 
+    this.imeService = new IMEService();
+    await this.imeService.load();
+
     this.addSettingTab(
       new ObsidianOutlinerPluginSettingTab(this.app, this, this.settingsService)
     );
@@ -50,12 +55,14 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       new EnterOutdentIfLineIsEmptyFeature(
         this,
         this.settingsService,
-        this.listsService
+        this.listsService,
+        this.imeService
       ),
       new EnterShouldCreateNewItemFeature(
         this,
         this.settingsService,
-        this.listsService
+        this.listsService,
+        this.imeService
       ),
       new EnsureCursorInListContentFeature(
         this,
@@ -65,26 +72,35 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       new MoveCursorToPreviousUnfoldedLineFeature(
         this,
         this.settingsService,
-        this.listsService
+        this.listsService,
+        this.imeService
       ),
       new DeleteShouldIgnoreBulletsFeature(
         this,
         this.settingsService,
-        this.listsService
+        this.listsService,
+        this.imeService
       ),
       new SelectionShouldIgnoreBulletsFeature(
         this,
         this.settingsService,
-        this.listsService
+        this.listsService,
+        this.imeService
       ),
-      new ZoomFeature(this, this.settingsService),
+      new ZoomFeature(this, this.settingsService, this.imeService),
       new FoldFeature(this, this.obsidianService),
-      new SelectAllFeature(this, this.settingsService, this.listsService),
+      new SelectAllFeature(
+        this,
+        this.settingsService,
+        this.listsService,
+        this.imeService
+      ),
       new MoveItemsFeature(this, this.obsidianService, this.listsService),
       new ShiftEnterShouldCreateNoteFeature(
         this,
         this.settingsService,
-        this.listsService
+        this.listsService,
+        this.imeService
       ),
     ];
 
@@ -95,6 +111,8 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
   async onunload() {
     console.log(`Unloading obsidian-outliner`);
+
+    await this.imeService.unload();
 
     for (const feature of this.features) {
       await feature.unload();
