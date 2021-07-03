@@ -7,6 +7,7 @@ export interface ObsidianOutlinerPluginSettings {
   betterEnter: boolean;
   selectAll: boolean;
   disableZoomNotification: boolean;
+  hideWarning: boolean;
 }
 
 const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
@@ -16,6 +17,7 @@ const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
   betterEnter: true,
   selectAll: true,
   disableZoomNotification: false,
+  hideWarning: false,
 };
 
 export interface Storage {
@@ -77,6 +79,13 @@ export class SettingsService implements ObsidianOutlinerPluginSettings {
   }
   set disableZoomNotification(value: boolean) {
     this.set("disableZoomNotification", value);
+  }
+
+  get hideWarning() {
+    return this.values.hideWarning;
+  }
+  set hideWarning(value: boolean) {
+    this.set("hideWarning", value);
   }
 
   onChange<T extends K>(key: T, cb: Callback<T>) {
@@ -190,6 +199,15 @@ export class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
             this.settings.disableZoomNotification = value;
             await this.settings.save();
           });
+      });
+
+    new Setting(containerEl)
+      .setName("Hide the warning about four-space tabs")
+      .addToggle((toggle) => {
+        toggle.setValue(this.settings.hideWarning).onChange(async (value) => {
+          this.settings.hideWarning = value;
+          await this.settings.save();
+        });
       });
 
     new Setting(containerEl)

@@ -46,7 +46,9 @@ export class ListsStylesFeature implements IFeature {
         this.obsidianService.getObsidianTabsSettigns();
 
       const shouldBeVisible =
-        this.settingsService.styleLists && !(useTab && tabSize === 4);
+        this.settingsService.styleLists &&
+        !(useTab && tabSize === 4) &&
+        !this.settingsService.hideWarning;
 
       if (shouldBeVisible && !visible) {
         this.statusBarText.style.display = "block";

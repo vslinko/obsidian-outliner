@@ -44,9 +44,10 @@ If you liked the styles from the demo above, you can enable them in the plugin s
 
 > **Disclaimer:** Styles are only compatible with built-in Obsidian themes and may not be compatible with other themes. Circle bullets only work well with spaces or four-space tabs. Indentation lines only work well with four-space tabs.
 
-| Setting                         | Default value |
-| ------------------------------- | :-----------: |
-| Improve the style of your lists |    `false`    |
+| Setting                                | Default value |
+| -------------------------------------- | :-----------: |
+| Improve the style of your lists        |    `false`    |
+| Hide the warning about four-space tabs |    `false`    |
 
 ### Move lists back and forth
 
