@@ -1,3 +1,4 @@
+import { recalculateNumericBullets } from "src/root/recalculateNumericBullets";
 import { Root } from "../root";
 import { IOperation } from "./IOperation";
 
@@ -51,5 +52,7 @@ export class MoveLeftOperation implements IOperation {
       line: cursor.line + lineDiff,
       ch: cursor.ch - chDiff,
     });
+
+    recalculateNumericBullets(root);
   }
 }

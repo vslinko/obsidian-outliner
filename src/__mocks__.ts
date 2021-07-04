@@ -1,3 +1,4 @@
+import { ListsService } from "./services/ListsService";
 import { LoggerService } from "./services/LoggerService";
 import { ObsidianService } from "./services/ObsidianService";
 
@@ -50,4 +51,20 @@ export function makeLoggerService(): LoggerService {
   };
 
   return logger;
+}
+
+export function makeRoot(options: {
+  editor: CodeMirror.Editor;
+  loggerService?: LoggerService;
+  obsidianService?: ObsidianService;
+}) {
+  const { loggerService, obsidianService, editor } = {
+    loggerService: makeLoggerService(),
+    obsidianService: makeObsidianService(),
+    ...options,
+  };
+
+  const listsService = new ListsService(loggerService, obsidianService);
+
+  return listsService.parseList(editor);
 }

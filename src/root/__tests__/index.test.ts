@@ -1,27 +1,4 @@
-import { ListsService } from "../../services/ListsService";
-import { LoggerService } from "../../services/LoggerService";
-import { ObsidianService } from "../../services/ObsidianService";
-import {
-  makeEditor,
-  makeLoggerService,
-  makeObsidianService,
-} from "../../__mocks__";
-
-export function makeRoot(options: {
-  editor: CodeMirror.Editor;
-  loggerService?: LoggerService;
-  obsidianService?: ObsidianService;
-}) {
-  const { loggerService, obsidianService, editor } = {
-    loggerService: makeLoggerService(),
-    obsidianService: makeObsidianService(),
-    ...options,
-  };
-
-  const listsService = new ListsService(loggerService, obsidianService);
-
-  return listsService.parseList(editor);
-}
+import { makeEditor, makeRoot } from "../../__mocks__";
 
 describe("Root", () => {
   describe("getListUnderLine", () => {

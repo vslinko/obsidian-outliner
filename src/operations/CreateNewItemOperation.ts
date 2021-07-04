@@ -1,3 +1,4 @@
+import { recalculateNumericBullets } from "src/root/recalculateNumericBullets";
 import { List, Root } from "../root";
 import { IOperation } from "./IOperation";
 
@@ -116,5 +117,7 @@ export class CreateNewItemOperation implements IOperation {
       line: newListStart.line,
       ch: newListStart.ch + prefix.length,
     });
+
+    recalculateNumericBullets(root);
   }
 }

@@ -1,3 +1,4 @@
+import { recalculateNumericBullets } from "src/root/recalculateNumericBullets";
 import { IListLine, List, Root } from "../root";
 import { IOperation } from "./IOperation";
 
@@ -106,6 +107,8 @@ export class DeleteAndMergeWithPreviousLineOperation implements IOperation {
       }
 
       root.replaceCursor(prevEnd);
+
+      recalculateNumericBullets(root);
     }
   }
 }

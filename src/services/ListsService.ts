@@ -3,12 +3,12 @@ import { ObsidianService } from "./ObsidianService";
 import { List, Root } from "../root";
 import { IOperation } from "../operations/IOperation";
 
-const bulletSign = "-*+";
+const bulletSign = `(?:[-*+]|\\d+\\.)`;
 
-const listItemWithoutSpacesRe = new RegExp(`^[${bulletSign}] `);
-const listItemRe = new RegExp(`^[ \t]*[${bulletSign}] `);
+const listItemWithoutSpacesRe = new RegExp(`^${bulletSign} `);
+const listItemRe = new RegExp(`^[ \t]*${bulletSign} `);
 const stringWithSpacesRe = new RegExp(`^[ \t]+`);
-const parseListItemRe = new RegExp(`^([ \t]*)([${bulletSign}]) (.*)$`);
+const parseListItemRe = new RegExp(`^([ \t]*)(${bulletSign}) (.*)$`);
 
 export interface IApplyChangesList {
   isFoldRoot(): boolean;

@@ -203,6 +203,10 @@ export class List {
     return this.bullet;
   }
 
+  replateBullet(bullet: string) {
+    this.bullet = bullet;
+  }
+
   getParent() {
     return this.parent;
   }
