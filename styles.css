@@ -9,7 +9,7 @@
 }
 
 .outliner-plugin-bls .cm-s-obsidian span.cm-formatting-list-ul {
-  color: var(--background-primary);
+  color: var(--background-primary) !important;
 }
 
 .outliner-plugin-bls .cm-s-obsidian span.cm-formatting-list-ul:before {
