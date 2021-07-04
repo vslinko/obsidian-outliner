@@ -6,12 +6,14 @@ import { IFeature } from "./IFeature";
 import { MoveRightOperation } from "../operations/MoveRightOperation";
 import { MoveDownOperation } from "../operations/MoveDownOperation";
 import { MoveUpOperation } from "../operations/MoveUpOperation";
+import { IMEService } from "src/services/IMEService";
 
 export class MoveItemsFeature implements IFeature {
   constructor(
     private plugin: Plugin_2,
     private obsidianService: ObsidianService,
-    private listsService: ListsService
+    private listsService: ListsService,
+    private imeService: IMEService
   ) {}
 
   async load() {
@@ -91,6 +93,10 @@ export class MoveItemsFeature implements IFeature {
   }
 
   private moveListElementRight(editor: CodeMirror.Editor) {
+    if (this.imeService.isIMEOpened()) {
+      return true;
+    }
+
     const { shouldStopPropagation } = this.listsService.performOperation(
       (root) =>
         new MoveRightOperation(root, this.listsService.getDefaultIndentChars()),
@@ -100,6 +106,10 @@ export class MoveItemsFeature implements IFeature {
   }
 
   private moveListElementLeft(editor: CodeMirror.Editor) {
+    if (this.imeService.isIMEOpened()) {
+      return true;
+    }
+
     const { shouldStopPropagation } = this.listsService.performOperation(
       (root) => new MoveLeftOperation(root),
       editor

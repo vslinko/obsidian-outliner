@@ -95,7 +95,12 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this.listsService,
         this.imeService
       ),
-      new MoveItemsFeature(this, this.obsidianService, this.listsService),
+      new MoveItemsFeature(
+        this,
+        this.obsidianService,
+        this.listsService,
+        this.imeService
+      ),
       new ShiftEnterShouldCreateNoteFeature(
         this,
         this.settingsService,
