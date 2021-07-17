@@ -1,4 +1,5 @@
 import { recalculateNumericBullets } from "src/root/recalculateNumericBullets";
+import { isEmptyLineOrEmptyCheckbox } from "src/utils/isEmptyLineOrEmptyCheckbox";
 import { List, Root } from "../root";
 import { IOperation } from "./IOperation";
 
@@ -26,7 +27,7 @@ export class CreateNewItemOperation implements IOperation {
     const list = root.getListUnderCursor();
     const lines = list.getLinesInfo();
 
-    if (lines.length === 1 && lines[0].text === "") {
+    if (lines.length === 1 && isEmptyLineOrEmptyCheckbox(lines[0].text)) {
       return;
     }
 

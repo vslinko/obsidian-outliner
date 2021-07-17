@@ -1,6 +1,7 @@
 import { Root } from "../root";
 import { MoveLeftOperation } from "./MoveLeftOperation";
 import { IOperation } from "./IOperation";
+import { isEmptyLineOrEmptyCheckbox } from "../utils/isEmptyLineOrEmptyCheckbox";
 
 export class OutdentIfLineIsEmptyOperation implements IOperation {
   private moveLeftOp: MoveLeftOperation;
@@ -27,7 +28,11 @@ export class OutdentIfLineIsEmptyOperation implements IOperation {
     const list = root.getListUnderCursor();
     const lines = list.getLines();
 
-    if (lines.length > 1 || lines[0].length > 0 || list.getLevel() === 1) {
+    if (
+      lines.length > 1 ||
+      !isEmptyLineOrEmptyCheckbox(lines[0]) ||
+      list.getLevel() === 1
+    ) {
       return;
     }
 

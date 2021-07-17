@@ -151,6 +151,21 @@
 |
 ```
 
+# enter should delete list item if it's last item and it's on the top level and it's checkbox
+
+```md
+- [ ] one
+- [ ] |
+```
+
+- keydown: `Enter`
+
+```md
+- [ ] one
+
+|
+```
+
 # enter should create checkbox if current item contains checkbox
 
 ```md
