@@ -67,7 +67,7 @@ async function prepareObsidian() {
 async function prepareVault() {
   debug(`Prepare vault`);
 
-  const vaultConfigFilePath = ".obsidian/config";
+  const vaultConfigFilePath = ".obsidian/app.json";
   const vaultPluginDir = ".obsidian/plugins/obsidian-outliner";
 
   if (!fs.existsSync(vaultConfigFilePath)) {
