@@ -42,12 +42,12 @@ export class ListsStylesFeature implements IFeature {
     let visible: boolean = false;
 
     this.interval = window.setInterval(() => {
-      const { useTab, tabSize } =
+      const { tabSize } =
         this.obsidianService.getObsidianTabsSettigns();
 
       const shouldBeVisible =
         this.settingsService.styleLists &&
-        !(useTab && tabSize === 4) &&
+        !(tabSize === 4) &&
         !this.settingsService.hideWarning;
 
       if (shouldBeVisible && !visible) {
