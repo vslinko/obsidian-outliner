@@ -23,20 +23,24 @@
 }
 
 /* lines */
-.outliner-plugin-bls .cm-hmd-list-indent .cm-tab {
-  position: relative;
-}
-
-.outliner-plugin-bls .cm-hmd-list-indent .cm-tab::before {
-  content: "";
-  border-left: 1px solid var(--text-faint);
-  position: absolute;
-  left: 3px;
-  top: -9px;
-  bottom: -9999px;
-}
-
-.outliner-plugin-bls .cm-s-obsidian .CodeMirror-line {
-  position: relative;
+.outliner-plugin-bls .cm-s-obsidian .HyperMD-list-line {
   overflow: hidden;
+}
+
+.cm-hmd-list-indent {
+  position: relative;
+}
+
+.outliner-plugin-bls .CodeMirror-line .cm-hmd-list-indent::before {
+  content: '';
+  display: block;
+  position: absolute;
+  background-image: linear-gradient(to right, var(--text-faint) 1px, transparent 1px);
+  /* https://developer.mozilla.org/en-US/docs/Web/CSS/length#units */
+  background-size: 1.8ch 1px;
+  background-position-x: 3px;
+  width: 100%;
+  left: 0;
+  top: -1.6em;
+  padding-bottom: 999em;
 }

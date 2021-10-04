@@ -149,7 +149,7 @@ export class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Improve the style of your lists")
       .setDesc(
-        "Styles are only compatible with built-in Obsidian themes and may not be compatible with other themes. Styles only work well with spaces or four-space tabs."
+        "Styles are only compatible with built-in Obsidian themes and may not be compatible with other themes. Styles only work well with tab size 4."
       )
       .addToggle((toggle) => {
         toggle.setValue(this.settings.styleLists).onChange(async (value) => {
