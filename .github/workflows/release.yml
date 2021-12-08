@@ -19,10 +19,10 @@ jobs:
         run: npm ci
       - name: Install Obsidian
         run: |
-          wget -q https://github.com/obsidianmd/obsidian-releases/releases/download/v0.12.15/Obsidian-0.12.15-universal.dmg
-          sudo hdiutil attach Obsidian-0.12.15-universal.dmg
-          sudo cp -rf "/Volumes/Obsidian 0.12.15-universal/Obsidian.app" /Applications
-          sudo hdiutil detach "/Volumes/Obsidian 0.12.15-universal"
+          wget -q https://github.com/obsidianmd/obsidian-releases/releases/download/v0.12.19/Obsidian-0.12.19-universal.dmg
+          sudo hdiutil attach Obsidian-0.12.19-universal.dmg
+          sudo cp -rf "/Volumes/Obsidian 0.12.19-universal/Obsidian.app" /Applications
+          sudo hdiutil detach "/Volumes/Obsidian 0.12.19-universal"
       - name: Test
         run: |
           npm run build-with-tests
