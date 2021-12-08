@@ -39,7 +39,7 @@ export class ObsidianService {
         return;
       }
 
-      const editor = view.sourceMode.cmEditor;
+      const editor = (view as any).sourceMode.cmEditor;
 
       const shouldStopPropagation = cb(editor);
 

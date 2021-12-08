@@ -127,8 +127,9 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     }
     await this.wait(1000);
 
-    this.editor =
-      this.app.workspace.getActiveViewOfType(MarkdownView).sourceMode.cmEditor;
+    this.editor = (
+      this.app.workspace.getActiveViewOfType(MarkdownView) as any
+    ).sourceMode.cmEditor;
   }
 
   async connect() {

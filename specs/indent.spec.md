@@ -9,7 +9,7 @@
 
 ```md
 - qwe
-	- qwe|
+  - qwe|
 ```
 
 # obsidian-outliner:indent-list should indent children
