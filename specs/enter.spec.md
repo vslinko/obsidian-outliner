@@ -118,6 +118,22 @@
   - |
 ```
 
+# enter should outdent line if line is empty and list using TAB after bullet
+
+```md
+-	one
+	-	two
+		-	|
+```
+
+- keydown: `Enter`
+
+```md
+-	one
+	-	two
+	-	|
+```
+
 # enter should outdent line if line is empty and previous line has notes
 
 ```md
@@ -316,4 +332,19 @@
 - one
 
 |- two
+```
+
+# enter should copy TAB after bullet point
+
+```md
+-	one
+	-	two|
+```
+
+- keydown: `Enter`
+
+```md
+-	one
+	-	two
+	-	|
 ```

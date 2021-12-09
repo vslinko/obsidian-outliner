@@ -36,6 +36,7 @@ export class List {
     private root: Root,
     private indent: string,
     private bullet: string,
+    private spaceAfterBullet: string,
     firstLine: string,
     private folded: boolean
   ) {
@@ -203,6 +204,10 @@ export class List {
     return this.bullet;
   }
 
+  getSpaceAfterBullet() {
+    return this.spaceAfterBullet;
+  }
+
   replateBullet(bullet: string) {
     this.bullet = bullet;
   }
@@ -257,7 +262,7 @@ export class List {
     let res = "";
 
     for (let i = 0; i < this.lines.length; i++) {
-      res += i === 0 ? this.indent + this.bullet + " " : this.notesIndent;
+      res += i === 0 ? this.indent + this.bullet + this.spaceAfterBullet : this.notesIndent;
       res += this.lines[i];
       res += "\n";
     }
@@ -271,7 +276,7 @@ export class List {
 }
 
 export class Root {
-  private rootList = new List(this, "", "", "", false);
+  private rootList = new List(this, "", "", "", "", false);
   private selections: IRange[] = [];
 
   constructor(

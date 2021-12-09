@@ -5,10 +5,10 @@ import { IOperation } from "../operations/IOperation";
 
 const bulletSign = `(?:[-*+]|\\d+\\.)`;
 
-const listItemWithoutSpacesRe = new RegExp(`^${bulletSign} `);
-const listItemRe = new RegExp(`^[ \t]*${bulletSign} `);
+const listItemWithoutSpacesRe = new RegExp(`^${bulletSign}( |\t)`);
+const listItemRe = new RegExp(`^[ \t]*${bulletSign}( |\t)`);
 const stringWithSpacesRe = new RegExp(`^[ \t]+`);
-const parseListItemRe = new RegExp(`^([ \t]*)(${bulletSign}) (.*)$`);
+const parseListItemRe = new RegExp(`^([ \t]*)(${bulletSign})( |\t)(.*)$`);
 
 export interface IApplyChangesList {
   isFoldRoot(): boolean;
@@ -152,7 +152,7 @@ export class ListsService {
       const matches = parseListItemRe.exec(line);
 
       if (matches) {
-        const [_, indent, bullet, content] = matches;
+        const [_, indent, bullet, spaceAfterBullet, content] = matches;
 
         const compareLength = Math.min(currentIndent.length, indent.length);
         const indentSlice = indent.slice(0, compareLength);
@@ -187,7 +187,7 @@ export class ListsService {
           ch: 0,
         });
 
-        currentList = new List(root, indent, bullet, content, folded);
+        currentList = new List(root, indent, bullet, spaceAfterBullet, content, folded);
         currentParent.addAfterAll(currentList);
       } else if (this.isLineWithIndent(line)) {
         if (!currentList) {

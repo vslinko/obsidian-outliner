@@ -82,12 +82,17 @@ export class CreateNewItemOperation implements IOperation {
       ? list.getChildren()[0].getBullet()
       : list.getBullet();
 
+    const spaceAfterBullet = onChildLevel
+      ? list.getChildren()[0].getSpaceAfterBullet()
+      : list.getSpaceAfterBullet();
+
     const prefix = oldLines[0].match(/^\[[ x]\]/) ? "[ ] " : "";
 
     const newList = new List(
       list.getRoot(),
       indent,
       bullet,
+      spaceAfterBullet,
       prefix + newLines.shift(),
       false
     );
