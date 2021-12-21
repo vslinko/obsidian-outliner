@@ -1,4 +1,4 @@
-import { Plugin } from "obsidian";
+import { Notice, Plugin } from "obsidian";
 import {
   ObsidianOutlinerPluginSettingTab,
   SettingsService,
@@ -32,12 +32,21 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   async onload() {
     console.log(`Loading obsidian-outliner`);
 
+    this.obsidianService = new ObsidianService(this.app);
+
+    if (!this.obsidianService.getObsidianLegacyEditorSettigns().legacyEditor) {
+      new Notice(
+        `Unfortunately Outliner plugin currently does not support a new editor, which was added in Obsidian 0.13. Please consider turning on the "Use legacy editor" setting until full support of the new editor is released.`,
+        30000
+      );
+      return;
+    }
+
     this.settingsService = new SettingsService(this);
     await this.settingsService.load();
 
     this.loggerService = new LoggerService(this.settingsService);
 
-    this.obsidianService = new ObsidianService(this.app);
     this.listsService = new ListsService(
       this.loggerService,
       this.obsidianService

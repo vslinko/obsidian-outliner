@@ -9,6 +9,10 @@ export interface IObsidianFoldSettigns {
   foldIndent: boolean;
 }
 
+export interface IObsidianLegacyEditorSettigns {
+  legacyEditor: boolean;
+}
+
 export class ObsidianService {
   constructor(private app: App) {}
 
@@ -23,6 +27,13 @@ export class ObsidianService {
   getObsidianFoldSettigns(): IObsidianFoldSettigns {
     return {
       foldIndent: false,
+      ...(this.app.vault as any).config,
+    };
+  }
+
+  getObsidianLegacyEditorSettigns(): IObsidianLegacyEditorSettigns {
+    return {
+      legacyEditor: true,
       ...(this.app.vault as any).config,
     };
   }
