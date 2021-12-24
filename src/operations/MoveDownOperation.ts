@@ -1,8 +1,9 @@
-import { recalculateNumericBullets } from "src/root/recalculateNumericBullets";
-import { Root } from "../root";
-import { IOperation } from "./IOperation";
+import { Operation } from "./Operation";
 
-export class MoveDownOperation implements IOperation {
+import { Root } from "../root";
+import { recalculateNumericBullets } from "../root/recalculateNumericBullets";
+
+export class MoveDownOperation implements Operation {
   private stopPropagation = false;
   private updated = false;
 

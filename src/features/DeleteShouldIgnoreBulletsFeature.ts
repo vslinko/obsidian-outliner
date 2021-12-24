@@ -1,101 +1,79 @@
-import { Platform, Plugin_2 } from "obsidian";
-import { IFeature } from "./IFeature";
-import { ListsService } from "../services/ListsService";
+import { Plugin_2 } from "obsidian";
+
+import { keymap } from "@codemirror/view";
+
+import { Feature } from "./Feature";
+
+import { MyEditor } from "../MyEditor";
 import { DeleteAndMergeWithNextLineOperation } from "../operations/DeleteAndMergeWithNextLineOperation";
 import { DeleteAndMergeWithPreviousLineOperation } from "../operations/DeleteAndMergeWithPreviousLineOperation";
 import { DeleteTillLineStartOperation } from "../operations/DeleteTillLineStartOperation";
+import { IMEService } from "../services/IMEService";
+import { ObsidianService } from "../services/ObsidianService";
+import { PerformOperationService } from "../services/PerformOperationService";
 import { SettingsService } from "../services/SettingsService";
-import { IMEService } from "src/services/IMEService";
 
-function isBackspace(e: KeyboardEvent) {
-  return (
-    (e.keyCode === 8 || e.code === "Backspace") &&
-    e.shiftKey === false &&
-    e.metaKey === false &&
-    e.altKey === false &&
-    e.ctrlKey === false
-  );
-}
-
-function isCmdBackspace(e: KeyboardEvent) {
-  return (
-    (e.keyCode === 8 || e.code === "Backspace") &&
-    e.shiftKey === false &&
-    e.metaKey === true &&
-    e.altKey === false &&
-    e.ctrlKey === false
-  );
-}
-
-function isDelete(e: KeyboardEvent) {
-  return (
-    (e.keyCode === 46 || e.code === "Delete") &&
-    e.shiftKey === false &&
-    e.metaKey === false &&
-    e.altKey === false &&
-    e.ctrlKey === false
-  );
-}
-
-export class DeleteShouldIgnoreBulletsFeature implements IFeature {
+export class DeleteShouldIgnoreBulletsFeature implements Feature {
   constructor(
     private plugin: Plugin_2,
-    private settingsService: SettingsService,
-    private listsService: ListsService,
-    private imeService: IMEService
+    private settings: SettingsService,
+    private ime: IMEService,
+    private obsidian: ObsidianService,
+    private performOperation: PerformOperationService
   ) {}
 
   async load() {
-    this.plugin.registerCodeMirror((cm) => {
-      cm.on("keydown", this.onKeyDown);
-    });
+    this.plugin.registerEditorExtension(
+      keymap.of([
+        {
+          key: "Backspace",
+          run: this.obsidian.createKeymapRunCallback({
+            check: this.check,
+            run: this.deleteAndMergeWithPreviousLine,
+          }),
+        },
+        {
+          key: "Delete",
+          run: this.obsidian.createKeymapRunCallback({
+            check: this.check,
+            run: this.deleteAndMergeWithNextLine,
+          }),
+        },
+        {
+          mac: "m-Backspace",
+          run: this.obsidian.createKeymapRunCallback({
+            check: this.check,
+            run: this.deleteTillLineStart,
+          }),
+        },
+      ])
+    );
   }
 
-  async unload() {
-    this.plugin.app.workspace.iterateCodeMirrors((cm) => {
-      cm.off("keydown", this.onKeyDown);
-    });
-  }
+  async unload() {}
 
-  private onKeyDown = (cm: CodeMirror.Editor, event: KeyboardEvent) => {
-    if (!this.settingsService.stickCursor || this.imeService.isIMEOpened()) {
-      return;
-    }
+  private check = () => {
+    return this.settings.stickCursor && !this.ime.isIMEOpened();
+  };
 
-    if (isBackspace(event)) {
-      const { shouldStopPropagation } = this.listsService.performOperation(
-        (root) => new DeleteAndMergeWithPreviousLineOperation(root),
-        cm
-      );
+  private deleteAndMergeWithPreviousLine = (editor: MyEditor) => {
+    return this.performOperation.performOperation(
+      (root) => new DeleteAndMergeWithPreviousLineOperation(root),
+      editor
+    );
+  };
 
-      if (shouldStopPropagation) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    }
+  private deleteTillLineStart = (editor: MyEditor) => {
+    return this.performOperation.performOperation(
+      (root) => new DeleteTillLineStartOperation(root),
+      editor
+    );
+  };
 
-    if (Platform.isMacOS && isCmdBackspace(event)) {
-      const { shouldStopPropagation } = this.listsService.performOperation(
-        (root) => new DeleteTillLineStartOperation(root),
-        cm
-      );
-
-      if (shouldStopPropagation) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    }
-
-    if (isDelete(event)) {
-      const { shouldStopPropagation } = this.listsService.performOperation(
-        (root) => new DeleteAndMergeWithNextLineOperation(root),
-        cm
-      );
-
-      if (shouldStopPropagation) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    }
+  private deleteAndMergeWithNextLine = (editor: MyEditor) => {
+    return this.performOperation.performOperation(
+      (root) => new DeleteAndMergeWithNextLineOperation(root),
+      editor
+    );
   };
 }

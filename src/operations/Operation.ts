@@ -1,4 +1,4 @@
-export interface IOperation {
+export interface Operation {
   shouldStopPropagation(): boolean;
   shouldUpdate(): boolean;
   perform(): void;

@@ -1,74 +1,249 @@
 /**
  * @jest-environment ./jest/obsidian-environment
  */
+import { readFileSync, readdirSync } from "fs";
 
-import { readdirSync, readFileSync } from "fs";
+interface State {
+  lines: string[];
+}
 
-const files = readdirSync(__dirname);
+interface ApplyState {
+  type: "applyState";
+  state: State;
+}
 
-interface ISimulateKeydown {
+interface AssertState {
+  type: "assertState";
+  state: State;
+}
+
+interface SimulateKeydown {
   type: "simulateKeydown";
   key: string;
 }
 
-interface IExecuteCommandById {
+interface ExecuteCommandById {
   type: "executeCommandById";
   command: string;
 }
 
-interface ISetSetting {
+interface SetSetting {
   type: "setSetting";
   k: string;
   v: any;
 }
 
-type Action = ISimulateKeydown | IExecuteCommandById;
+type Action =
+  | ApplyState
+  | AssertState
+  | SimulateKeydown
+  | ExecuteCommandById
+  | SetSetting;
 
-interface ITestDesc {
+interface TestDesc {
   title: string;
-  before: string[];
   actions: Action[];
-  settings: ISetSetting[];
-  after: string[];
 }
 
-function makeTestDesc(): ITestDesc {
-  return {
-    title: "",
-    before: [],
-    actions: [],
-    settings: [],
-    after: [],
-  };
-}
-
-function registerTest(desc: ITestDesc) {
+function registerTest(desc: TestDesc) {
   test(desc.title, async () => {
-    // arrange
     await resetSettings();
-    for (const action of desc.settings) {
-      await setSetting({ k: action.k, v: action.v });
-    }
-    await applyState(desc.before);
 
-    // act
     for (const action of desc.actions) {
       switch (action.type) {
+        case "applyState":
+          await applyState(action.state.lines);
+          break;
         case "simulateKeydown":
           await simulateKeydown(action.key);
           break;
         case "executeCommandById":
           await executeCommandById(action.command);
           break;
+        case "setSetting":
+          await setSetting({ k: action.k, v: action.v });
+          break;
+        case "assertState":
+          await expect(await getCurrentState()).toEqualEditorState(
+            action.state.lines
+          );
+          break;
       }
     }
-
-    // assert
-    await expect(await getCurrentState()).toEqualEditorState(desc.after);
   });
 }
 
-for (const file of files) {
+function isHeader(line: string) {
+  return line.startsWith("# ");
+}
+
+function isAction(line: string) {
+  return line.startsWith("- ");
+}
+
+function isCodeBlock(line: string) {
+  return line.startsWith("```");
+}
+
+function parseState(l: LinesIterator): State {
+  if (!isCodeBlock(l.line)) {
+    throw new Error(
+      `parseState: Unexpected line "${l.line}", expected "\`\`\`"`
+    );
+  }
+
+  const lines: string[] = [];
+
+  while (true) {
+    l.next();
+
+    if (l.isEnded()) {
+      throw new Error(`parseState: Unexpected EOF, expected "\`\`\`"`);
+    } else if (isCodeBlock(l.line)) {
+      l.nextNotEmpty();
+      return {
+        lines,
+      };
+    } else {
+      lines.push(l.line);
+    }
+  }
+}
+
+function parseApplyState(l: LinesIterator): ApplyState {
+  l.nextNotEmpty();
+
+  return {
+    type: "applyState",
+    state: parseState(l),
+  };
+}
+
+function parseAssertState(l: LinesIterator): AssertState {
+  l.nextNotEmpty();
+
+  return {
+    type: "assertState",
+    state: parseState(l),
+  };
+}
+
+function parseSimulateKeydown(l: LinesIterator): SimulateKeydown {
+  const key = l.line.replace(/- keydown: `([^`]+)`/, "$1");
+
+  l.nextNotEmpty();
+
+  return {
+    type: "simulateKeydown",
+    key,
+  };
+}
+
+function parseExecuteCommandById(l: LinesIterator): ExecuteCommandById {
+  const command = l.line.replace(/- execute: `([^`]+)`/, "$1");
+
+  l.nextNotEmpty();
+
+  return {
+    type: "executeCommandById",
+    command,
+  };
+}
+
+function parseSetSetting(l: LinesIterator): SetSetting {
+  const [k, v] = l.line.replace(/- setting: `([^`]+)`/, "$1").split("=", 2);
+
+  l.nextNotEmpty();
+
+  return {
+    type: "setSetting",
+    k,
+    v: JSON.parse(v),
+  };
+}
+
+function parseAction(l: LinesIterator): Action {
+  if (!isAction(l.line)) {
+    throw new Error(
+      `parseAction: Unexpected line "${l.line}", expected ACTION`
+    );
+  }
+
+  if (l.line.startsWith("- applyState:")) {
+    return parseApplyState(l);
+  } else if (l.line.startsWith("- keydown:")) {
+    return parseSimulateKeydown(l);
+  } else if (l.line.startsWith("- execute:")) {
+    return parseExecuteCommandById(l);
+  } else if (l.line.startsWith("- setting:")) {
+    return parseSetSetting(l);
+  } else if (l.line.startsWith("- assertState:")) {
+    return parseAssertState(l);
+  }
+
+  throw new Error(`parseAction: Unknown action "${l.line}"`);
+}
+
+function parseTest(l: LinesIterator): TestDesc {
+  if (!isHeader(l.line)) {
+    throw new Error(`parseTest: Unexpected line "${l.line}", expected HEADER`);
+  }
+
+  const title = l.line.replace(/^# /, "").trim();
+  const actions: Action[] = [];
+
+  l.nextNotEmpty();
+
+  while (!l.isEnded() && !isHeader(l.line)) {
+    actions.push(parseAction(l));
+  }
+
+  return {
+    title,
+    actions,
+  };
+}
+
+function parseTests(l: LinesIterator): TestDesc[] {
+  l.nextNotEmpty();
+
+  const tests: TestDesc[] = [];
+
+  while (!l.isEnded()) {
+    tests.push(parseTest(l));
+  }
+
+  return tests;
+}
+
+class LinesIterator {
+  private i = -1;
+  private len: number;
+
+  constructor(private lines: string[]) {
+    this.len = this.lines.length;
+  }
+
+  get line(): string | undefined {
+    return this.lines[this.i];
+  }
+
+  isEnded() {
+    return this.i >= this.len;
+  }
+
+  nextNotEmpty() {
+    do {
+      this.i++;
+    } while (!this.isEnded() && this.line.trim() === "");
+  }
+
+  next() {
+    this.i++;
+  }
+}
+
+for (const file of readdirSync(__dirname)) {
   const matches = /^(.+)\.spec.md$/.exec(file);
 
   if (!matches) {
@@ -76,61 +251,12 @@ for (const file of files) {
   }
 
   describe(matches[1], () => {
-    const content = readFileSync(__dirname + "/" + file, "utf-8").split("\n");
+    const l = new LinesIterator(
+      readFileSync(__dirname + "/" + file, "utf-8").split("\n")
+    );
 
-    let sm = "looking-for-title";
-    let desc = makeTestDesc();
-
-    for (const line of content) {
-      if (sm === "looking-for-title" && line.startsWith("# ")) {
-        desc.title = line.slice(2).trim();
-        sm = "looking-for-before";
-      } else if (sm === "looking-for-before" && line.startsWith("```")) {
-        sm = "inside-before";
-      } else if (sm === "inside-before" && line.startsWith("```")) {
-        sm = "looking-for-actions";
-      } else if (sm === "inside-before") {
-        desc.before.push(line);
-      } else if (
-        sm === "looking-for-actions" &&
-        /^- keydown: `[^`]+`$/.test(line)
-      ) {
-        desc.actions.push({
-          type: "simulateKeydown",
-          key: line.replace(/^- keydown: `/, "").slice(0, -1),
-        });
-      } else if (
-        sm === "looking-for-actions" &&
-        /^- execute: `[^`]+`$/.test(line)
-      ) {
-        desc.actions.push({
-          type: "executeCommandById",
-          command: line.replace(/^- execute: `/, "").slice(0, -1),
-        });
-      } else if (
-        sm === "looking-for-before" &&
-        /^- setting: `[^`]+`$/.test(line)
-      ) {
-        const content = line
-          .replace(/^- setting: `/, "")
-          .slice(0, -1)
-          .split("=", 2);
-        const k = content[0];
-        const v = JSON.parse(content[1]);
-        desc.settings.push({
-          type: "setSetting",
-          k,
-          v,
-        });
-      } else if (sm === "looking-for-actions" && line.startsWith("```")) {
-        sm = "inside-after";
-      } else if (sm === "inside-after" && line.startsWith("```")) {
-        registerTest(desc);
-        desc = makeTestDesc();
-        sm = "looking-for-title";
-      } else if (sm === "inside-after") {
-        desc.after.push(line);
-      }
+    for (const test of parseTests(l)) {
+      registerTest(test);
     }
   });
 }

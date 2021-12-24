@@ -1,7 +1,5 @@
-import { LoggerService } from "./LoggerService";
-import { ObsidianService } from "./ObsidianService";
 import { List, Root } from "../root";
-import { IOperation } from "../operations/IOperation";
+import { LoggerService } from "../services/LoggerService";
 
 const bulletSign = `(?:[-*+]|\\d+\\.)`;
 
@@ -10,66 +8,38 @@ const listItemRe = new RegExp(`^[ \t]*${bulletSign}( |\t)`);
 const stringWithSpacesRe = new RegExp(`^[ \t]+`);
 const parseListItemRe = new RegExp(`^([ \t]*)(${bulletSign})( |\t)(.*)$`);
 
-export interface IApplyChangesList {
-  isFoldRoot(): boolean;
+export interface ReaderPosition {
+  line: number;
+  ch: number;
 }
 
-export interface IApplyChangesRoot {
-  getRange(): [CodeMirror.Position, CodeMirror.Position];
-  getSelections(): { anchor: CodeMirror.Position; head: CodeMirror.Position }[];
-  print(): string;
-  getListUnderLine(l: number): IApplyChangesList;
+export interface ReaderSelection {
+  anchor: ReaderPosition;
+  head: ReaderPosition;
 }
 
-interface IParseListList {
+export interface Reader {
+  getCursor(): ReaderPosition;
+  getLine(n: number): string;
+  lastLine(): number;
+  listSelections(): ReaderSelection[];
+  isFolded(line: number): boolean;
+}
+
+interface ParseListList {
   getFirstLineIndent(): string;
   setNotesIndent(notesIndent: string): void;
   getNotesIndent(): string | null;
   addLine(text: string): void;
-  getParent(): IParseListList | null;
-  addAfterAll(list: IParseListList): void;
+  getParent(): ParseListList | null;
+  addAfterAll(list: ParseListList): void;
 }
 
-export class ListsService {
-  constructor(
-    private loggerService: LoggerService,
-    private obsidianService: ObsidianService
-  ) {}
+export class ParserService {
+  constructor(private logger: LoggerService) {}
 
-  evalOperation(root: Root, op: IOperation, editor: CodeMirror.Editor) {
-    op.perform();
-
-    if (op.shouldUpdate()) {
-      this.applyChanges(editor, root);
-    }
-
-    return {
-      shouldUpdate: op.shouldUpdate(),
-      shouldStopPropagation: op.shouldStopPropagation(),
-    };
-  }
-
-  performOperation(
-    cb: (root: Root) => IOperation,
-    editor: CodeMirror.Editor,
-    cursor = editor.getCursor()
-  ) {
-    const root = this.parseList(editor, cursor);
-
-    if (!root) {
-      return { shouldUpdate: false, shouldStopPropagation: false };
-    }
-
-    const op = cb(root);
-
-    return this.evalOperation(root, op, editor);
-  }
-
-  parseList(
-    editor: CodeMirror.Editor,
-    cursor = editor.getCursor()
-  ): Root | null {
-    const d = this.loggerService.bind("parseList");
+  parse(editor: Reader, cursor = editor.getCursor()): Root | null {
+    const d = this.logger.bind("parseList");
     const error = (msg: string): null => {
       d(msg);
       return null;
@@ -83,7 +53,7 @@ export class ListsService {
       listLookingPos = cursor.line;
     } else if (this.isLineWithIndent(line)) {
       let listLookingPosSearch = cursor.line - 1;
-      while (listLookingPosSearch >= editor.firstLine()) {
+      while (listLookingPosSearch >= 0) {
         const line = editor.getLine(listLookingPosSearch);
         if (this.isListItem(line)) {
           listLookingPos = listLookingPosSearch;
@@ -102,7 +72,7 @@ export class ListsService {
 
     let listStartLine: number | null = null;
     let listStartLineLookup = listLookingPos;
-    while (listStartLineLookup >= editor.firstLine()) {
+    while (listStartLineLookup >= 0) {
       const line = editor.getLine(listStartLineLookup);
       if (!this.isListItem(line) && !this.isLineWithIndent(line)) {
         break;
@@ -143,8 +113,8 @@ export class ListsService {
       }))
     );
 
-    let currentParent: IParseListList = root.getRootList();
-    let currentList: IParseListList | null = null;
+    let currentParent: ParseListList = root.getRootList();
+    let currentList: ParseListList | null = null;
     let currentIndent = "";
 
     for (let l = listStartLine; l <= listEndLine; l++) {
@@ -152,7 +122,7 @@ export class ListsService {
       const matches = parseListItemRe.exec(line);
 
       if (matches) {
-        const [_, indent, bullet, spaceAfterBullet, content] = matches;
+        const [, indent, bullet, spaceAfterBullet, content] = matches;
 
         const compareLength = Math.min(currentIndent.length, indent.length);
         const indentSlice = indent.slice(0, compareLength);
@@ -182,12 +152,16 @@ export class ListsService {
           currentIndent = indent;
         }
 
-        const folded = !!(editor as any).isFolded({
-          line: Math.min(l + 1, listEndLine),
-          ch: 0,
-        });
+        const folded = editor.isFolded(Math.min(l + 1, listEndLine));
 
-        currentList = new List(root, indent, bullet, spaceAfterBullet, content, folded);
+        currentList = new List(
+          root,
+          indent,
+          bullet,
+          spaceAfterBullet,
+          content,
+          folded
+        );
         currentParent.addAfterAll(currentList);
       } else if (this.isLineWithIndent(line)) {
         if (!currentList) {
@@ -231,77 +205,6 @@ export class ListsService {
     }
 
     return root;
-  }
-
-  private applyChanges(editor: CodeMirror.Editor, root: IApplyChangesRoot) {
-    const rootRange = root.getRange();
-    const oldString = editor.getRange(rootRange[0], rootRange[1]);
-    const newString = root.print();
-
-    const fromLine = rootRange[0].line;
-    const toLine = rootRange[1].line;
-
-    for (let l = fromLine; l <= toLine; l++) {
-      (editor as any).foldCode(l, null, "unfold");
-    }
-
-    let changeFrom = { ...rootRange[0] };
-    let changeTo = { ...rootRange[1] };
-    let oldTmp = oldString;
-    let newTmp = newString;
-
-    while (true) {
-      const nlIndex = oldTmp.indexOf("\n");
-      if (nlIndex < 0) {
-        break;
-      }
-      const oldLine = oldTmp.slice(0, nlIndex + 1);
-      const newLine = newTmp.slice(0, oldLine.length);
-      if (oldLine !== newLine) {
-        break;
-      }
-      changeFrom.line++;
-      oldTmp = oldTmp.slice(oldLine.length);
-      newTmp = newTmp.slice(oldLine.length);
-    }
-    while (true) {
-      const nlIndex = oldTmp.lastIndexOf("\n");
-      if (nlIndex < 0) {
-        break;
-      }
-      const oldLine = oldTmp.slice(nlIndex);
-      const newLine = newTmp.slice(-oldLine.length);
-      if (oldLine !== newLine) {
-        break;
-      }
-      oldTmp = oldTmp.slice(0, -oldLine.length);
-      newTmp = newTmp.slice(0, -oldLine.length);
-
-      const nlIndex2 = oldTmp.lastIndexOf("\n");
-      changeTo.ch =
-        nlIndex2 >= 0 ? oldTmp.length - nlIndex2 - 1 : oldTmp.length;
-      changeTo.line--;
-    }
-
-    if (oldTmp !== newTmp) {
-      editor.replaceRange(newTmp, changeFrom, changeTo);
-    }
-
-    editor.setSelections(root.getSelections());
-
-    // TODO: lines could be different because of deletetion
-    for (let l = fromLine; l <= toLine; l++) {
-      const line = root.getListUnderLine(l);
-      if (line && line.isFoldRoot()) {
-        (editor as any).foldCode(l);
-      }
-    }
-  }
-
-  getDefaultIndentChars() {
-    const { useTab, tabSize } = this.obsidianService.getObsidianTabsSettigns();
-
-    return useTab ? "\t" : new Array(tabSize).fill(" ").join("");
   }
 
   private isEmptyLine(line: string) {

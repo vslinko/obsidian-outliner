@@ -1,10 +1,11 @@
 import { SettingsService } from "./SettingsService";
 
 export class LoggerService {
-  constructor(private settingsService: SettingsService) {}
+  constructor(private settings: SettingsService) {}
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   log(method: string, ...args: any[]) {
-    if (!this.settingsService.debug) {
+    if (!this.settings.debug) {
       return;
     }
 
@@ -12,6 +13,7 @@ export class LoggerService {
   }
 
   bind(method: string) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (...args: any[]) => this.log(method, ...args);
   }
 }

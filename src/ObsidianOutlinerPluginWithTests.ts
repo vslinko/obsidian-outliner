@@ -1,4 +1,6 @@
 import { MarkdownView } from "obsidian";
+
+import { MyEditor, MyEditorPosition } from "./MyEditor";
 import ObsidianOutlinerPlugin from "./ObsidianOutlinerPlugin";
 import { ObsidianOutlinerPluginSettings } from "./services/SettingsService";
 
@@ -14,13 +16,14 @@ const keysMap: { [key: string]: number } = {
 };
 
 export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlugin {
-  private editor: CodeMirror.Editor;
+  private editor: MyEditor;
 
   wait(time: number) {
     return new Promise((resolve) => setTimeout(resolve, time));
   }
 
   executeCommandById(id: string) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (this.app as any).commands.executeCommandById(id);
   }
 
@@ -31,13 +34,13 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     k: T;
     v: ObsidianOutlinerPluginSettings[T];
   }) {
-    this.settingsService[k] = v;
-    await this.settingsService.save();
+    this.settings[k] = v;
+    await this.settings.save();
   }
 
   async resetSettings() {
-    this.settingsService.reset();
-    await this.settingsService.save();
+    this.settings.reset();
+    await this.settings.save();
   }
 
   simulateKeydown(keys: string) {
@@ -89,12 +92,13 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       throw new Error("Unknown key: " + e.code);
     }
 
-    (this.editor as any).triggerOnKeyDown(e);
+    this.editor.triggerOnKeyDown(e as KeyboardEvent);
   }
 
   async load() {
     await super.load();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).ObsidianOutlinerPlugin = this;
 
     if (process.env.TEST_PLATFORM) {
@@ -107,6 +111,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
 
   async onunload() {
     await super.onunload();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (window as any).ObsidianOutlinerPlugin;
   }
 
@@ -127,9 +132,9 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     }
     await this.wait(1000);
 
-    this.editor = (
-      this.app.workspace.getActiveViewOfType(MarkdownView) as any
-    ).sourceMode.cmEditor;
+    this.editor = new MyEditor(
+      this.app.workspace.getActiveViewOfType(MarkdownView).editor
+    );
   }
 
   async connect() {
@@ -177,8 +182,8 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
 
   applyState(state: string[]): void;
   applyState(state: string): void;
-  applyState(state: IState): void;
-  applyState(state: IState | string | string[]) {
+  applyState(state: State): void;
+  applyState(state: State | string | string[]) {
     if (typeof state === "string") {
       state = state.split("\n");
     }
@@ -188,53 +193,40 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
 
     this.editor.setValue("");
     this.editor.setValue(state.value);
-    this.editor.setSelections(
-      state.selections.map((s) => ({
-        anchor: s.from,
-        head: s.to,
-      }))
-    );
-    for (let l of state.folds) {
-      (this.editor as any).foldCode({ line: l, ch: 0 }, null, "fold");
+    this.editor.setSelections(state.selections);
+    for (const l of state.folds) {
+      this.editor.fold(l);
     }
   }
 
-  getCurrentState(): IState {
+  getCurrentState(): State {
     const folds = new Set<number>();
-    for (let l = this.editor.firstLine(); l <= this.editor.lastLine(); l++) {
-      const mark = this.editor
-        .findMarksAt({ line: l, ch: 0 })
-        .find((m) => (m as any).__isFold);
-      if (!mark) {
-        continue;
+    for (let l = 0; l <= this.editor.lastLine(); l++) {
+      const lineNo = this.editor.getFirstLineOfFolding(l);
+      if (lineNo !== null) {
+        folds.add(lineNo);
       }
-      const firstFoldingLine: CodeMirror.LineHandle = (mark as any).lines[0];
-      if (!firstFoldingLine) {
-        continue;
-      }
-      const lineNo = this.editor.getLineNumber(firstFoldingLine);
-      folds.add(lineNo);
     }
 
     return {
       folds: Array.from(folds.values()),
       selections: this.editor.listSelections().map((range) => ({
-        from: {
-          line: range.from().line,
-          ch: range.from().ch,
+        anchor: {
+          line: range.anchor.line,
+          ch: range.anchor.ch,
         },
-        to: {
-          line: range.to().line,
-          ch: range.to().ch,
+        head: {
+          line: range.head.line,
+          ch: range.head.ch,
         },
       })),
       value: this.editor.getValue(),
     };
   }
 
-  parseState(content: string[]): IState;
-  parseState(content: string): IState;
-  parseState(content: string | string[]): IState {
+  parseState(content: string[]): State;
+  parseState(content: string): State;
+  parseState(content: string | string[]): State {
     if (typeof content === "string") {
       content = content.split("\n");
     }
@@ -246,10 +238,10 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
           acc.folds.push(lineNo);
         }
 
-        if (!acc.from) {
+        if (!acc.anchor) {
           const dashIndex = line.indexOf("|");
           if (dashIndex >= 0) {
-            acc.from = {
+            acc.anchor = {
               line: lineNo,
               ch: dashIndex,
             };
@@ -257,10 +249,10 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
           }
         }
 
-        if (!acc.to) {
+        if (!acc.head) {
           const dashIndex = line.indexOf("|");
           if (dashIndex >= 0) {
-            acc.to = {
+            acc.head = {
               line: lineNo,
               ch: dashIndex,
             };
@@ -273,22 +265,22 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
         return acc;
       },
       {
-        from: null as CodeMirror.Position | null,
-        to: null as CodeMirror.Position | null,
+        anchor: null as MyEditorPosition | null,
+        head: null as MyEditorPosition | null,
         lines: [] as string[],
         folds: [] as number[],
       }
     );
-    if (!acc.from) {
-      acc.from = { line: 0, ch: 0 };
+    if (!acc.anchor) {
+      acc.anchor = { line: 0, ch: 0 };
     }
-    if (!acc.to) {
-      acc.to = { ...acc.from };
+    if (!acc.head) {
+      acc.head = { ...acc.anchor };
     }
 
     return {
       folds: acc.folds,
-      selections: [{ from: acc.from, to: acc.to }],
+      selections: [{ anchor: acc.anchor, head: acc.head }],
       value: acc.lines.join("\n"),
     };
   }

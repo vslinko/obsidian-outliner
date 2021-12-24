@@ -1,26 +1,28 @@
-import { SettingsService } from "../services/SettingsService";
 import { Plugin_2 } from "obsidian";
-import { IFeature } from "./IFeature";
+
+import { Feature } from "./Feature";
+
 import { ObsidianService } from "../services/ObsidianService";
+import { SettingsService } from "../services/SettingsService";
 
 const STATUS_BAR_TEXT = `Outliner styles only work with four-space tabs. Please check Obsidian settings.`;
 
-export class ListsStylesFeature implements IFeature {
+export class ListsStylesFeature implements Feature {
   private statusBarText: HTMLElement;
   private interval: number;
 
   constructor(
     private plugin: Plugin_2,
-    private settingsService: SettingsService,
-    private obsidianService: ObsidianService
+    private settings: SettingsService,
+    private obsidian: ObsidianService
   ) {}
 
   async load() {
-    if (this.settingsService.styleLists) {
+    if (this.settings.styleLists) {
       this.addListsStyles();
     }
 
-    this.settingsService.onChange("styleLists", this.onStyleListsSettingChange);
+    this.settings.onChange("styleLists", this.onStyleListsSettingChange);
 
     this.addStatusBarText();
     this.startStatusBarInterval();
@@ -31,24 +33,20 @@ export class ListsStylesFeature implements IFeature {
     if (this.statusBarText.parentElement) {
       this.statusBarText.parentElement.removeChild(this.statusBarText);
     }
-    this.settingsService.removeCallback(
-      "styleLists",
-      this.onStyleListsSettingChange
-    );
+    this.settings.removeCallback("styleLists", this.onStyleListsSettingChange);
     this.removeListsStyles();
   }
 
   private startStatusBarInterval() {
-    let visible: boolean = false;
+    let visible = false;
 
     this.interval = window.setInterval(() => {
-      const { tabSize } =
-        this.obsidianService.getObsidianTabsSettigns();
+      const { tabSize } = this.obsidian.getObsidianTabsSettings();
 
       const shouldBeVisible =
-        this.settingsService.styleLists &&
+        this.settings.styleLists &&
         !(tabSize === 4) &&
-        !this.settingsService.hideWarning;
+        !this.settings.hideWarning;
 
       if (shouldBeVisible && !visible) {
         this.statusBarText.style.display = "block";

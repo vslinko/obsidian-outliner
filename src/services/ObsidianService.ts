@@ -1,65 +1,83 @@
-import { App, MarkdownView } from "obsidian";
+import { App, Editor, editorViewField } from "obsidian";
 
-export interface IObsidianTabsSettigns {
+import { EditorState } from "@codemirror/state";
+import { EditorView } from "@codemirror/view";
+
+import { MyEditor } from "../MyEditor";
+
+export interface ObsidianTabsSettings {
   useTab: boolean;
   tabSize: number;
 }
 
-export interface IObsidianFoldSettigns {
+export interface ObsidianFoldSettings {
   foldIndent: boolean;
-}
-
-export interface IObsidianLegacyEditorSettigns {
-  legacyEditor: boolean;
 }
 
 export class ObsidianService {
   constructor(private app: App) {}
 
-  getObsidianTabsSettigns(): IObsidianTabsSettigns {
+  getObsidianTabsSettings(): ObsidianTabsSettings {
     return {
       useTab: true,
       tabSize: 4,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(this.app.vault as any).config,
     };
   }
 
-  getObsidianFoldSettigns(): IObsidianFoldSettigns {
+  getObsidianFoldSettings(): ObsidianFoldSettings {
     return {
       foldIndent: false,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(this.app.vault as any).config,
     };
   }
 
-  getObsidianLegacyEditorSettigns(): IObsidianLegacyEditorSettigns {
-    return {
-      legacyEditor: true,
-      ...(this.app.vault as any).config,
+  getDefaultIndentChars() {
+    const { useTab, tabSize } = this.getObsidianTabsSettings();
+
+    return useTab ? "\t" : new Array(tabSize).fill(" ").join("");
+  }
+
+  getEditorFromState(state: EditorState) {
+    return new MyEditor(state.field(editorViewField).editor);
+  }
+
+  createKeymapRunCallback(config: {
+    check?: (editor: MyEditor) => boolean;
+    run: (editor: MyEditor) => {
+      shouldUpdate: boolean;
+      shouldStopPropagation: boolean;
     };
-  }
+  }) {
+    const check = config.check || (() => true);
+    const { run } = config;
 
-  getActiveLeafDisplayText() {
-    return this.app.workspace.activeLeaf.getDisplayText();
-  }
+    return (view: EditorView): boolean => {
+      const editor = this.getEditorFromState(view.state);
 
-  createCommandCallback(cb: (editor: CodeMirror.Editor) => boolean) {
-    return () => {
-      const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-
-      if (!view) {
-        return;
+      if (!check(editor)) {
+        return false;
       }
 
-      const editor = (view as any).sourceMode.cmEditor;
+      const { shouldUpdate, shouldStopPropagation } = run(editor);
 
-      const shouldStopPropagation = cb(editor);
+      return shouldUpdate || shouldStopPropagation;
+    };
+  }
+
+  createEditorCallback(cb: (editor: MyEditor) => boolean) {
+    return (editor: Editor) => {
+      const myEditor = new MyEditor(editor);
+      const shouldStopPropagation = cb(myEditor);
 
       if (
         !shouldStopPropagation &&
         window.event &&
         window.event.type === "keydown"
       ) {
-        (editor as any).triggerOnKeyDown(window.event);
+        myEditor.triggerOnKeyDown(window.event as KeyboardEvent);
       }
     };
   }

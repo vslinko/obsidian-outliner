@@ -1,32 +1,24 @@
-import { ListsService } from "../ListsService";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { makeEditor, makeLoggerService } from "../../__mocks__";
 import { LoggerService } from "../LoggerService";
-import { ObsidianService } from "../ObsidianService";
-import {
-  makeEditor,
-  makeLoggerService,
-  makeObsidianService,
-} from "../../__mocks__";
+import { ParserService } from "../ParserService";
 
-export function makeListsService(
+function makeParserService(
   options: {
-    loggerService?: LoggerService;
-    obsidianService?: ObsidianService;
+    logger?: LoggerService;
   } = {}
 ) {
-  const { loggerService, obsidianService } = {
-    loggerService: makeLoggerService(),
-    obsidianService: makeObsidianService(),
+  const { logger } = {
+    logger: makeLoggerService(),
     ...options,
   };
 
-  const listsService = new ListsService(loggerService, obsidianService);
-
-  return listsService;
+  return new ParserService(logger);
 }
 
 describe("parseList", () => {
   test("should parse list with notes and sublists", () => {
-    const listsService = makeListsService();
+    const parser = makeParserService();
     const editor = makeEditor({
       text: `
 - one
@@ -39,7 +31,7 @@ describe("parseList", () => {
       cursor: { line: 0, ch: 0 },
     });
 
-    const list = listsService.parseList(editor as any);
+    const list = parser.parse(editor as any);
 
     expect(list).toBeDefined();
     expect(list).toMatchObject(
@@ -84,7 +76,7 @@ describe("parseList", () => {
   });
 
   test("should parse second list", () => {
-    const listsService = makeListsService();
+    const parser = makeParserService();
     const editor = makeEditor({
       text: `
 - one
@@ -96,58 +88,58 @@ describe("parseList", () => {
       cursor: { line: 3, ch: 3 },
     });
 
-    const list = listsService.parseList(editor as any);
+    const list = parser.parse(editor as any);
 
     expect(list).toBeDefined();
     expect(list.print()).toBe("- three\n- four");
   });
 
   test("should error if indent is not match 1", () => {
-    const loggerService = makeLoggerService();
-    const listsService = makeListsService({ loggerService });
+    const logger = makeLoggerService();
+    const parser = makeParserService({ logger });
     const editor = makeEditor({
       text: "- one\n  - two\n\t- three",
       cursor: { line: 0, ch: 0 },
     });
 
-    const list = listsService.parseList(editor as any);
+    const list = parser.parse(editor as any);
 
     expect(list).toBeNull();
-    expect(loggerService.log).toBeCalledWith(
+    expect(logger.log).toBeCalledWith(
       "parseList",
       `Unable to parse list: expected indent "S", got "T"`
     );
   });
 
   test("should error if indent is not match 2", () => {
-    const loggerService = makeLoggerService();
-    const listsService = makeListsService({ loggerService });
+    const logger = makeLoggerService();
+    const parser = makeParserService({ logger });
     const editor = makeEditor({
       text: "- one\n\t- two\n  - three",
       cursor: { line: 0, ch: 0 },
     });
 
-    const list = listsService.parseList(editor as any);
+    const list = parser.parse(editor as any);
 
     expect(list).toBeNull();
-    expect(loggerService.log).toBeCalledWith(
+    expect(logger.log).toBeCalledWith(
       "parseList",
       `Unable to parse list: expected indent "T", got "S"`
     );
   });
 
   test("should error if note indent is not match", () => {
-    const loggerService = makeLoggerService();
-    const listsService = makeListsService({ loggerService });
+    const logger = makeLoggerService();
+    const parser = makeParserService({ logger });
     const editor = makeEditor({
       text: "- one\n\t- two\n  three",
       cursor: { line: 0, ch: 0 },
     });
 
-    const list = listsService.parseList(editor as any);
+    const list = parser.parse(editor as any);
 
     expect(list).toBeNull();
-    expect(loggerService.log).toBeCalledWith(
+    expect(logger.log).toBeCalledWith(
       "parseList",
       `Unable to parse list: expected indent "T", got "SS"`
     );

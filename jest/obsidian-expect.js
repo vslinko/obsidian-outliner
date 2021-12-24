@@ -4,8 +4,8 @@ function stateToString(state) {
   const lines = state.value.split("\n");
 
   const sels = state.selections.reduce((acc, sel) => {
-    acc.set(sel.from.line + "_" + sel.from.ch, "from");
-    acc.set(sel.to.line + "_" + sel.to.ch, "to");
+    acc.set(sel.anchor.line + "_" + sel.anchor.ch, "anchor");
+    acc.set(sel.head.line + "_" + sel.head.ch, "head");
     return acc;
   }, new Map());
 

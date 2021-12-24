@@ -1,29 +1,29 @@
-export function cmpPos(a: IPosition, b: IPosition) {
+export function cmpPos(a: Position, b: Position) {
   return a.line - b.line || a.ch - b.ch;
 }
 
-export function maxPos(a: IPosition, b: IPosition) {
+export function maxPos(a: Position, b: Position) {
   return cmpPos(a, b) < 0 ? b : a;
 }
 
-export function minPos(a: IPosition, b: IPosition) {
+export function minPos(a: Position, b: Position) {
   return cmpPos(a, b) < 0 ? a : b;
 }
 
-export interface IPosition {
+export interface Position {
   ch: number;
   line: number;
 }
 
-export interface IListLine {
+export interface ListLine {
   text: string;
-  from: IPosition;
-  to: IPosition;
+  from: Position;
+  to: Position;
 }
 
-export interface IRange {
-  anchor: IPosition;
-  head: IPosition;
+export interface Range {
+  anchor: Position;
+  head: Position;
 }
 
 export class List {
@@ -86,7 +86,7 @@ export class List {
     return this.children.concat();
   }
 
-  getLinesInfo(): IListLine[] {
+  getLinesInfo(): ListLine[] {
     const startLine = this.root.getContentLinesRangeOf(this)[0];
 
     return this.lines.map((row, i) => {
@@ -262,7 +262,10 @@ export class List {
     let res = "";
 
     for (let i = 0; i < this.lines.length; i++) {
-      res += i === 0 ? this.indent + this.bullet + this.spaceAfterBullet : this.notesIndent;
+      res +=
+        i === 0
+          ? this.indent + this.bullet + this.spaceAfterBullet
+          : this.notesIndent;
       res += this.lines[i];
       res += "\n";
     }
@@ -277,12 +280,12 @@ export class List {
 
 export class Root {
   private rootList = new List(this, "", "", "", "", false);
-  private selections: IRange[] = [];
+  private selections: Range[] = [];
 
   constructor(
-    private start: IPosition,
-    private end: IPosition,
-    selections: IRange[]
+    private start: Position,
+    private end: Position,
+    selections: Range[]
   ) {
     this.replaceSelections(selections);
   }
@@ -291,11 +294,11 @@ export class Root {
     return this.rootList;
   }
 
-  getRange(): [IPosition, IPosition] {
+  getRange(): [Position, Position] {
     return [{ ...this.start }, { ...this.end }];
   }
 
-  getSelections(): IRange[] {
+  getSelections(): Range[] {
     return this.selections.map((s) => ({
       anchor: { ...s.anchor },
       head: { ...s.head },
@@ -323,11 +326,11 @@ export class Root {
     return { ...this.selections[this.selections.length - 1].head };
   }
 
-  replaceCursor(cursor: IPosition) {
+  replaceCursor(cursor: Position) {
     this.selections = [{ anchor: cursor, head: cursor }];
   }
 
-  replaceSelections(selections: IRange[]) {
+  replaceSelections(selections: Range[]) {
     if (selections.length < 1) {
       throw new Error(`Unable to create Root without selections`);
     }

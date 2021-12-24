@@ -1,27 +1,29 @@
 import { Plugin_2 } from "obsidian";
-import { ListsService } from "../services/ListsService";
-import { MoveLeftOperation } from "../operations/MoveLeftOperation";
-import { ObsidianService } from "../services/ObsidianService";
-import { IFeature } from "./IFeature";
-import { MoveRightOperation } from "../operations/MoveRightOperation";
-import { MoveDownOperation } from "../operations/MoveDownOperation";
-import { MoveUpOperation } from "../operations/MoveUpOperation";
-import { IMEService } from "src/services/IMEService";
 
-export class MoveItemsFeature implements IFeature {
+import { MyEditor } from "../MyEditor";
+import { Feature } from "../features/Feature";
+import { MoveDownOperation } from "../operations/MoveDownOperation";
+import { MoveLeftOperation } from "../operations/MoveLeftOperation";
+import { MoveRightOperation } from "../operations/MoveRightOperation";
+import { MoveUpOperation } from "../operations/MoveUpOperation";
+import { IMEService } from "../services/IMEService";
+import { ObsidianService } from "../services/ObsidianService";
+import { PerformOperationService } from "../services/PerformOperationService";
+
+export class MoveItemsFeature implements Feature {
   constructor(
     private plugin: Plugin_2,
-    private obsidianService: ObsidianService,
-    private listsService: ListsService,
-    private imeService: IMEService
+    private ime: IMEService,
+    private obsidian: ObsidianService,
+    private performOperation: PerformOperationService
   ) {}
 
   async load() {
     this.plugin.addCommand({
       id: "move-list-item-up",
       name: "Move list and sublists up",
-      callback: this.obsidianService.createCommandCallback(
-        this.moveListElementUp.bind(this)
+      editorCallback: this.obsidian.createEditorCallback(
+        this.moveListElementUp
       ),
       hotkeys: [
         {
@@ -34,8 +36,8 @@ export class MoveItemsFeature implements IFeature {
     this.plugin.addCommand({
       id: "move-list-item-down",
       name: "Move list and sublists down",
-      callback: this.obsidianService.createCommandCallback(
-        this.moveListElementDown.bind(this)
+      editorCallback: this.obsidian.createEditorCallback(
+        this.moveListElementDown
       ),
       hotkeys: [
         {
@@ -48,8 +50,8 @@ export class MoveItemsFeature implements IFeature {
     this.plugin.addCommand({
       id: "indent-list",
       name: "Indent the list and sublists",
-      callback: this.obsidianService.createCommandCallback(
-        this.moveListElementRight.bind(this)
+      editorCallback: this.obsidian.createEditorCallback(
+        this.moveListElementRight
       ),
       hotkeys: [
         {
@@ -62,8 +64,8 @@ export class MoveItemsFeature implements IFeature {
     this.plugin.addCommand({
       id: "outdent-list",
       name: "Outdent the list and sublists",
-      callback: this.obsidianService.createCommandCallback(
-        this.moveListElementLeft.bind(this)
+      editorCallback: this.obsidian.createEditorCallback(
+        this.moveListElementLeft
       ),
       hotkeys: [
         {
@@ -76,44 +78,48 @@ export class MoveItemsFeature implements IFeature {
 
   async unload() {}
 
-  private moveListElementDown(editor: CodeMirror.Editor) {
-    const { shouldStopPropagation } = this.listsService.performOperation(
+  private moveListElementDown = (editor: MyEditor) => {
+    const { shouldStopPropagation } = this.performOperation.performOperation(
       (root) => new MoveDownOperation(root),
       editor
     );
-    return shouldStopPropagation;
-  }
 
-  private moveListElementUp(editor: CodeMirror.Editor) {
-    const { shouldStopPropagation } = this.listsService.performOperation(
+    return shouldStopPropagation;
+  };
+
+  private moveListElementUp = (editor: MyEditor) => {
+    const { shouldStopPropagation } = this.performOperation.performOperation(
       (root) => new MoveUpOperation(root),
       editor
     );
-    return shouldStopPropagation;
-  }
 
-  private moveListElementRight(editor: CodeMirror.Editor) {
-    if (this.imeService.isIMEOpened()) {
+    return shouldStopPropagation;
+  };
+
+  private moveListElementRight = (editor: MyEditor) => {
+    if (this.ime.isIMEOpened()) {
       return true;
     }
 
-    const { shouldStopPropagation } = this.listsService.performOperation(
+    const { shouldStopPropagation } = this.performOperation.performOperation(
       (root) =>
-        new MoveRightOperation(root, this.listsService.getDefaultIndentChars()),
+        new MoveRightOperation(root, this.obsidian.getDefaultIndentChars()),
       editor
     );
-    return shouldStopPropagation;
-  }
 
-  private moveListElementLeft(editor: CodeMirror.Editor) {
-    if (this.imeService.isIMEOpened()) {
+    return shouldStopPropagation;
+  };
+
+  private moveListElementLeft = (editor: MyEditor) => {
+    if (this.ime.isIMEOpened()) {
       return true;
     }
 
-    const { shouldStopPropagation } = this.listsService.performOperation(
+    const { shouldStopPropagation } = this.performOperation.performOperation(
       (root) => new MoveLeftOperation(root),
       editor
     );
+
     return shouldStopPropagation;
-  }
+  };
 }

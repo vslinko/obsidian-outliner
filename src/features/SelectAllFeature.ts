@@ -1,71 +1,49 @@
-import { Platform, Plugin_2 } from "obsidian";
-import { ListsService } from "../services/ListsService";
+import { Plugin_2 } from "obsidian";
+
+import { keymap } from "@codemirror/view";
+
+import { MyEditor } from "../MyEditor";
+import { Feature } from "../features/Feature";
 import { SelectAllOperation } from "../operations/SelectAllOperation";
+import { IMEService } from "../services/IMEService";
+import { ObsidianService } from "../services/ObsidianService";
+import { PerformOperationService } from "../services/PerformOperationService";
 import { SettingsService } from "../services/SettingsService";
-import { IFeature } from "./IFeature";
-import { IMEService } from "src/services/IMEService";
 
-function isCmdA(e: KeyboardEvent) {
-  return (
-    (e.keyCode === 65 || e.code === "KeyA") &&
-    e.shiftKey === false &&
-    e.metaKey === true &&
-    e.altKey === false &&
-    e.ctrlKey === false
-  );
-}
-
-function isCtrlA(e: KeyboardEvent) {
-  return (
-    (e.keyCode === 65 || e.code === "KeyA") &&
-    e.shiftKey === false &&
-    e.metaKey === false &&
-    e.altKey === false &&
-    e.ctrlKey === true
-  );
-}
-
-function isSelectAll(e: KeyboardEvent) {
-  return Platform.isMacOS ? isCmdA(e) : isCtrlA(e);
-}
-
-export class SelectAllFeature implements IFeature {
+export class SelectAllFeature implements Feature {
   constructor(
     private plugin: Plugin_2,
-    private settingsService: SettingsService,
-    private listsService: ListsService,
-    private imeService: IMEService
+    private settings: SettingsService,
+    private ime: IMEService,
+    private obsidian: ObsidianService,
+    private performOperation: PerformOperationService
   ) {}
 
   async load() {
-    this.plugin.registerCodeMirror((cm) => {
-      cm.on("keydown", this.onKeyDown);
-    });
-  }
-
-  async unload() {
-    this.plugin.app.workspace.iterateCodeMirrors((cm) => {
-      cm.off("keydown", this.onKeyDown);
-    });
-  }
-
-  private onKeyDown = (cm: CodeMirror.Editor, event: KeyboardEvent) => {
-    if (
-      !this.settingsService.selectAll ||
-      !isSelectAll(event) ||
-      this.imeService.isIMEOpened()
-    ) {
-      return;
-    }
-
-    const { shouldStopPropagation } = this.listsService.performOperation(
-      (root) => new SelectAllOperation(root),
-      cm
+    this.plugin.registerEditorExtension(
+      keymap.of([
+        {
+          key: "c-a",
+          mac: "m-a",
+          run: this.obsidian.createKeymapRunCallback({
+            check: this.check,
+            run: this.run,
+          }),
+        },
+      ])
     );
+  }
 
-    if (shouldStopPropagation) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
+  async unload() {}
+
+  private check = () => {
+    return this.settings.selectAll && !this.ime.isIMEOpened();
+  };
+
+  private run = (editor: MyEditor) => {
+    return this.performOperation.performOperation(
+      (root) => new SelectAllOperation(root),
+      editor
+    );
   };
 }

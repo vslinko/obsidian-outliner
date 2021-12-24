@@ -1,8 +1,9 @@
-import { recalculateNumericBullets } from "src/root/recalculateNumericBullets";
-import { IListLine, List, Root } from "../root";
-import { IOperation } from "./IOperation";
+import { Operation } from "./Operation";
 
-export class DeleteAndMergeWithPreviousLineOperation implements IOperation {
+import { List, ListLine, Position, Root } from "../root";
+import { recalculateNumericBullets } from "../root/recalculateNumericBullets";
+
+export class DeleteAndMergeWithPreviousLineOperation implements Operation {
   private stopPropagation = false;
   private updated = false;
 
@@ -40,9 +41,9 @@ export class DeleteAndMergeWithPreviousLineOperation implements IOperation {
 
   private mergeNotes(
     root: Root,
-    cursor: IPosition,
+    cursor: Position,
     list: List,
-    lines: IListLine[],
+    lines: ListLine[],
     lineNo: number
   ) {
     this.stopPropagation = true;
@@ -61,7 +62,7 @@ export class DeleteAndMergeWithPreviousLineOperation implements IOperation {
     list.replaceLines(lines.map((l) => l.text));
   }
 
-  private mergeWithPreviousItem(root: Root, cursor: IPosition, list: List) {
+  private mergeWithPreviousItem(root: Root, cursor: Position, list: List) {
     if (root.getChildren()[0] === list && list.getChildren().length === 0) {
       return;
     }

@@ -1,61 +1,53 @@
 import { Plugin_2 } from "obsidian";
+
+import { keymap } from "@codemirror/view";
+
+import { Feature } from "./Feature";
+
+import { MyEditor } from "../MyEditor";
 import { CreateNoteLineOperation } from "../operations/CreateNoteLineOperation";
-import { IFeature } from "./IFeature";
-import { ListsService } from "../services/ListsService";
+import { IMEService } from "../services/IMEService";
+import { ObsidianService } from "../services/ObsidianService";
+import { PerformOperationService } from "../services/PerformOperationService";
 import { SettingsService } from "../services/SettingsService";
-import { IMEService } from "src/services/IMEService";
 
-function isShiftEnter(e: KeyboardEvent) {
-  return (
-    (e.keyCode === 13 || e.code === "Enter") &&
-    e.shiftKey === true &&
-    e.metaKey === false &&
-    e.altKey === false &&
-    e.ctrlKey === false
-  );
-}
-
-export class ShiftEnterShouldCreateNoteFeature implements IFeature {
+export class ShiftEnterShouldCreateNoteFeature implements Feature {
   constructor(
     private plugin: Plugin_2,
-    private settingsService: SettingsService,
-    private listsService: ListsService,
-    private imeService: IMEService
+    private obsidian: ObsidianService,
+    private settings: SettingsService,
+    private ime: IMEService,
+    private performOperation: PerformOperationService
   ) {}
 
   async load() {
-    this.plugin.registerCodeMirror((cm) => {
-      cm.on("keydown", this.onKeyDown);
-    });
+    this.plugin.registerEditorExtension(
+      keymap.of([
+        {
+          key: "s-Enter",
+          run: this.obsidian.createKeymapRunCallback({
+            check: this.check,
+            run: this.run,
+          }),
+        },
+      ])
+    );
   }
 
-  async unload() {
-    this.plugin.app.workspace.iterateCodeMirrors((cm) => {
-      cm.off("keydown", this.onKeyDown);
-    });
-  }
+  async unload() {}
 
-  private onKeyDown = (cm: CodeMirror.Editor, e: KeyboardEvent) => {
-    if (
-      !this.settingsService.betterEnter ||
-      !isShiftEnter(e) ||
-      this.imeService.isIMEOpened()
-    ) {
-      return;
-    }
+  private check = () => {
+    return this.settings.betterEnter && !this.ime.isIMEOpened();
+  };
 
-    const { shouldStopPropagation } = this.listsService.performOperation(
+  private run = (editor: MyEditor) => {
+    return this.performOperation.performOperation(
       (root) =>
         new CreateNoteLineOperation(
           root,
-          this.listsService.getDefaultIndentChars()
+          this.obsidian.getDefaultIndentChars()
         ),
-      cm
+      editor
     );
-
-    if (shouldStopPropagation) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
   };
 }

@@ -1,11 +1,14 @@
 # obsidian-outliner:move-list-item-down should move line down
 
+- applyState:
+
 ```md
 - one|
 - two
 ```
 
 - execute: `obsidian-outliner:move-list-item-down`
+- assertState:
 
 ```md
 - two
@@ -14,6 +17,8 @@
 
 # obsidian-outliner:move-list-item-down should move children down
 
+- applyState:
+
 ```md
 - one|
   - one one
@@ -21,6 +26,7 @@
 ```
 
 - execute: `obsidian-outliner:move-list-item-down`
+- assertState:
 
 ```md
 - two
@@ -30,12 +36,15 @@
 
 # obsidian-outliner:move-list-item-up should move line up
 
+- applyState:
+
 ```md
 - one
 - two|
 ```
 
 - execute: `obsidian-outliner:move-list-item-up`
+- assertState:
 
 ```md
 - two|
@@ -44,6 +53,8 @@
 
 # obsidian-outliner:move-list-item-up should move children up
 
+- applyState:
+
 ```md
 - two
 - one|
@@ -51,6 +62,7 @@
 ```
 
 - execute: `obsidian-outliner:move-list-item-up`
+- assertState:
 
 ```md
 - one|

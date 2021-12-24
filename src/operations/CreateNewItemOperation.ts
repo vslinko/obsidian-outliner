@@ -1,9 +1,10 @@
-import { recalculateNumericBullets } from "src/root/recalculateNumericBullets";
-import { isEmptyLineOrEmptyCheckbox } from "src/utils/isEmptyLineOrEmptyCheckbox";
-import { List, Root } from "../root";
-import { IOperation } from "./IOperation";
+import { Operation } from "./Operation";
 
-export class CreateNewItemOperation implements IOperation {
+import { List, Root } from "../root";
+import { recalculateNumericBullets } from "../root/recalculateNumericBullets";
+import { isEmptyLineOrEmptyCheckbox } from "../utils/isEmptyLineOrEmptyCheckbox";
+
+export class CreateNewItemOperation implements Operation {
   private stopPropagation = false;
   private updated = false;
 
