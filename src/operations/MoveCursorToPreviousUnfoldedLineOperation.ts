@@ -1,7 +1,8 @@
-import { IListLine, Root } from "../root";
-import { IOperation } from "./IOperation";
+import { Operation } from "./Operation";
 
-export class MoveCursorToPreviousUnfoldedLineOperation implements IOperation {
+import { ListLine, Position, Root } from "../root";
+
+export class MoveCursorToPreviousUnfoldedLineOperation implements Operation {
   private stopPropagation = false;
   private updated = false;
 
@@ -38,7 +39,7 @@ export class MoveCursorToPreviousUnfoldedLineOperation implements IOperation {
 
   private moveCursorToPreviousNoteLine(
     root: Root,
-    lines: IListLine[],
+    lines: ListLine[],
     lineNo: number
   ) {
     this.stopPropagation = true;
@@ -47,7 +48,7 @@ export class MoveCursorToPreviousUnfoldedLineOperation implements IOperation {
     root.replaceCursor(lines[lineNo - 1].to);
   }
 
-  private moveCursorToPreviousUnfoldedItem(root: Root, cursor: IPosition) {
+  private moveCursorToPreviousUnfoldedItem(root: Root, cursor: Position) {
     const prev = root.getListUnderLine(cursor.line - 1);
 
     if (!prev) {

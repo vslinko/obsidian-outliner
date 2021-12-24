@@ -1,7 +1,8 @@
-import { Root } from "../root";
-import { IOperation } from "./IOperation";
+import { Operation } from "./Operation";
 
-export class EnsureCursorIsInUnfoldedLineOperation implements IOperation {
+import { Root } from "../root";
+
+export class EnsureCursorIsInUnfoldedLineOperation implements Operation {
   private stopPropagation = false;
   private updated = false;
 

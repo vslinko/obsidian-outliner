@@ -1,5 +1,7 @@
 # enter should create new item on the child level if child exists and current item has notes
 
+- applyState:
+
 ```md
 - one
   - two|
@@ -8,6 +10,7 @@
 ```
 
 - keydown: `Enter`
+- assertState:
 
 ```md
 - one
@@ -19,6 +22,8 @@
 
 # enter should create new item on the child level if child exists and previous item has notes
 
+- applyState:
+
 ```md
 - one
   note
@@ -27,6 +32,7 @@
 ```
 
 - keydown: `Enter`
+- assertState:
 
 ```md
 - one
@@ -38,6 +44,8 @@
 
 # enter should create new item on the child level if child exists
 
+- applyState:
+
 ```md
 - one
   - two|
@@ -45,6 +53,7 @@
 ```
 
 - keydown: `Enter`
+- assertState:
 
 ```md
 - one
@@ -55,6 +64,8 @@
 
 # enter should create new item on the child level if child exists and item have notes
 
+- applyState:
+
 ```md
 - one
   - two
@@ -63,6 +74,7 @@
 ```
 
 - keydown: `Enter`
+- assertState:
 
 ```md
 - one
@@ -74,12 +86,15 @@
 
 # enter should create new item on the same level
 
+- applyState:
+
 ```md
 - one
   - two|
 ```
 
 - keydown: `Enter`
+- assertState:
 
 ```md
 - one
@@ -89,12 +104,15 @@
 
 # enter should create new item on the same level and split the text
 
+- applyState:
+
 ```md
 - one
   - tw|o
 ```
 
 - keydown: `Enter`
+- assertState:
 
 ```md
 - one
@@ -104,6 +122,8 @@
 
 # enter should outdent line if line is empty
 
+- applyState:
+
 ```md
 - one
   - two
@@ -111,6 +131,7 @@
 ```
 
 - keydown: `Enter`
+- assertState:
 
 ```md
 - one
@@ -120,6 +141,8 @@
 
 # enter should outdent line if line is empty and list using TAB after bullet
 
+- applyState:
+
 ```md
 -	one
 	-	two
@@ -127,6 +150,7 @@
 ```
 
 - keydown: `Enter`
+- assertState:
 
 ```md
 -	one
@@ -136,6 +160,8 @@
 
 # enter should outdent line if line is empty and previous line has notes
 
+- applyState:
+
 ```md
 - one
   - two
@@ -144,6 +170,7 @@
 ```
 
 - keydown: `Enter`
+- assertState:
 
 ```md
 - one
@@ -154,12 +181,15 @@
 
 # enter should delete list item if it's last item and it's on the top level
 
+- applyState:
+
 ```md
 - one
 - |
 ```
 
 - keydown: `Enter`
+- assertState:
 
 ```md
 - one
@@ -169,12 +199,15 @@
 
 # enter should delete list item if it's last item and it's on the top level and it's checkbox
 
+- applyState:
+
 ```md
 - [ ] one
 - [ ] |
 ```
 
 - keydown: `Enter`
+- assertState:
 
 ```md
 - [ ] one
@@ -184,11 +217,14 @@
 
 # enter should create checkbox if current item contains checkbox
 
+- applyState:
+
 ```md
 - [ ] one|
 ```
 
 - keydown: `Enter`
+- assertState:
 
 ```md
 - [ ] one
@@ -197,11 +233,14 @@
 
 # enter should create unchecked checkbox if current item contains checked checkbox
 
+- applyState:
+
 ```md
 - [x] one|
 ```
 
 - keydown: `Enter`
+- assertState:
 
 ```md
 - [x] one
@@ -210,12 +249,15 @@
 
 # enter should create checkbox if current item contains checkbox and cursor on notes
 
+- applyState:
+
 ```md
 - [ ] one
   qwe|
 ```
 
 - keydown: `Enter`
+- assertState:
 
 ```md
 - [ ] one
@@ -225,12 +267,15 @@
 
 # enter should create checkbox and split text if current item contains checkbox and cursor inside text
 
+- applyState:
+
 ```md
 - [ ] one
   q|we
 ```
 
 - keydown: `Enter`
+- assertState:
 
 ```md
 - [ ] one
@@ -240,11 +285,14 @@
 
 # enter should not create checkbox if current item contains checkbox but cursor inside checkbox
 
+- applyState:
+
 ```md
 - [| ] one
 ```
 
 - keydown: `Enter`
+- assertState:
 
 ```md
 - [
@@ -253,12 +301,15 @@
 
 # shift-enter should create note
 
+- applyState:
+
 ```md
 - one|
   - two
 ```
 
 - keydown: `Shift-Enter`
+- assertState:
 
 ```md
 - one
@@ -268,12 +319,15 @@
 
 # shift-enter should continue note
 
+- applyState:
+
 ```md
 - one
   note|
 ```
 
 - keydown: `Shift-Enter`
+- assertState:
 
 ```md
 - one
@@ -283,12 +337,15 @@
 
 # shift-enter should split note
 
+- applyState:
+
 ```md
 - one
   no|te
 ```
 
 - keydown: `Shift-Enter`
+- assertState:
 
 ```md
 - one
@@ -297,6 +354,8 @@
 ```
 
 # enter should not create new item if cursor is inside code block
+
+- applyState:
 
 ```md
 - one
@@ -307,6 +366,7 @@
 ```
 
 - keydown: `Enter`
+- assertState:
 
 ```md
 - one
@@ -320,6 +380,7 @@
 # enter should not create new item if cursor is before line start
 
 - setting: `stickCursor=false`
+- applyState:
 
 ```md
 - one
@@ -327,6 +388,7 @@
 ```
 
 - keydown: `Enter`
+- assertState:
 
 ```md
 - one
@@ -336,12 +398,15 @@
 
 # enter should copy TAB after bullet point
 
+- applyState:
+
 ```md
 -	one
 	-	two|
 ```
 
 - keydown: `Enter`
+- assertState:
 
 ```md
 -	one

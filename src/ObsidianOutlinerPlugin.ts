@@ -1,120 +1,120 @@
-import { Notice, Plugin } from "obsidian";
-import {
-  ObsidianOutlinerPluginSettingTab,
-  SettingsService,
-} from "./services/SettingsService";
-import { IFeature } from "./features/IFeature";
-import { ObsidianService } from "./services/ObsidianService";
-import { ListsService } from "./services/ListsService";
-import { LoggerService } from "./services/LoggerService";
-import { ListsStylesFeature } from "./features/ListsStylesFeature";
+import { Plugin } from "obsidian";
+
+import { DeleteShouldIgnoreBulletsFeature } from "./features/DeleteShouldIgnoreBulletsFeature";
+import { EnsureCursorInListContentFeature } from "./features/EnsureCursorInListContentFeature";
 import { EnterOutdentIfLineIsEmptyFeature } from "./features/EnterOutdentIfLineIsEmptyFeature";
 import { EnterShouldCreateNewItemFeature } from "./features/EnterShouldCreateNewItemOnChildLevelFeature";
-import { MoveCursorToPreviousUnfoldedLineFeature } from "./features/MoveCursorToPreviousUnfoldedLineFeature";
-import { EnsureCursorInListContentFeature } from "./features/EnsureCursorInListContentFeature";
-import { DeleteShouldIgnoreBulletsFeature } from "./features/DeleteShouldIgnoreBulletsFeature";
-import { SelectionShouldIgnoreBulletsFeature } from "./features/SelectionShouldIgnoreBulletsFeature";
-import { ZoomFeature } from "./features/ZoomFeature";
+import { Feature } from "./features/Feature";
 import { FoldFeature } from "./features/FoldFeature";
-import { SelectAllFeature } from "./features/SelectAllFeature";
+import { ListsStylesFeature } from "./features/ListsStylesFeature";
+import { MoveCursorToPreviousUnfoldedLineFeature } from "./features/MoveCursorToPreviousUnfoldedLineFeature";
 import { MoveItemsFeature } from "./features/MoveItemsFeature";
+import { SelectAllFeature } from "./features/SelectAllFeature";
+import { SelectionShouldIgnoreBulletsFeature } from "./features/SelectionShouldIgnoreBulletsFeature";
+import { SettingsTabFeature } from "./features/SettingsTabFeature";
 import { ShiftEnterShouldCreateNoteFeature } from "./features/ShiftEnterShouldCreateNoteFeature";
+import { ApplyChangesService } from "./services/ApplyChangesService";
 import { IMEService } from "./services/IMEService";
+import { LoggerService } from "./services/LoggerService";
+import { ObsidianService } from "./services/ObsidianService";
+import { ParserService } from "./services/ParserService";
+import { PerformOperationService } from "./services/PerformOperationService";
+import { SettingsService } from "./services/SettingsService";
 
 export default class ObsidianOutlinerPlugin extends Plugin {
-  private features: IFeature[];
-  protected settingsService: SettingsService;
-  private loggerService: LoggerService;
-  private obsidianService: ObsidianService;
-  private listsService: ListsService;
-  private imeService: IMEService;
+  private features: Feature[];
+  protected settings: SettingsService;
+  private logger: LoggerService;
+  private obsidian: ObsidianService;
+  private parser: ParserService;
+  private applyChanges: ApplyChangesService;
+  private performOperation: PerformOperationService;
+  private ime: IMEService;
 
   async onload() {
     console.log(`Loading obsidian-outliner`);
 
-    this.obsidianService = new ObsidianService(this.app);
+    this.obsidian = new ObsidianService(this.app);
 
-    if (!this.obsidianService.getObsidianLegacyEditorSettigns().legacyEditor) {
-      new Notice(
-        `Unfortunately Outliner plugin currently does not support a new editor, which was added in Obsidian 0.13. Please consider turning on the "Use legacy editor" setting until full support of the new editor is released.`,
-        30000
-      );
-      return;
-    }
+    this.settings = new SettingsService(this);
+    await this.settings.load();
 
-    this.settingsService = new SettingsService(this);
-    await this.settingsService.load();
+    this.logger = new LoggerService(this.settings);
 
-    this.loggerService = new LoggerService(this.settingsService);
-
-    this.listsService = new ListsService(
-      this.loggerService,
-      this.obsidianService
+    this.parser = new ParserService(this.logger);
+    this.applyChanges = new ApplyChangesService();
+    this.performOperation = new PerformOperationService(
+      this.parser,
+      this.applyChanges
     );
 
-    this.imeService = new IMEService();
-    await this.imeService.load();
-
-    this.addSettingTab(
-      new ObsidianOutlinerPluginSettingTab(this.app, this, this.settingsService)
-    );
+    this.ime = new IMEService();
+    await this.ime.load();
 
     this.features = [
-      new ListsStylesFeature(this, this.settingsService, this.obsidianService),
+      new SettingsTabFeature(this, this.settings),
+      new ListsStylesFeature(this, this.settings, this.obsidian),
       new EnterOutdentIfLineIsEmptyFeature(
         this,
-        this.settingsService,
-        this.listsService,
-        this.imeService
+        this.settings,
+        this.ime,
+        this.obsidian,
+        this.performOperation
       ),
       new EnterShouldCreateNewItemFeature(
         this,
-        this.settingsService,
-        this.listsService,
-        this.imeService
+        this.settings,
+        this.ime,
+        this.obsidian,
+        this.performOperation
       ),
       new EnsureCursorInListContentFeature(
         this,
-        this.settingsService,
-        this.listsService
+        this.settings,
+        this.obsidian,
+        this.performOperation
       ),
       new MoveCursorToPreviousUnfoldedLineFeature(
         this,
-        this.settingsService,
-        this.listsService,
-        this.imeService
+        this.settings,
+        this.ime,
+        this.obsidian,
+        this.performOperation
       ),
       new DeleteShouldIgnoreBulletsFeature(
         this,
-        this.settingsService,
-        this.listsService,
-        this.imeService
+        this.settings,
+        this.ime,
+        this.obsidian,
+        this.performOperation
       ),
       new SelectionShouldIgnoreBulletsFeature(
         this,
-        this.settingsService,
-        this.listsService,
-        this.imeService
+        this.settings,
+        this.ime,
+        this.obsidian,
+        this.performOperation
       ),
-      new ZoomFeature(this, this.settingsService, this.imeService),
-      new FoldFeature(this, this.obsidianService),
+      new FoldFeature(this, this.obsidian),
       new SelectAllFeature(
         this,
-        this.settingsService,
-        this.listsService,
-        this.imeService
+        this.settings,
+        this.ime,
+        this.obsidian,
+        this.performOperation
       ),
       new MoveItemsFeature(
         this,
-        this.obsidianService,
-        this.listsService,
-        this.imeService
+        this.ime,
+        this.obsidian,
+        this.performOperation
       ),
       new ShiftEnterShouldCreateNoteFeature(
         this,
-        this.settingsService,
-        this.listsService,
-        this.imeService
+        this.obsidian,
+        this.settings,
+        this.ime,
+        this.performOperation
       ),
     ];
 
@@ -126,7 +126,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   async onunload() {
     console.log(`Unloading obsidian-outliner`);
 
-    await this.imeService.unload();
+    await this.ime.unload();
 
     for (const feature of this.features) {
       await feature.unload();

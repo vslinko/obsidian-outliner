@@ -1,7 +1,8 @@
-import { maxPos, minPos, Root } from "../root";
-import { IOperation } from "./IOperation";
+import { Operation } from "./Operation";
 
-export class SelectAllOperation implements IOperation {
+import { Root, maxPos, minPos } from "../root";
+
+export class SelectAllOperation implements Operation {
   private stopPropagation = false;
   private updated = false;
 

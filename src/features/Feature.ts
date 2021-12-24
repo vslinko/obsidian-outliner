@@ -1,4 +1,4 @@
-export interface IFeature {
+export interface Feature {
   load(): Promise<void>;
   unload(): Promise<void>;
 }

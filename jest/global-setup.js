@@ -85,7 +85,7 @@ async function prepareVault() {
     foldIndent: true,
     useTab: false,
     tabSize: 2,
-    legacyEditor: true,
+    legacyEditor: false,
   };
   if (JSON.stringify(vaultConfig) !== JSON.stringify(newVaultConfig)) {
     debug(`  Saving ${vaultConfigFilePath}`);

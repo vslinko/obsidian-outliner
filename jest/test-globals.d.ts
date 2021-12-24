@@ -5,28 +5,28 @@ declare namespace jest {
   }
 }
 
-interface IPosition {
+interface StatePosition {
   line: number;
   ch: number;
 }
 
-interface ISelection {
-  from: IPosition;
-  to: IPosition;
+interface StateSelection {
+  anchor: StatePosition;
+  head: StatePosition;
 }
 
-interface IState {
+interface State {
   folds: number[];
-  selections: ISelection[];
+  selections: StateSelection[];
   value: string;
 }
 
 declare function applyState(state: string): Promise<void>;
 declare function applyState(state: string[]): Promise<void>;
-declare function parseState(state: string): Promise<IState>;
-declare function parseState(state: string[]): Promise<IState>;
+declare function parseState(state: string): Promise<State>;
+declare function parseState(state: string[]): Promise<State>;
 declare function simulateKeydown(keys: string): Promise<void>;
 declare function executeCommandById(keys: string): Promise<void>;
 declare function setSetting(opts: { k: string; v: any }): Promise<void>;
 declare function resetSettings(): Promise<void>;
-declare function getCurrentState(): Promise<IState>;
+declare function getCurrentState(): Promise<State>;

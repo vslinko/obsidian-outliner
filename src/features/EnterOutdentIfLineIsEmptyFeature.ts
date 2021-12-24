@@ -1,57 +1,51 @@
 import { Plugin_2 } from "obsidian";
+
+import { Prec } from "@codemirror/state";
+import { keymap } from "@codemirror/view";
+
+import { MyEditor } from "../MyEditor";
+import { Feature } from "../features/Feature";
 import { OutdentIfLineIsEmptyOperation } from "../operations/OutdentIfLineIsEmptyOperation";
-import { IFeature } from "./IFeature";
-import { ListsService } from "../services/ListsService";
+import { IMEService } from "../services/IMEService";
+import { ObsidianService } from "../services/ObsidianService";
+import { PerformOperationService } from "../services/PerformOperationService";
 import { SettingsService } from "../services/SettingsService";
-import { IMEService } from "src/services/IMEService";
 
-function isEnter(e: KeyboardEvent) {
-  return (
-    (e.keyCode === 13 || e.code === "Enter") &&
-    e.shiftKey === false &&
-    e.metaKey === false &&
-    e.altKey === false &&
-    e.ctrlKey === false
-  );
-}
-
-export class EnterOutdentIfLineIsEmptyFeature implements IFeature {
+export class EnterOutdentIfLineIsEmptyFeature implements Feature {
   constructor(
     private plugin: Plugin_2,
-    private settingsService: SettingsService,
-    private listsService: ListsService,
-    private imeService: IMEService
+    private settings: SettingsService,
+    private ime: IMEService,
+    private obsidian: ObsidianService,
+    private performOperation: PerformOperationService
   ) {}
 
   async load() {
-    this.plugin.registerCodeMirror((cm) => {
-      cm.on("keydown", this.onKeyDown);
-    });
-  }
-
-  async unload() {
-    this.plugin.app.workspace.iterateCodeMirrors((cm) => {
-      cm.off("keydown", this.onKeyDown);
-    });
-  }
-
-  private onKeyDown = (cm: CodeMirror.Editor, e: KeyboardEvent) => {
-    if (
-      !this.settingsService.betterEnter ||
-      !isEnter(e) ||
-      this.imeService.isIMEOpened()
-    ) {
-      return;
-    }
-
-    const { shouldStopPropagation } = this.listsService.performOperation(
-      (root) => new OutdentIfLineIsEmptyOperation(root),
-      cm
+    this.plugin.registerEditorExtension(
+      Prec.highest(
+        keymap.of([
+          {
+            key: "Enter",
+            run: this.obsidian.createKeymapRunCallback({
+              check: this.check,
+              run: this.run,
+            }),
+          },
+        ])
+      )
     );
+  }
 
-    if (shouldStopPropagation) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+  async unload() {}
+
+  private check = () => {
+    return this.settings.betterEnter && !this.ime.isIMEOpened();
+  };
+
+  private run = (editor: MyEditor) => {
+    return this.performOperation.performOperation(
+      (root) => new OutdentIfLineIsEmptyOperation(root),
+      editor
+    );
   };
 }

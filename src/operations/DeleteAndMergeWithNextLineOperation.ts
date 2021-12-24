@@ -1,8 +1,9 @@
-import { Root } from "../root";
 import { DeleteAndMergeWithPreviousLineOperation } from "./DeleteAndMergeWithPreviousLineOperation";
-import { IOperation } from "./IOperation";
+import { Operation } from "./Operation";
 
-export class DeleteAndMergeWithNextLineOperation implements IOperation {
+import { Root } from "../root";
+
+export class DeleteAndMergeWithNextLineOperation implements Operation {
   private deleteAndMergeWithPrevious: DeleteAndMergeWithPreviousLineOperation;
 
   constructor(private root: Root) {

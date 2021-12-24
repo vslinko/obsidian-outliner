@@ -1,65 +1,56 @@
-import { Platform, Plugin_2 } from "obsidian";
-import { IFeature } from "./IFeature";
-import { ListsService } from "../services/ListsService";
+import { Plugin_2 } from "obsidian";
+
+import { keymap } from "@codemirror/view";
+
+import { MyEditor } from "../MyEditor";
+import { Feature } from "../features/Feature";
 import { MoveCursorToPreviousUnfoldedLineOperation } from "../operations/MoveCursorToPreviousUnfoldedLineOperation";
+import { IMEService } from "../services/IMEService";
+import { ObsidianService } from "../services/ObsidianService";
+import { PerformOperationService } from "../services/PerformOperationService";
 import { SettingsService } from "../services/SettingsService";
-import { IMEService } from "src/services/IMEService";
 
-function isArrowLeft(e: KeyboardEvent) {
-  return (
-    (e.keyCode === 37 || e.code === "ArrowLeft") &&
-    e.shiftKey === false &&
-    e.metaKey === false &&
-    e.altKey === false &&
-    e.ctrlKey === false
-  );
-}
-
-function isCtrlArrowLeft(e: KeyboardEvent) {
-  return (
-    (e.keyCode === 37 || e.code === "ArrowLeft") &&
-    e.shiftKey === false &&
-    e.metaKey === false &&
-    e.altKey === false &&
-    e.ctrlKey === true
-  );
-}
-
-export class MoveCursorToPreviousUnfoldedLineFeature implements IFeature {
+export class MoveCursorToPreviousUnfoldedLineFeature implements Feature {
   constructor(
     private plugin: Plugin_2,
-    private settingsService: SettingsService,
-    private listsService: ListsService,
-    private imeService: IMEService
+    private settings: SettingsService,
+    private ime: IMEService,
+    private obsidian: ObsidianService,
+    private performOperation: PerformOperationService
   ) {}
 
   async load() {
-    this.plugin.registerCodeMirror((cm) => {
-      cm.on("keydown", this.onKeyDown);
-    });
+    this.plugin.registerEditorExtension(
+      keymap.of([
+        {
+          key: "ArrowLeft",
+          run: this.obsidian.createKeymapRunCallback({
+            check: this.check,
+            run: this.run,
+          }),
+        },
+        {
+          win: "c-ArrowLeft",
+          linux: "c-ArrowLeft",
+          run: this.obsidian.createKeymapRunCallback({
+            check: this.check,
+            run: this.run,
+          }),
+        },
+      ])
+    );
   }
 
-  async unload() {
-    this.plugin.app.workspace.iterateCodeMirrors((cm) => {
-      cm.off("keydown", this.onKeyDown);
-    });
-  }
+  async unload() {}
 
-  private onKeyDown = (cm: CodeMirror.Editor, event: KeyboardEvent) => {
-    if (!this.settingsService.stickCursor || this.imeService.isIMEOpened()) {
-      return;
-    }
+  private check = () => {
+    return this.settings.stickCursor && !this.ime.isIMEOpened();
+  };
 
-    if (isArrowLeft(event) || (!Platform.isMacOS && isCtrlArrowLeft(event))) {
-      const { shouldStopPropagation } = this.listsService.performOperation(
-        (root) => new MoveCursorToPreviousUnfoldedLineOperation(root),
-        cm
-      );
-
-      if (shouldStopPropagation) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    }
+  private run = (editor: MyEditor) => {
+    return this.performOperation.performOperation(
+      (root) => new MoveCursorToPreviousUnfoldedLineOperation(root),
+      editor
+    );
   };
 }

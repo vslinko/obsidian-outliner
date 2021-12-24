@@ -1,20 +1,18 @@
 import { Notice, Plugin_2 } from "obsidian";
-import { ObsidianService } from "../services/ObsidianService";
-import { IFeature } from "./IFeature";
 
-export class FoldFeature implements IFeature {
-  constructor(
-    private plugin: Plugin_2,
-    private obsidianService: ObsidianService
-  ) {}
+import { Feature } from "./Feature";
+
+import { MyEditor } from "../MyEditor";
+import { ObsidianService } from "../services/ObsidianService";
+
+export class FoldFeature implements Feature {
+  constructor(private plugin: Plugin_2, private obsidian: ObsidianService) {}
 
   async load() {
     this.plugin.addCommand({
       id: "fold",
       name: "Fold the list",
-      callback: this.obsidianService.createCommandCallback(
-        this.fold.bind(this)
-      ),
+      editorCallback: this.obsidian.createEditorCallback(this.fold),
       hotkeys: [
         {
           modifiers: ["Mod"],
@@ -26,9 +24,7 @@ export class FoldFeature implements IFeature {
     this.plugin.addCommand({
       id: "unfold",
       name: "Unfold the list",
-      callback: this.obsidianService.createCommandCallback(
-        this.unfold.bind(this)
-      ),
+      editorCallback: this.obsidian.createEditorCallback(this.unfold),
       hotkeys: [
         {
           modifiers: ["Mod"],
@@ -40,8 +36,8 @@ export class FoldFeature implements IFeature {
 
   async unload() {}
 
-  private setFold(editor: CodeMirror.Editor, type: "fold" | "unfold") {
-    if (!this.obsidianService.getObsidianFoldSettigns().foldIndent) {
+  private setFold(editor: MyEditor, type: "fold" | "unfold") {
+    if (!this.obsidian.getObsidianFoldSettings().foldIndent) {
       new Notice(
         `Unable to ${type} because folding is disabled. Please enable "Fold indent" in Obsidian settings.`,
         5000
@@ -49,16 +45,22 @@ export class FoldFeature implements IFeature {
       return true;
     }
 
-    (editor as any).foldCode(editor.getCursor(), null, type);
+    const cursor = editor.getCursor();
+
+    if (type === "fold") {
+      editor.fold(cursor.line);
+    } else {
+      editor.unfold(cursor.line);
+    }
 
     return true;
   }
 
-  private fold(editor: CodeMirror.Editor) {
+  private fold = (editor: MyEditor) => {
     return this.setFold(editor, "fold");
-  }
+  };
 
-  private unfold(editor: CodeMirror.Editor) {
+  private unfold = (editor: MyEditor) => {
     return this.setFold(editor, "unfold");
-  }
+  };
 }
