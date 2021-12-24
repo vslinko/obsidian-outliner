@@ -68,6 +68,8 @@ async function prepareVault() {
   debug(`Prepare vault`);
 
   const vaultConfigFilePath = ".obsidian/app.json";
+  const vaultCommunityPluginsConfigFilePath =
+    ".obsidian/community-plugins.json";
   const vaultPluginDir = ".obsidian/plugins/obsidian-outliner";
 
   if (!fs.existsSync(vaultConfigFilePath)) {
@@ -77,18 +79,33 @@ async function prepareVault() {
   }
 
   const vaultConfig = JSON.parse(fs.readFileSync(vaultConfigFilePath));
-  if (!vaultConfig.enabledPlugins) {
-    vaultConfig.enabledPlugins = [];
-  }
-  vaultConfig.foldIndent = true;
-  vaultConfig.tabSize = 2;
-  vaultConfig.useTab = false;
-  if (!vaultConfig.enabledPlugins.includes("obsidian-outliner")) {
-    debug(`  Enabling obsidian-outliner plugin`);
-    vaultConfig.enabledPlugins.push("obsidian-outliner");
-
+  const newVaultConfig = {
+    ...vaultConfig,
+    foldHeading: true,
+    foldIndent: true,
+    useTab: false,
+    tabSize: 2,
+    legacyEditor: true,
+  };
+  if (JSON.stringify(vaultConfig) !== JSON.stringify(newVaultConfig)) {
     debug(`  Saving ${vaultConfigFilePath}`);
-    fs.writeFileSync(vaultConfigFilePath, JSON.stringify(vaultConfig));
+    fs.writeFileSync(vaultConfigFilePath, JSON.stringify(newVaultConfig));
+  }
+
+  const vaultCommunityPluginsConfig = fs.existsSync(
+    vaultCommunityPluginsConfigFilePath
+  )
+    ? JSON.parse(fs.readFileSync(vaultCommunityPluginsConfigFilePath))
+    : [];
+  if (!vaultCommunityPluginsConfig.includes("obsidian-outliner")) {
+    debug(`  Enabling obsidian-outliner plugin`);
+    vaultCommunityPluginsConfig.push("obsidian-outliner");
+
+    debug(`  Saving ${vaultCommunityPluginsConfigFilePath}`);
+    fs.writeFileSync(
+      vaultCommunityPluginsConfigFilePath,
+      JSON.stringify(vaultCommunityPluginsConfig)
+    );
   }
 
   debug(`  Disabling Safe Mode`);
