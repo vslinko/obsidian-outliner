@@ -17,6 +17,16 @@ export interface ObsidianFoldSettings {
 export class ObsidianService {
   constructor(private app: App) {}
 
+  isLegacyEditorEnabled() {
+    const config: { legacyEditor: boolean } = {
+      legacyEditor: true,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...(this.app.vault as any).config,
+    };
+
+    return config.legacyEditor;
+  }
+
   getObsidianTabsSettings(): ObsidianTabsSettings {
     return {
       useTab: true,
