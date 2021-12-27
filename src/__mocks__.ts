@@ -18,8 +18,7 @@ export function makeEditor(params: EditorMockParams): MyEditor {
     getLine: (l: number) => text.split("\n")[l],
     lastLine: () => text.split("\n").length - 1,
     lineCount: () => text.split("\n").length,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    isFolded: (l: number) => false,
+    getFirstLineOfFolding: (): null => null,
   };
 
   return editor;

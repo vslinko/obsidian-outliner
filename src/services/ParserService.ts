@@ -23,7 +23,7 @@ export interface Reader {
   getLine(n: number): string;
   lastLine(): number;
   listSelections(): ReaderSelection[];
-  isFolded(line: number): boolean;
+  getFirstLineOfFolding(line: number): number | null;
 }
 
 interface ParseListList {
@@ -152,7 +152,8 @@ export class ParserService {
           currentIndent = indent;
         }
 
-        const folded = editor.isFolded(Math.min(l + 1, listEndLine));
+        const folded =
+          editor.getFirstLineOfFolding(Math.min(l, listEndLine)) === l;
 
         currentList = new List(
           root,

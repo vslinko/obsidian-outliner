@@ -33,3 +33,26 @@
 - one #folded
   - two
 ```
+
+# should keep foldind on change, issue #236
+
+- applyState:
+
+```md
+- one
+  - two #folded
+    - three
+  - four|
+  - five
+```
+
+- keydown: `ArrowDown`
+- assertState:
+
+```md
+- one
+  - two #folded
+    - three
+  - four
+  - five|
+```
