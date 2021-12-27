@@ -234,7 +234,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     const acc = content.reduce(
       (acc, line, lineNo) => {
         if (line.includes("#folded")) {
-          line = line.replace("#folded", "").trim();
+          line = line.replace("#folded", "").trimEnd();
           acc.folds.push(lineNo);
         }
 
