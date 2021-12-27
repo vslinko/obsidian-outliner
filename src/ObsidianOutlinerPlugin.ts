@@ -115,6 +115,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this,
         this.ime,
         this.obsidian,
+        this.settings,
         this.performOperation
       ),
       new ShiftEnterShouldCreateNoteFeature(

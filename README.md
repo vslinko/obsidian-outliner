@@ -57,8 +57,12 @@ Move lists with children wherever you want without breaking the structure.
 | ----------------------------- | :-----------------------------------------: | :--------------------------------------------: |
 | Move list and sublists up     | <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>↑</kbd> | <kbd>Command</kbd><kbd>Shift</kbd><kbd>↑</kbd> |
 | Move list and sublists down   | <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>↓</kbd> | <kbd>Command</kbd><kbd>Shift</kbd><kbd>↓</kbd> |
-| Indent the list and sublists  |               <kbd>Tab</kbd>                |                 <kbd>Tab</kbd>                 |
-| Outdent the list and sublists |       <kbd>Shift</kbd><kbd>Tab</kbd>        |         <kbd>Shift</kbd><kbd>Tab</kbd>         |
+| Indent the list and sublists  |                                             |                                                |
+| Outdent the list and sublists |                                             |                                                |
+
+| Setting             | Default value |
+| ------------------- | :-----------: |
+| Enhance the Tab key |    `true`     |
 
 ### Stick the cursor to the content
 

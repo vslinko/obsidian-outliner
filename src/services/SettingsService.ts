@@ -3,6 +3,7 @@ export interface ObsidianOutlinerPluginSettings {
   debug: boolean;
   stickCursor: boolean;
   betterEnter: boolean;
+  betterTab: boolean;
   selectAll: boolean;
   hideWarning: boolean;
 }
@@ -12,6 +13,7 @@ const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
   debug: false,
   stickCursor: true,
   betterEnter: true,
+  betterTab: true,
   selectAll: true,
   hideWarning: false,
 };
@@ -61,6 +63,13 @@ export class SettingsService implements ObsidianOutlinerPluginSettings {
   }
   set betterEnter(value: boolean) {
     this.set("betterEnter", value);
+  }
+
+  get betterTab() {
+    return this.values.betterTab;
+  }
+  set betterTab(value: boolean) {
+    this.set("betterTab", value);
   }
 
   get selectAll() {

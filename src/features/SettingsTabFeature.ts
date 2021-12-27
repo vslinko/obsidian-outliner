@@ -47,6 +47,16 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
+      .setName("Enhance the Tab key")
+      .setDesc("Make Tab and Shift-Tab behave the same as other outliners.")
+      .addToggle((toggle) => {
+        toggle.setValue(this.settings.betterTab).onChange(async (value) => {
+          this.settings.betterTab = value;
+          await this.settings.save();
+        });
+      });
+
+    new Setting(containerEl)
       .setName("Enhance the Ctrl+A or Cmd+A behavior")
       .setDesc(
         "Press the hotkey once to select the current list item. Press the hotkey twice to select the entire list."
