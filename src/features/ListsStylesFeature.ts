@@ -33,7 +33,7 @@ export class ListsStylesFeature implements Feature {
   }
 
   private syncListsStyles = () => {
-    if (!this.settings.styleLists) {
+    if (!this.settings.styleLists || !this.obsidian.isDefaultThemeEnabled()) {
       this.applyListsStyles([]);
       return;
     }

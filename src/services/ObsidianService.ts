@@ -27,6 +27,16 @@ export class ObsidianService {
     return config.legacyEditor;
   }
 
+  isDefaultThemeEnabled() {
+    const config: { cssTheme: string } = {
+      cssTheme: "",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...(this.app.vault as any).config,
+    };
+
+    return config.cssTheme === "";
+  }
+
   getObsidianTabsSettings(): ObsidianTabsSettings {
     return {
       useTab: true,
