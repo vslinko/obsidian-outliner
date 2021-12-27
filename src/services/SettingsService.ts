@@ -5,7 +5,6 @@ export interface ObsidianOutlinerPluginSettings {
   betterEnter: boolean;
   betterTab: boolean;
   selectAll: boolean;
-  hideWarning: boolean;
 }
 
 const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
@@ -15,7 +14,6 @@ const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
   betterEnter: true,
   betterTab: true,
   selectAll: true,
-  hideWarning: false,
 };
 
 export interface Storage {
@@ -77,13 +75,6 @@ export class SettingsService implements ObsidianOutlinerPluginSettings {
   }
   set selectAll(value: boolean) {
     this.set("selectAll", value);
-  }
-
-  get hideWarning() {
-    return this.values.hideWarning;
-  }
-  set hideWarning(value: boolean) {
-    this.set("hideWarning", value);
   }
 
   onChange<T extends K>(key: T, cb: Callback<T>) {

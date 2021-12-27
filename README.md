@@ -42,7 +42,7 @@ Try to create a deeply structured list and move items by pressing the hotkeys de
 
 If you liked the styles from the demo above, you can enable them in the plugin settings tab.
 
-> **Disclaimer:** Styles are only compatible with built-in Obsidian themes and may not be compatible with other themes. Circle bullets only work well with spaces or four-space tabs. Indentation lines only work well with tab size 4.
+> **Disclaimer:** Styles are only compatible with built-in Obsidian themes and may not be compatible with other themes. Indentation lines works only with tab size 4.
 
 | Setting                                | Default value |
 | -------------------------------------- | :-----------: |

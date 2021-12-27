@@ -1,83 +1,66 @@
-import { Plugin_2 } from "obsidian";
-
 import { Feature } from "./Feature";
 
 import { ObsidianService } from "../services/ObsidianService";
 import { SettingsService } from "../services/SettingsService";
 
-const STATUS_BAR_TEXT = `Outliner styles only work with four-space tabs. Please check Obsidian settings.`;
+const BETTER_LISTS_CLASS = "outliner-plugin-better-lists";
+const BETTER_BULLETS_CLASS = "outliner-plugin-better-bullets";
+const VERTICAL_LINES_CLASS = "outliner-plugin-vertical-lines";
+const KNOWN_CLASSES = [
+  BETTER_LISTS_CLASS,
+  BETTER_BULLETS_CLASS,
+  VERTICAL_LINES_CLASS,
+];
 
 export class ListsStylesFeature implements Feature {
-  private statusBarText: HTMLElement;
   private interval: number;
 
   constructor(
-    private plugin: Plugin_2,
     private settings: SettingsService,
     private obsidian: ObsidianService
   ) {}
 
   async load() {
-    if (this.settings.styleLists) {
-      this.addListsStyles();
-    }
-
-    this.settings.onChange("styleLists", this.onStyleListsSettingChange);
-
-    this.addStatusBarText();
-    this.startStatusBarInterval();
+    this.syncListsStyles();
+    this.interval = window.setInterval(() => {
+      this.syncListsStyles();
+    }, 1000);
   }
 
   async unload() {
     clearInterval(this.interval);
-    if (this.statusBarText.parentElement) {
-      this.statusBarText.parentElement.removeChild(this.statusBarText);
-    }
-    this.settings.removeCallback("styleLists", this.onStyleListsSettingChange);
-    this.removeListsStyles();
+    this.applyListsStyles([]);
   }
 
-  private startStatusBarInterval() {
-    let visible = false;
-
-    this.interval = window.setInterval(() => {
-      const { tabSize } = this.obsidian.getObsidianTabsSettings();
-
-      const shouldBeVisible =
-        this.settings.styleLists &&
-        !(tabSize === 4) &&
-        !this.settings.hideWarning;
-
-      if (shouldBeVisible && !visible) {
-        this.statusBarText.style.display = "block";
-        visible = true;
-      } else if (!shouldBeVisible && visible) {
-        this.statusBarText.style.display = "none";
-        visible = false;
-      }
-    }, 1000);
-  }
-
-  private onStyleListsSettingChange = (styleLists: boolean) => {
-    if (styleLists) {
-      this.addListsStyles();
-    } else {
-      this.removeListsStyles();
+  private syncListsStyles = () => {
+    if (!this.settings.styleLists) {
+      this.applyListsStyles([]);
+      return;
     }
+
+    const { tabSize } = this.obsidian.getObsidianTabsSettings();
+
+    this.applyListsStyles([
+      BETTER_LISTS_CLASS,
+      BETTER_BULLETS_CLASS,
+      tabSize === 4 ? VERTICAL_LINES_CLASS : null,
+    ]);
   };
 
-  private addStatusBarText() {
-    this.statusBarText = this.plugin.addStatusBarItem();
-    this.statusBarText.style.color = "red";
-    this.statusBarText.style.display = "none";
-    this.statusBarText.setText(STATUS_BAR_TEXT);
-  }
+  private applyListsStyles(classes: string[]) {
+    const toKeep = classes.filter((c) => KNOWN_CLASSES.contains(c));
+    const toRemove = KNOWN_CLASSES.filter((c) => !toKeep.contains(c));
 
-  private addListsStyles() {
-    document.body.classList.add("outliner-plugin-bls");
-  }
+    for (const c of toKeep) {
+      if (!document.body.classList.contains(c)) {
+        document.body.classList.add(c);
+      }
+    }
 
-  private removeListsStyles() {
-    document.body.classList.remove("outliner-plugin-bls");
+    for (const c of toRemove) {
+      if (document.body.classList.contains(c)) {
+        document.body.classList.remove(c);
+      }
+    }
   }
 }

@@ -61,7 +61,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
     this.features = [
       new SettingsTabFeature(this, this.settings),
-      new ListsStylesFeature(this, this.settings, this.obsidian),
+      new ListsStylesFeature(this.settings, this.obsidian),
       new EnterOutdentIfLineIsEmptyFeature(
         this,
         this.settings,

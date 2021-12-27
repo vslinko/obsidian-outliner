@@ -69,15 +69,6 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName("Hide the warning about four-space tabs")
-      .addToggle((toggle) => {
-        toggle.setValue(this.settings.hideWarning).onChange(async (value) => {
-          this.settings.hideWarning = value;
-          await this.settings.save();
-        });
-      });
-
-    new Setting(containerEl)
       .setName("Debug mode")
       .setDesc(
         "Open DevTools (Command+Option+I or Control+Shift+I) to copy the debug logs."
