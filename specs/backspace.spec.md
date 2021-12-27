@@ -197,3 +197,23 @@
 - qwe|notes
   - ee
 ```
+
+# delete should remove next line if cursor is on the end, issue #175
+
+- applyState:
+
+```md
+- 1
+- 2|
+
+3
+```
+
+- keydown: `Delete`
+- keydown: `Delete`
+- assertState:
+
+```md
+- 1
+- 2|3
+```

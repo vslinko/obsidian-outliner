@@ -37,6 +37,9 @@ export class DeleteAndMergeWithNextLineOperation implements Operation {
     if (lineNo === lines.length - 1) {
       const nextLine = lines[lineNo].to.line + 1;
       const nextList = root.getListUnderLine(nextLine);
+      if (!nextList) {
+        return;
+      }
       root.replaceCursor(nextList.getFirstLineContentStart());
       this.deleteAndMergeWithPrevious.perform();
     } else if (lineNo >= 0) {
