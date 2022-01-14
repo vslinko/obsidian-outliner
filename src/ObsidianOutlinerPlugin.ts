@@ -1,4 +1,4 @@
-import { Notice, Plugin } from "obsidian";
+import { Plugin } from "obsidian";
 
 import { DeleteShouldIgnoreBulletsFeature } from "./features/DeleteShouldIgnoreBulletsFeature";
 import { EnsureCursorInListContentFeature } from "./features/EnsureCursorInListContentFeature";
@@ -35,14 +35,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     console.log(`Loading obsidian-outliner`);
 
     this.obsidian = new ObsidianService(this.app);
-
-    if (this.obsidian.isLegacyEditorEnabled()) {
-      new Notice(
-        `Outliner plugin does not support legacy editor mode starting from version 2.0. Please disable the "Use legacy editor" option or manually install version 1.0 of Outliner plugin.`,
-        30000
-      );
-      return;
-    }
 
     this.settings = new SettingsService(this);
     await this.settings.load();
