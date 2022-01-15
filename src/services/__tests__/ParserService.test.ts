@@ -144,4 +144,20 @@ describe("parseList", () => {
       `Unable to parse list: expected indent "T", got "SS"`
     );
   });
+
+  test("should parse list with tab just after the list", () => {
+    const logger = makeLoggerService();
+    const parser = makeParserService({ logger });
+    const editor = makeEditor({
+      text: "- one\n\t- two\n\t\n",
+      cursor: { line: 0, ch: 0 },
+    });
+
+    const list = parser.parse(editor as any);
+
+    console.log(list);
+
+    expect(logger.log).not.toBeCalled();
+    expect(list).toBeTruthy();
+  });
 });

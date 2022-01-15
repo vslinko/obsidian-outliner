@@ -189,6 +189,10 @@ export class ParserService {
           const matches = line.match(/^[ \t]+/);
 
           if (!matches || matches[0].length <= currentIndent.length) {
+            if (/^\s+$/.test(line)) {
+              continue;
+            }
+
             return error(
               `Unable to parse list: expected some indent, got no indent`
             );
