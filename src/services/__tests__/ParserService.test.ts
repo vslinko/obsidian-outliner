@@ -155,8 +155,6 @@ describe("parseList", () => {
 
     const list = parser.parse(editor as any);
 
-    console.log(list);
-
     expect(logger.log).not.toBeCalled();
     expect(list).toBeTruthy();
   });
