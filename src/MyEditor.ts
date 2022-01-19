@@ -10,6 +10,11 @@ export class MyEditorPosition {
   ch: number;
 }
 
+export class MyEditorRange {
+  from: MyEditorPosition;
+  to: MyEditorPosition;
+}
+
 export class MyEditorSelection {
   anchor: MyEditorPosition;
   head: MyEditorPosition;
@@ -108,6 +113,39 @@ export class MyEditor {
 
   triggerOnKeyDown(e: KeyboardEvent): void {
     runScopeHandlers(this.getEditorView(), e, "editor");
+  }
+
+  getZoomRange(): MyEditorRange | null {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const api = (window as any).ObsidianZoomPlugin;
+
+    if (!api || !api.getZoomRange) {
+      return null;
+    }
+
+    return api.getZoomRange(this.e);
+  }
+
+  zoomOut() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const api = (window as any).ObsidianZoomPlugin;
+
+    if (!api || !api.zoomOut) {
+      return;
+    }
+
+    api.zoomOut(this.e);
+  }
+
+  zoomIn(line: number) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const api = (window as any).ObsidianZoomPlugin;
+
+    if (!api || !api.zoomIn) {
+      return;
+    }
+
+    api.zoomIn(this.e, line);
   }
 
   private getEditorView(): EditorView {

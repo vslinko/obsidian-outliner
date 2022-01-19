@@ -1,14 +1,22 @@
 import { Operation } from "./Operation";
 
-import { List, Root } from "../root";
+import { List, Position, Root } from "../root";
 import { recalculateNumericBullets } from "../root/recalculateNumericBullets";
 import { isEmptyLineOrEmptyCheckbox } from "../utils/isEmptyLineOrEmptyCheckbox";
+
+export interface GetZoomRange {
+  getZoomRange(): { from: Position; to: Position } | null;
+}
 
 export class CreateNewItemOperation implements Operation {
   private stopPropagation = false;
   private updated = false;
 
-  constructor(private root: Root) {}
+  constructor(
+    private root: Root,
+    private defaultIndentChars: string,
+    private getZoomRange: GetZoomRange
+  ) {}
 
   shouldStopPropagation() {
     return this.stopPropagation;
@@ -71,21 +79,35 @@ export class CreateNewItemOperation implements Operation {
     this.stopPropagation = true;
     this.updated = true;
 
+    const zoomRange = this.getZoomRange.getZoomRange();
+    const listIsZoomingRoot = Boolean(
+      zoomRange &&
+        list.getFirstLineContentStart().line >= zoomRange.from.line &&
+        list.getLastLineContentEnd().line <= zoomRange.from.line
+    );
+
+    const hasChildren = !list.isEmpty();
+
     const endPos = list.getLastLineContentEnd();
     const onChildLevel =
-      !list.isEmpty() && cursor.line === endPos.line && cursor.ch === endPos.ch;
+      listIsZoomingRoot ||
+      (hasChildren && cursor.line === endPos.line && cursor.ch === endPos.ch);
 
     const indent = onChildLevel
-      ? list.getChildren()[0].getFirstLineIndent()
+      ? hasChildren
+        ? list.getChildren()[0].getFirstLineIndent()
+        : list.getFirstLineIndent() + this.defaultIndentChars
       : list.getFirstLineIndent();
 
-    const bullet = onChildLevel
-      ? list.getChildren()[0].getBullet()
-      : list.getBullet();
+    const bullet =
+      onChildLevel && hasChildren
+        ? list.getChildren()[0].getBullet()
+        : list.getBullet();
 
-    const spaceAfterBullet = onChildLevel
-      ? list.getChildren()[0].getSpaceAfterBullet()
-      : list.getSpaceAfterBullet();
+    const spaceAfterBullet =
+      onChildLevel && hasChildren
+        ? list.getChildren()[0].getSpaceAfterBullet()
+        : list.getSpaceAfterBullet();
 
     const prefix = oldLines[0].match(/^\[[ x]\]/) ? "[ ] " : "";
 

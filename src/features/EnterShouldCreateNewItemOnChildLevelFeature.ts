@@ -43,9 +43,24 @@ export class EnterShouldCreateNewItemFeature implements Feature {
   };
 
   private run = (editor: MyEditor) => {
-    return this.performOperation.performOperation(
-      (root) => new CreateNewItemOperation(root),
+    const zoomRange = editor.getZoomRange();
+
+    const res = this.performOperation.performOperation(
+      (root) =>
+        new CreateNewItemOperation(
+          root,
+          this.obsidian.getDefaultIndentChars(),
+          {
+            getZoomRange: () => zoomRange,
+          }
+        ),
       editor
     );
+
+    if (res.shouldUpdate && zoomRange) {
+      editor.zoomIn(zoomRange.from.line);
+    }
+
+    return res;
   };
 }
