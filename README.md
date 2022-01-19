@@ -6,7 +6,7 @@
 **Work with your lists like in Workflowy or RoamResearch**
 
 ⁉️ [Discuss ideas or ask a question](https://github.com/vslinko/obsidian-outliner/discussions)<br>
-⚙️ [Follow the development process](https://github.com/users/vslinko/projects/2)<br>
+⚙️ [Follow the development process](https://github.com/users/vslinko/projects/3/views/1)<br>
 🐛 [Report issues](https://github.com/vslinko/obsidian-outliner/issues)
 
 Compatible with [Obsidian Zoom plugin](https://github.com/vslinko/obsidian-zoom).
