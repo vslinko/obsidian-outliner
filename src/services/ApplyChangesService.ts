@@ -57,21 +57,6 @@ export class ApplyChangesService {
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      const nlIndex = oldTmp.indexOf("\n");
-      if (nlIndex < 0) {
-        break;
-      }
-      const oldLine = oldTmp.slice(0, nlIndex + 1);
-      const newLine = newTmp.slice(0, oldLine.length);
-      if (oldLine !== newLine) {
-        break;
-      }
-      changeFrom.line++;
-      oldTmp = oldTmp.slice(oldLine.length);
-      newTmp = newTmp.slice(oldLine.length);
-    }
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
       const nlIndex = oldTmp.lastIndexOf("\n");
       if (nlIndex < 0) {
         break;
@@ -88,6 +73,21 @@ export class ApplyChangesService {
       changeTo.ch =
         nlIndex2 >= 0 ? oldTmp.length - nlIndex2 - 1 : oldTmp.length;
       changeTo.line--;
+    }
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const nlIndex = oldTmp.indexOf("\n");
+      if (nlIndex < 0) {
+        break;
+      }
+      const oldLine = oldTmp.slice(0, nlIndex + 1);
+      const newLine = newTmp.slice(0, oldLine.length);
+      if (oldLine !== newLine) {
+        break;
+      }
+      changeFrom.line++;
+      oldTmp = oldTmp.slice(oldLine.length);
+      newTmp = newTmp.slice(oldLine.length);
     }
 
     if (oldTmp !== newTmp) {
