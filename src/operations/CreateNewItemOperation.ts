@@ -87,11 +87,12 @@ export class CreateNewItemOperation implements Operation {
     );
 
     const hasChildren = !list.isEmpty();
-
+    const childIsFolded = list.isFoldRoot();
     const endPos = list.getLastLineContentEnd();
+    const endOfLine = cursor.line === endPos.line && cursor.ch === endPos.ch;
+
     const onChildLevel =
-      listIsZoomingRoot ||
-      (hasChildren && cursor.line === endPos.line && cursor.ch === endPos.ch);
+      listIsZoomingRoot || (hasChildren && !childIsFolded && endOfLine);
 
     const indent = onChildLevel
       ? hasChildren
@@ -130,10 +131,12 @@ export class CreateNewItemOperation implements Operation {
     if (onChildLevel) {
       list.addBeforeAll(newList);
     } else {
-      const children = list.getChildren();
-      for (const child of children) {
-        list.removeChild(child);
-        newList.addAfterAll(child);
+      if (!childIsFolded || !endOfLine) {
+        const children = list.getChildren();
+        for (const child of children) {
+          list.removeChild(child);
+          newList.addAfterAll(child);
+        }
       }
 
       list.getParent().addAfter(list, newList);

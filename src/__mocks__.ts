@@ -6,6 +6,7 @@ import { ParserService } from "./services/ParserService";
 export interface EditorMockParams {
   text: string;
   cursor: { line: number; ch: number };
+  getFirstLineOfFolding?: (n: number) => number | null;
 }
 
 export function makeEditor(params: EditorMockParams): MyEditor {
@@ -18,7 +19,7 @@ export function makeEditor(params: EditorMockParams): MyEditor {
     getLine: (l: number) => text.split("\n")[l],
     lastLine: () => text.split("\n").length - 1,
     lineCount: () => text.split("\n").length,
-    getFirstLineOfFolding: (): null => null,
+    getFirstLineOfFolding: params.getFirstLineOfFolding || ((): null => null),
   };
 
   return editor;
