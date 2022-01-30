@@ -2,7 +2,7 @@ import { App, PluginSettingTab, Plugin_2, Setting } from "obsidian";
 
 import { Feature } from "./Feature";
 
-import { SettingsService } from "../services/SettingsService";
+import { ListLineAction, SettingsService } from "../services/SettingsService";
 
 class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
   constructor(app: App, plugin: Plugin_2, private settings: SettingsService) {
@@ -24,6 +24,31 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
           this.settings.styleLists = value;
           await this.settings.save();
         });
+      });
+
+    new Setting(containerEl)
+      .setName("Draw vertical indentation lines")
+      .addToggle((toggle) => {
+        toggle.setValue(this.settings.listLines).onChange(async (value) => {
+          this.settings.listLines = value;
+          await this.settings.save();
+        });
+      });
+
+    new Setting(containerEl)
+      .setName("Vertical indentation line click action")
+      .addDropdown((dropdown) => {
+        dropdown
+          .addOptions({
+            none: "None",
+            "zoom-in": "Zoom In",
+            "toggle-folding": "Toggle Folding",
+          } as { [key in ListLineAction]: string })
+          .setValue(this.settings.listLineAction)
+          .onChange(async (value) => {
+            this.settings.listLineAction = value as ListLineAction;
+            await this.settings.save();
+          });
       });
 
     new Setting(containerEl)
