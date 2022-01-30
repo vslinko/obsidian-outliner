@@ -179,7 +179,8 @@ class ListLinesViewPluginValue implements PluginValue {
   }
 
   private updateDom() {
-    this.root.style.width = this.view.scrollDOM.clientWidth + "px";
+    this.root.style.width = this.view.contentDOM.clientWidth + "px";
+    this.root.style.left = this.view.contentDOM.offsetLeft + "px";
     this.root.style.height = this.view.scrollDOM.clientHeight + "px";
     this.root.style.marginTop =
       this.view.scrollDOM.offsetTop + WRAPPER_TOP_MARGIN + "px";

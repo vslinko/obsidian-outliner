@@ -29,15 +29,14 @@
 .outliner-plugin-list-lines-wrapper {
   position: absolute;
   pointer-events: none;
-  margin: 10px 17px;
 }
 
 .outliner-plugin-list-line {
   pointer-events: auto;
   position: absolute;
   width: 5px;
-  margin-left: 15px;
-  margin-top: 32px;
+  margin-left: 0.5ch;
+  margin-top: 2em;
   z-index: 1;
   cursor: pointer;
   background: transparent;
