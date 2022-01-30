@@ -6,6 +6,7 @@ import { EnterOutdentIfLineIsEmptyFeature } from "./features/EnterOutdentIfLineI
 import { EnterShouldCreateNewItemFeature } from "./features/EnterShouldCreateNewItemOnChildLevelFeature";
 import { Feature } from "./features/Feature";
 import { FoldFeature } from "./features/FoldFeature";
+import { LinesFeature } from "./features/LinesFeature";
 import { ListsStylesFeature } from "./features/ListsStylesFeature";
 import { MoveCursorToPreviousUnfoldedLineFeature } from "./features/MoveCursorToPreviousUnfoldedLineFeature";
 import { MoveItemsFeature } from "./features/MoveItemsFeature";
@@ -125,6 +126,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this.ime,
         this.performOperation
       ),
+      new LinesFeature(this, this.settings, this.obsidian, this.parser),
     ];
 
     for (const feature of this.features) {

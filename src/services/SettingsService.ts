@@ -1,3 +1,5 @@
+export type ListLineAction = "none" | "zoom-in" | "toggle-folding";
+
 export interface ObsidianOutlinerPluginSettings {
   styleLists: boolean;
   debug: boolean;
@@ -5,15 +7,19 @@ export interface ObsidianOutlinerPluginSettings {
   betterEnter: boolean;
   betterTab: boolean;
   selectAll: boolean;
+  listLines: boolean;
+  listLineAction: ListLineAction;
 }
 
 const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
-  styleLists: false,
+  styleLists: true,
   debug: false,
   stickCursor: true,
   betterEnter: true,
   betterTab: true,
   selectAll: true,
+  listLines: true,
+  listLineAction: "toggle-folding",
 };
 
 export interface Storage {
@@ -22,8 +28,7 @@ export interface Storage {
 }
 
 type K = keyof ObsidianOutlinerPluginSettings;
-type V<T extends K> = ObsidianOutlinerPluginSettings[T];
-type Callback<T extends K> = (cb: V<T>) => void;
+type Callback<T extends K> = (cb: ObsidianOutlinerPluginSettings[T]) => void;
 
 export class SettingsService implements ObsidianOutlinerPluginSettings {
   private storage: Storage;
@@ -77,6 +82,20 @@ export class SettingsService implements ObsidianOutlinerPluginSettings {
     this.set("selectAll", value);
   }
 
+  get listLines() {
+    return this.values.listLines;
+  }
+  set listLines(value: boolean) {
+    this.set("listLines", value);
+  }
+
+  get listLineAction() {
+    return this.values.listLineAction;
+  }
+  set listLineAction(value: ListLineAction) {
+    this.set("listLineAction", value);
+  }
+
   onChange<T extends K>(key: T, cb: Callback<T>) {
     if (!this.handlers.has(key)) {
       this.handlers.set(key, new Set());
@@ -111,7 +130,7 @@ export class SettingsService implements ObsidianOutlinerPluginSettings {
     await this.storage.saveData(this.values);
   }
 
-  private set<T extends K>(key: T, value: V<K>): void {
+  set<T extends K>(key: T, value: ObsidianOutlinerPluginSettings[T]): void {
     this.values[key] = value;
     const callbacks = this.handlers.get(key);
 

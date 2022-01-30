@@ -5,12 +5,7 @@ import { SettingsService } from "../services/SettingsService";
 
 const BETTER_LISTS_CLASS = "outliner-plugin-better-lists";
 const BETTER_BULLETS_CLASS = "outliner-plugin-better-bullets";
-const VERTICAL_LINES_CLASS = "outliner-plugin-vertical-lines";
-const KNOWN_CLASSES = [
-  BETTER_LISTS_CLASS,
-  BETTER_BULLETS_CLASS,
-  VERTICAL_LINES_CLASS,
-];
+const KNOWN_CLASSES = [BETTER_LISTS_CLASS, BETTER_BULLETS_CLASS];
 
 export class ListsStylesFeature implements Feature {
   private interval: number;
@@ -38,13 +33,7 @@ export class ListsStylesFeature implements Feature {
       return;
     }
 
-    const { tabSize } = this.obsidian.getObsidianTabsSettings();
-
-    this.applyListsStyles([
-      BETTER_LISTS_CLASS,
-      BETTER_BULLETS_CLASS,
-      tabSize === 4 ? VERTICAL_LINES_CLASS : null,
-    ]);
+    this.applyListsStyles([BETTER_LISTS_CLASS, BETTER_BULLETS_CLASS]);
   };
 
   private applyListsStyles(classes: string[]) {

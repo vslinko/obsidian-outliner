@@ -34,7 +34,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     k: T;
     v: ObsidianOutlinerPluginSettings[T];
   }) {
-    this.settings[k] = v;
+    this.settings.set(k, v);
     await this.settings.save();
   }
 

@@ -42,12 +42,11 @@ Try to create a deeply structured list and move items by pressing the hotkeys de
 
 If you liked the styles from the demo above, you can enable them in the plugin settings tab.
 
-> **Disclaimer:** Styles are only compatible with built-in Obsidian themes. Indentation lines works only with tab size 4.
+> **Disclaimer:** Styles are only compatible with built-in Obsidian themes.
 
-| Setting                                | Default value |
-| -------------------------------------- | :-----------: |
-| Improve the style of your lists        |    `false`    |
-| Hide the warning about four-space tabs |    `false`    |
+| Setting                         | Default value |
+| ------------------------------- | :-----------: |
+| Improve the style of your lists |    `true`     |
 
 ### Move lists back and forth
 
@@ -63,6 +62,15 @@ Move lists with children wherever you want without breaking the structure.
 | Setting             | Default value |
 | ------------------- | :-----------: |
 | Enhance the Tab key |    `true`     |
+
+### Draw vertical indentation lines
+
+![Demo of vertical indentation lines](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/demo2.gif)
+
+| Setting                                |  Default value   |
+| -------------------------------------- | :--------------: |
+| Draw vertical indentation lines        |     `false`      |
+| Vertical indentation line click action | `Toggle Folding` |
 
 ### Stick the cursor to the content
 
