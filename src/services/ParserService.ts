@@ -38,21 +38,49 @@ interface ParseListList {
 export class ParserService {
   constructor(private logger: LoggerService) {}
 
+  parseRange(editor: Reader, fromLine = 0, toLine = editor.lastLine()): Root[] {
+    const lists: Root[] = [];
+
+    for (let i = fromLine; i <= toLine; i++) {
+      const line = editor.getLine(i);
+
+      if (i === fromLine || this.isListItem(line)) {
+        const list = this.parseWithLimits(editor, i, fromLine, toLine);
+
+        if (list) {
+          lists.push(list);
+          i = list.getRange()[1].line;
+        }
+      }
+    }
+
+    return lists;
+  }
+
   parse(editor: Reader, cursor = editor.getCursor()): Root | null {
+    return this.parseWithLimits(editor, cursor.line, 0, editor.lastLine());
+  }
+
+  private parseWithLimits(
+    editor: Reader,
+    parsingStartLine: number,
+    limitFrom: number,
+    limitTo: number
+  ): Root | null {
     const d = this.logger.bind("parseList");
     const error = (msg: string): null => {
       d(msg);
       return null;
     };
 
-    const line = editor.getLine(cursor.line);
+    const line = editor.getLine(parsingStartLine);
 
     let listLookingPos: number | null = null;
 
     if (this.isListItem(line)) {
-      listLookingPos = cursor.line;
+      listLookingPos = parsingStartLine;
     } else if (this.isLineWithIndent(line)) {
-      let listLookingPosSearch = cursor.line - 1;
+      let listLookingPosSearch = parsingStartLine - 1;
       while (listLookingPosSearch >= 0) {
         const line = editor.getLine(listLookingPosSearch);
         if (this.isListItem(line)) {
@@ -79,6 +107,9 @@ export class ParserService {
       }
       if (this.isListItemWithoutSpaces(line)) {
         listStartLine = listStartLineLookup;
+        if (listStartLineLookup <= limitFrom) {
+          break;
+        }
       }
       listStartLineLookup--;
     }
@@ -97,10 +128,14 @@ export class ParserService {
       if (!this.isEmptyLine(line)) {
         listEndLine = listEndLineLookup;
       }
+      if (listEndLineLookup >= limitTo) {
+        listEndLine = limitTo;
+        break;
+      }
       listEndLineLookup++;
     }
 
-    if (listStartLine > cursor.line || listEndLine < cursor.line) {
+    if (listStartLine > parsingStartLine || listEndLine < parsingStartLine) {
       return null;
     }
 

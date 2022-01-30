@@ -28,23 +28,111 @@ function foldInside(view: EditorView, from: number, to: number) {
   return found;
 }
 
-export class MyEditor {
-  constructor(private e: Editor) {}
+export class MyCMEditor {
+  constructor(protected view: EditorView) {}
+
+  fold(n: number): void {
+    const { view } = this;
+    const l = view.lineBlockAt(view.state.doc.line(n + 1).from);
+    const range = foldable(view.state, l.from, l.to);
+
+    if (!range || range.from === range.to) {
+      return;
+    }
+
+    view.dispatch({ effects: [foldEffect.of(range)] });
+  }
+
+  unfold(n: number): void {
+    const { view } = this;
+    const l = view.lineBlockAt(view.state.doc.line(n + 1).from);
+    const range = foldInside(view, l.from, l.to);
+
+    if (!range) {
+      return;
+    }
+
+    view.dispatch({ effects: [unfoldEffect.of(range)] });
+  }
+
+  isFolded(n: number): boolean {
+    return this.getFirstLineOfFolding(n) !== null;
+  }
+
+  getFirstLineOfFolding(n: number): number | null {
+    const { view } = this;
+    const l = view.lineBlockAt(view.state.doc.line(n + 1).from);
+    const range = foldInside(view, l.from, l.to);
+
+    if (!range) {
+      return null;
+    }
+
+    return view.state.doc.lineAt(range.from).number - 1;
+  }
+
+  triggerOnKeyDown(e: KeyboardEvent): void {
+    runScopeHandlers(this.view, e, "editor");
+  }
 
   getCursor(): MyEditorPosition {
-    return this.e.getCursor();
+    return this.offsetToPos(this.view.state.selection.main.anchor);
   }
 
   getLine(n: number): string {
-    return this.e.getLine(n);
+    return this.view.state.doc.line(n + 1).text;
   }
 
   lastLine(): number {
-    return this.e.lastLine();
+    return this.view.state.doc.lines - 1;
   }
 
   listSelections(): MyEditorSelection[] {
-    return this.e.listSelections();
+    return this.view.state.selection.ranges.map((r) => ({
+      anchor: this.offsetToPos(r.anchor),
+      head: this.offsetToPos(r.head),
+    }));
+  }
+
+  offsetToPos(offset: number): MyEditorPosition {
+    const line = this.view.state.doc.lineAt(offset);
+
+    return {
+      line: line.number - 1,
+      ch: offset - line.from,
+    };
+  }
+
+  posToOffset(pos: MyEditorPosition): number {
+    const line = this.view.state.doc.line(pos.line + 1);
+
+    return line.from + pos.ch;
+  }
+}
+
+export class MyEditor {
+  private cmEditor: MyCMEditor;
+
+  constructor(private e: Editor) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const view: EditorView = (this.e as any).cm;
+    this.cmEditor = new MyCMEditor(view);
+  }
+
+  getCursor(): MyEditorPosition {
+    return this.cmEditor.getCursor();
+  }
+
+  getLine(n: number): string {
+    return this.cmEditor.getLine(n);
+  }
+
+  lastLine(): number {
+    return this.cmEditor.lastLine();
+  }
+
+  listSelections(): MyEditorSelection[] {
+    return this.cmEditor.listSelections();
   }
 
   getRange(from: MyEditorPosition, to: MyEditorPosition): string {
@@ -72,47 +160,23 @@ export class MyEditor {
   }
 
   fold(n: number): void {
-    const view = this.getEditorView();
-    const l = view.lineBlockAt(view.state.doc.line(n + 1).from);
-    const range = foldable(view.state, l.from, l.to);
-
-    if (!range || range.from === range.to) {
-      return;
-    }
-
-    view.dispatch({ effects: [foldEffect.of(range)] });
+    this.cmEditor.fold(n);
   }
 
   unfold(n: number): void {
-    const view = this.getEditorView();
-    const l = view.lineBlockAt(view.state.doc.line(n + 1).from);
-    const range = foldInside(view, l.from, l.to);
-
-    if (!range) {
-      return;
-    }
-
-    view.dispatch({ effects: [unfoldEffect.of(range)] });
+    this.cmEditor.unfold(n);
   }
 
   isFolded(n: number): boolean {
-    return this.getFirstLineOfFolding(n) !== null;
+    return this.cmEditor.isFolded(n);
   }
 
   getFirstLineOfFolding(n: number): number | null {
-    const view = this.getEditorView();
-    const l = view.lineBlockAt(view.state.doc.line(n + 1).from);
-    const range = foldInside(view, l.from, l.to);
-
-    if (!range) {
-      return null;
-    }
-
-    return view.state.doc.lineAt(range.from).number - 1;
+    return this.cmEditor.getFirstLineOfFolding(n);
   }
 
   triggerOnKeyDown(e: KeyboardEvent): void {
-    runScopeHandlers(this.getEditorView(), e, "editor");
+    this.cmEditor.triggerOnKeyDown(e);
   }
 
   getZoomRange(): MyEditorRange | null {
@@ -146,10 +210,5 @@ export class MyEditor {
     }
 
     api.zoomIn(this.e, line);
-  }
-
-  private getEditorView(): EditorView {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (this.e as any).cm;
   }
 }

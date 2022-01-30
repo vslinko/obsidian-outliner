@@ -27,6 +27,15 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
+      .setName("Draw vertical indentation lines")
+      .addToggle((toggle) => {
+        toggle.setValue(this.settings.listLines).onChange(async (value) => {
+          this.settings.listLines = value;
+          await this.settings.save();
+        });
+      });
+
+    new Setting(containerEl)
       .setName("Stick the cursor to the content")
       .setDesc("Don't let the cursor move to the bullet position.")
       .addToggle((toggle) => {

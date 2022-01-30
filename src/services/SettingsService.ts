@@ -5,6 +5,7 @@ export interface ObsidianOutlinerPluginSettings {
   betterEnter: boolean;
   betterTab: boolean;
   selectAll: boolean;
+  listLines: boolean;
 }
 
 const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
@@ -14,6 +15,7 @@ const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
   betterEnter: true,
   betterTab: true,
   selectAll: true,
+  listLines: false,
 };
 
 export interface Storage {
@@ -75,6 +77,13 @@ export class SettingsService implements ObsidianOutlinerPluginSettings {
   }
   set selectAll(value: boolean) {
     this.set("selectAll", value);
+  }
+
+  get listLines() {
+    return this.values.listLines;
+  }
+  set listLines(value: boolean) {
+    this.set("listLines", value);
   }
 
   onChange<T extends K>(key: T, cb: Callback<T>) {
