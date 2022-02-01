@@ -194,22 +194,16 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     this.editor.setValue("");
     this.editor.setValue(state.value);
     this.editor.setSelections(state.selections);
+
+    // TODO: recursive bottom-top folding, because it's impossible to fold inside already folded range
     for (const l of state.folds) {
       this.editor.fold(l);
     }
   }
 
   getCurrentState(): State {
-    const folds = new Set<number>();
-    for (let l = 0; l <= this.editor.lastLine(); l++) {
-      const lineNo = this.editor.getFirstLineOfFolding(l);
-      if (lineNo !== null) {
-        folds.add(lineNo);
-      }
-    }
-
     return {
-      folds: Array.from(folds.values()),
+      folds: this.editor.getAllFoldedLines(),
       selections: this.editor.listSelections().map((range) => ({
         anchor: {
           line: range.anchor.line,

@@ -38,7 +38,7 @@ export class List {
     private bullet: string,
     private spaceAfterBullet: string,
     firstLine: string,
-    private folded: boolean
+    private foldRoot: boolean
   ) {
     this.lines.push(firstLine);
   }
@@ -134,7 +134,7 @@ export class List {
   }
 
   isFolded(): boolean {
-    if (this.folded) {
+    if (this.foldRoot) {
       return true;
     }
 
@@ -146,17 +146,20 @@ export class List {
   }
 
   isFoldRoot() {
-    let parent = this.getParent();
+    return this.foldRoot;
+  }
 
-    while (parent) {
-      if (parent.folded) {
-        return false;
+  getTopFoldRoot() {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let tmp: List = this;
+    let foldRoot: List | null = null;
+    while (tmp) {
+      if (tmp.isFoldRoot()) {
+        foldRoot = tmp;
       }
-
-      parent = parent.getParent();
+      tmp = tmp.parent;
     }
-
-    return this.folded;
+    return foldRoot;
   }
 
   getLevel(): number {

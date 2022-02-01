@@ -59,11 +59,7 @@ export class MoveCursorToPreviousUnfoldedLineOperation implements Operation {
     this.updated = true;
 
     if (prev.isFolded()) {
-      let foldRoot = prev;
-      while (!foldRoot.isFoldRoot()) {
-        foldRoot = foldRoot.getParent();
-      }
-
+      const foldRoot = prev.getTopFoldRoot();
       const firstLineEnd = foldRoot.getLinesInfo()[0].to;
       root.replaceCursor(firstLineEnd);
     } else {

@@ -56,3 +56,40 @@
   - four
   - five|
 ```
+
+# should keep subfoldind on change, issue #258
+
+- applyState:
+
+```md
+- one
+  - two
+    - three|
+      - four
+  - five
+```
+
+- execute: `obsidian-outliner:fold`
+- keydown: `ArrowUp`
+- execute: `obsidian-outliner:fold`
+- keydown: `ArrowDown`
+- assertState:
+
+```md
+- one
+  - two #folded
+    - three #folded
+      - four
+  - five|
+```
+
+- execute: `obsidian-outliner:move-list-item-up`
+- assertState:
+
+```md
+- one
+  - five|
+  - two #folded
+    - three #folded
+      - four
+```

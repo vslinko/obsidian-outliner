@@ -55,20 +55,14 @@ export class MyCMEditor {
     view.dispatch({ effects: [unfoldEffect.of(range)] });
   }
 
-  isFolded(n: number): boolean {
-    return this.getFirstLineOfFolding(n) !== null;
-  }
-
-  getFirstLineOfFolding(n: number): number | null {
-    const { view } = this;
-    const l = view.lineBlockAt(view.state.doc.line(n + 1).from);
-    const range = foldInside(view, l.from, l.to);
-
-    if (!range) {
-      return null;
+  getAllFoldedLines(): number[] {
+    const c = foldedRanges(this.view.state).iter();
+    const res: number[] = [];
+    while (c.value) {
+      res.push(this.offsetToPos(c.from).line);
+      c.next();
     }
-
-    return view.state.doc.lineAt(range.from).number - 1;
+    return res;
   }
 
   triggerOnKeyDown(e: KeyboardEvent): void {
@@ -167,12 +161,8 @@ export class MyEditor {
     this.cmEditor.unfold(n);
   }
 
-  isFolded(n: number): boolean {
-    return this.cmEditor.isFolded(n);
-  }
-
-  getFirstLineOfFolding(n: number): number | null {
-    return this.cmEditor.getFirstLineOfFolding(n);
+  getAllFoldedLines(): number[] {
+    return this.cmEditor.getAllFoldedLines();
   }
 
   triggerOnKeyDown(e: KeyboardEvent): void {

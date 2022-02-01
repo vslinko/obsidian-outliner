@@ -32,11 +32,7 @@ export class EnsureCursorIsInUnfoldedLineOperation implements Operation {
       return;
     }
 
-    let foldRoot = list;
-    while (!foldRoot.isFoldRoot()) {
-      foldRoot = foldRoot.getParent();
-    }
-
+    const foldRoot = list.getTopFoldRoot();
     const firstLineEnd = foldRoot.getLinesInfo()[0].to;
 
     if (cursor.line > firstLineEnd.line) {

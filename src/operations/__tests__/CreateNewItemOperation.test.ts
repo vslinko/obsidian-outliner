@@ -6,7 +6,7 @@ test("should create sibling bullet instead of child bullet if child bullets are 
     editor: makeEditor({
       text: "- one\n  - two\n",
       cursor: { line: 0, ch: 5 },
-      getFirstLineOfFolding: () => 0,
+      getAllFoldedLines: () => [0],
     }),
   });
   const getZoomRange = {

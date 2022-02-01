@@ -23,7 +23,7 @@ export interface Reader {
   getLine(n: number): string;
   lastLine(): number;
   listSelections(): ReaderSelection[];
-  getFirstLineOfFolding(line: number): number | null;
+  getAllFoldedLines(): number[];
 }
 
 interface ParseListList {
@@ -152,6 +152,8 @@ export class ParserService {
     let currentList: ParseListList | null = null;
     let currentIndent = "";
 
+    const foldedLines = editor.getAllFoldedLines();
+
     for (let l = listStartLine; l <= listEndLine; l++) {
       const line = editor.getLine(l);
       const matches = parseListItemRe.exec(line);
@@ -187,8 +189,7 @@ export class ParserService {
           currentIndent = indent;
         }
 
-        const folded =
-          editor.getFirstLineOfFolding(Math.min(l, listEndLine)) === l;
+        const foldRoot = foldedLines.includes(l);
 
         currentList = new List(
           root,
@@ -196,7 +197,7 @@ export class ParserService {
           bullet,
           spaceAfterBullet,
           content,
-          folded
+          foldRoot
         );
         currentParent.addAfterAll(currentList);
       } else if (this.isLineWithIndent(line)) {

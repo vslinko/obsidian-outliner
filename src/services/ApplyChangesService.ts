@@ -25,6 +25,8 @@ export interface ApplyChangesEditor {
 
 export interface ApplyChangesList {
   isFoldRoot(): boolean;
+  getChildren(): ApplyChangesList[];
+  getFirstLineContentStart(): { line: number };
 }
 
 export interface ApplyChangesRoot {
@@ -34,7 +36,7 @@ export interface ApplyChangesRoot {
     head: ApplyChangesEditorPosition;
   }[];
   print(): string;
-  getListUnderLine(l: number): ApplyChangesList;
+  getChildren(): ApplyChangesList[];
 }
 
 export class ApplyChangesService {
@@ -96,12 +98,16 @@ export class ApplyChangesService {
 
     editor.setSelections(root.getSelections());
 
-    // TODO: lines could be different because of deletetion
-    for (let l = fromLine; l <= toLine; l++) {
-      const line = root.getListUnderLine(l);
-      if (line && line.isFoldRoot()) {
-        editor.fold(l);
+    function recursive(list: ApplyChangesList) {
+      for (const c of list.getChildren()) {
+        recursive(c);
       }
+      if (list.isFoldRoot()) {
+        editor.fold(list.getFirstLineContentStart().line);
+      }
+    }
+    for (const c of root.getChildren()) {
+      recursive(c);
     }
   }
 }
