@@ -42,11 +42,7 @@ export class ShiftEnterShouldCreateNoteFeature implements Feature {
 
   private run = (editor: MyEditor) => {
     return this.performOperation.performOperation(
-      (root) =>
-        new CreateNoteLineOperation(
-          root,
-          this.obsidian.getDefaultIndentChars()
-        ),
+      (root) => new CreateNoteLineOperation(root),
       editor
     );
   };

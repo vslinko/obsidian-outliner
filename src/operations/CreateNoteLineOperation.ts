@@ -6,7 +6,7 @@ export class CreateNoteLineOperation implements Operation {
   private stopPropagation = false;
   private updated = false;
 
-  constructor(private root: Root, private defaultIndentChars: string) {}
+  constructor(private root: Root) {}
 
   shouldStopPropagation() {
     return this.stopPropagation;
@@ -37,11 +37,7 @@ export class CreateNoteLineOperation implements Operation {
     this.updated = true;
 
     if (!list.getNotesIndent()) {
-      const indent = list.isEmpty()
-        ? list.getFirstLineIndent() + this.defaultIndentChars
-        : list.getChildren()[0].getFirstLineIndent();
-
-      list.setNotesIndent(indent);
+      list.setNotesIndent(list.getFirstLineIndent() + "  ");
     }
 
     const lines = list.getLinesInfo().reduce((acc, line) => {
