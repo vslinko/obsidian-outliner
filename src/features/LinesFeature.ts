@@ -9,13 +9,11 @@ import {
 
 import { Feature } from "./Feature";
 
-import { MyCMEditor, MyEditor } from "../MyEditor";
+import { MyEditor } from "../MyEditor";
 import { List } from "../root";
 import { ObsidianService } from "../services/ObsidianService";
 import { ParserService } from "../services/ParserService";
 import { SettingsService } from "../services/SettingsService";
-
-const WRAPPER_TOP_MARGIN = 10;
 
 interface LineData {
   top: number;
@@ -28,7 +26,7 @@ class ListLinesViewPluginValue implements PluginValue {
   private scheduled: ReturnType<typeof setImmediate>;
   private scroller: HTMLElement;
   private contentContainer: HTMLElement;
-  private editor: MyCMEditor;
+  private editor: MyEditor;
   private lastLine: number;
   private lines: LineData[];
   private lineElements: HTMLElement[] = [];
@@ -39,14 +37,22 @@ class ListLinesViewPluginValue implements PluginValue {
     private parser: ParserService,
     private view: EditorView
   ) {
-    this.editor = new MyCMEditor(view);
-
     this.view.scrollDOM.addEventListener("scroll", this.onScroll);
     this.settings.onChange("listLines", this.scheduleRecalculate);
 
     this.prepareDom();
-    this.scheduleRecalculate();
+    this.waitForEditor();
   }
+
+  private waitForEditor = () => {
+    const oe = this.view.state.field(editorViewField).editor;
+    if (!oe) {
+      setTimeout(this.waitForEditor, 0);
+      return;
+    }
+    this.editor = new MyEditor(oe);
+    this.scheduleRecalculate();
+  };
 
   private prepareDom() {
     this.contentContainer = document.createElement("div");
@@ -149,22 +155,30 @@ class ListLinesViewPluginValue implements PluginValue {
       ch: 0,
     });
 
-    const visibleFrom = this.view.visibleRanges[0].from;
-    const visibleTo =
+    let visibleFrom = this.view.visibleRanges[0].from;
+    let visibleTo =
       this.view.visibleRanges[this.view.visibleRanges.length - 1].to;
+    const zoomRange = this.editor.getZoomRange();
+    if (zoomRange) {
+      visibleFrom = Math.max(
+        visibleFrom,
+        this.editor.posToOffset(zoomRange.from)
+      );
+      visibleTo = Math.min(visibleTo, this.editor.posToOffset(zoomRange.to));
+    }
 
     if (fromOffset > visibleTo || tillOffset < visibleFrom) {
       return;
     }
 
     const top =
-      fromOffset < visibleFrom
-        ? -WRAPPER_TOP_MARGIN
+      visibleFrom > 0 && fromOffset <= visibleFrom
+        ? -20
         : this.view.lineBlockAt(fromOffset).top;
     const bottom =
       tillOffset > visibleTo
-        ? this.view.lineBlockAt(visibleTo - 1).top
-        : this.view.lineBlockAt(tillOffset).top;
+        ? this.view.lineBlockAt(visibleTo - 1).bottom
+        : this.view.lineBlockAt(tillOffset).bottom;
     const height = bottom - top;
 
     if (height > 0) {
@@ -266,7 +280,7 @@ class ListLinesViewPluginValue implements PluginValue {
       const e = this.lineElements[i];
       e.style.top = l.top + "px";
       e.style.left = l.left + "px";
-      e.style.height = l.height + "px";
+      e.style.height = `calc(${l.height + 4}px - 2em)`;
       e.style.display = "block";
     }
 

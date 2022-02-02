@@ -28,8 +28,61 @@ function foldInside(view: EditorView, from: number, to: number) {
   return found;
 }
 
-export class MyCMEditor {
-  constructor(protected view: EditorView) {}
+export class MyEditor {
+  private view: EditorView;
+
+  constructor(private e: Editor) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.view = (this.e as any).cm;
+  }
+
+  getCursor(): MyEditorPosition {
+    return this.e.getCursor();
+  }
+
+  getLine(n: number): string {
+    return this.e.getLine(n);
+  }
+
+  lastLine(): number {
+    return this.e.lastLine();
+  }
+
+  listSelections(): MyEditorSelection[] {
+    return this.e.listSelections();
+  }
+
+  getRange(from: MyEditorPosition, to: MyEditorPosition): string {
+    return this.e.getRange(from, to);
+  }
+
+  replaceRange(
+    replacement: string,
+    from: MyEditorPosition,
+    to: MyEditorPosition
+  ): void {
+    return this.e.replaceRange(replacement, from, to);
+  }
+
+  setSelections(selections: MyEditorSelection[]): void {
+    this.e.setSelections(selections);
+  }
+
+  setValue(text: string): void {
+    this.e.setValue(text);
+  }
+
+  getValue(): string {
+    return this.e.getValue();
+  }
+
+  offsetToPos(offset: number): MyEditorPosition {
+    return this.e.offsetToPos(offset);
+  }
+
+  posToOffset(pos: MyEditorPosition): number {
+    return this.e.posToOffset(pos);
+  }
 
   fold(n: number): void {
     const { view } = this;
@@ -67,106 +120,6 @@ export class MyCMEditor {
 
   triggerOnKeyDown(e: KeyboardEvent): void {
     runScopeHandlers(this.view, e, "editor");
-  }
-
-  getCursor(): MyEditorPosition {
-    return this.offsetToPos(this.view.state.selection.main.anchor);
-  }
-
-  getLine(n: number): string {
-    return this.view.state.doc.line(n + 1).text;
-  }
-
-  lastLine(): number {
-    return this.view.state.doc.lines - 1;
-  }
-
-  listSelections(): MyEditorSelection[] {
-    return this.view.state.selection.ranges.map((r) => ({
-      anchor: this.offsetToPos(r.anchor),
-      head: this.offsetToPos(r.head),
-    }));
-  }
-
-  offsetToPos(offset: number): MyEditorPosition {
-    const line = this.view.state.doc.lineAt(offset);
-
-    return {
-      line: line.number - 1,
-      ch: offset - line.from,
-    };
-  }
-
-  posToOffset(pos: MyEditorPosition): number {
-    const line = this.view.state.doc.line(pos.line + 1);
-
-    return line.from + pos.ch;
-  }
-}
-
-export class MyEditor {
-  private cmEditor: MyCMEditor;
-
-  constructor(private e: Editor) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const view: EditorView = (this.e as any).cm;
-    this.cmEditor = new MyCMEditor(view);
-  }
-
-  getCursor(): MyEditorPosition {
-    return this.cmEditor.getCursor();
-  }
-
-  getLine(n: number): string {
-    return this.cmEditor.getLine(n);
-  }
-
-  lastLine(): number {
-    return this.cmEditor.lastLine();
-  }
-
-  listSelections(): MyEditorSelection[] {
-    return this.cmEditor.listSelections();
-  }
-
-  getRange(from: MyEditorPosition, to: MyEditorPosition): string {
-    return this.e.getRange(from, to);
-  }
-
-  replaceRange(
-    replacement: string,
-    from: MyEditorPosition,
-    to: MyEditorPosition
-  ): void {
-    return this.e.replaceRange(replacement, from, to);
-  }
-
-  setSelections(selections: MyEditorSelection[]): void {
-    this.e.setSelections(selections);
-  }
-
-  setValue(text: string): void {
-    this.e.setValue(text);
-  }
-
-  getValue(): string {
-    return this.e.getValue();
-  }
-
-  fold(n: number): void {
-    this.cmEditor.fold(n);
-  }
-
-  unfold(n: number): void {
-    this.cmEditor.unfold(n);
-  }
-
-  getAllFoldedLines(): number[] {
-    return this.cmEditor.getAllFoldedLines();
-  }
-
-  triggerOnKeyDown(e: KeyboardEvent): void {
-    this.cmEditor.triggerOnKeyDown(e);
   }
 
   getZoomRange(): MyEditorRange | null {

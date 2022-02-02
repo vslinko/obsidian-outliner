@@ -36,10 +36,14 @@
 }
 
 .outliner-plugin-list-lines-content-container {
-  max-width: 700px;
-  margin: auto;
   padding-left: 10px;
   position: relative;
+}
+
+.markdown-source-view.mod-cm6.is-line-wrap.is-readable-line-width
+  .outliner-plugin-list-lines-content-container {
+  max-width: 700px;
+  margin: auto;
 }
 
 .outliner-plugin-list-line {
@@ -47,7 +51,7 @@
   position: absolute;
   width: 5px;
   margin-left: calc(0.5ch + 10px);
-  margin-top: 2em;
+  margin-top: calc(2em + 6px);
   z-index: 1;
   cursor: pointer;
   background: transparent;
