@@ -36,8 +36,12 @@
 }
 
 .outliner-plugin-list-lines-content-container {
-  padding-left: 10px;
   position: relative;
+}
+
+.markdown-source-view.mod-cm6.is-folding
+  .outliner-plugin-list-lines-content-container {
+  padding-left: 10px;
 }
 
 .markdown-source-view.mod-cm6.is-line-wrap.is-readable-line-width
@@ -50,7 +54,7 @@
   pointer-events: auto;
   position: absolute;
   width: 5px;
-  margin-left: calc(0.5ch + 10px);
+  margin-left: 0.5ch;
   margin-top: calc(2em + 6px);
   z-index: 1;
   cursor: pointer;
@@ -62,6 +66,11 @@
   );
   background-position-x: 2px;
   background-repeat: no-repeat;
+}
+
+.markdown-source-view.mod-cm6.is-folding .outliner-plugin-list-line {
+  padding-left: 10px;
+  margin-left: calc(0.5ch + 10px);
 }
 
 .outliner-plugin-list-line:hover {
