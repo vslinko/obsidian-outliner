@@ -87,3 +87,85 @@ b
 - one
   |note|
 ```
+
+# Shift-Up should select whole list item
+
+- applyState:
+
+```md
+- one
+  - two
+    note
+    - three
+  - fou|r
+```
+
+- keydown: `Shift-ArrowUp`
+- assertState:
+
+```md
+- one
+  - two
+    note
+|    - three
+  - four|
+```
+
+- keydown: `Shift-ArrowUp`
+- assertState:
+
+```md
+- one
+|  - two
+    note
+    - three
+  - four|
+```
+
+- keydown: `Shift-ArrowUp`
+- assertState:
+
+```md
+|- one
+  - two
+    note
+    - three
+  - four|
+```
+
+# Shift-Up should select whole list item with children
+
+- applyState:
+
+```md
+- one
+  - two
+  - three
+    - four
+    - fiv|e
+    - six
+```
+
+- keydown: `Shift-ArrowUp`
+- assertState:
+
+```md
+- one
+  - two
+  - three
+|    - four
+    - five|
+    - six
+```
+
+- keydown: `Shift-ArrowUp`
+- assertState:
+
+```md
+- one
+  - two
+|  - three
+    - four
+    - five
+    - six|
+```

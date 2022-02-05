@@ -6,6 +6,7 @@ import { MyEditor } from "../MyEditor";
 import { Feature } from "../features/Feature";
 import { EnsureCursorInListContentOperation } from "../operations/EnsureCursorInListContentOperation";
 import { EnsureCursorIsInUnfoldedLineOperation } from "../operations/EnsureCursorIsInUnfoldedLineOperation";
+import { EnsureMultilineSelectionSelectsWholeTreeOperation } from "../operations/EnsureMultilineSelectionSelectsWholeTreeOperation";
 import { ObsidianService } from "../services/ObsidianService";
 import { PerformOperationService } from "../services/PerformOperationService";
 import { SettingsService } from "../services/SettingsService";
@@ -41,6 +42,11 @@ export class EnsureCursorInListContentFeature implements Feature {
   };
 
   private handleCursorActivity = (editor: MyEditor) => {
+    this.performOperation.performOperation(
+      (root) => new EnsureMultilineSelectionSelectsWholeTreeOperation(root),
+      editor
+    );
+
     this.performOperation.performOperation(
       (root) => new EnsureCursorIsInUnfoldedLineOperation(root),
       editor

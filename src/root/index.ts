@@ -10,6 +10,15 @@ export function minPos(a: Position, b: Position) {
   return cmpPos(a, b) < 0 ? a : b;
 }
 
+export function isRangesEqual(a: Range, b: Range) {
+  return (
+    a.anchor.line === b.anchor.line &&
+    a.anchor.ch === b.anchor.ch &&
+    a.head.line === b.head.line &&
+    a.head.ch === b.head.ch
+  );
+}
+
 export interface Position {
   ch: number;
   line: number;
@@ -84,6 +93,31 @@ export class List {
 
   getChildren() {
     return this.children.concat();
+  }
+
+  getListRangeWithChildren(): Range {
+    let firstLine: ListLine | null = null;
+    let lastLine: ListLine | null = null;
+
+    const recursive = (l: List) => {
+      const linesInfo = l.getLinesInfo();
+      if (firstLine === null) {
+        firstLine = linesInfo[0];
+      }
+      lastLine = linesInfo[linesInfo.length - 1];
+      const children = l.getChildren();
+
+      if (children.length > 0) {
+        recursive(children[children.length - 1]);
+      }
+    };
+
+    recursive(this);
+
+    return {
+      anchor: firstLine.from,
+      head: lastLine.to,
+    };
   }
 
   getLinesInfo(): ListLine[] {
