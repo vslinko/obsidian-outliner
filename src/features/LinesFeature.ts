@@ -261,10 +261,16 @@ class ListLinesViewPluginValue implements PluginValue {
   }
 
   private updateDom() {
-    this.scroller.style.top = this.view.scrollDOM.offsetTop + "px";
-    this.scroller.style.width = this.view.scrollDOM.clientWidth + "px";
-    this.contentContainer.style.height =
-      this.view.contentDOM.clientHeight + "px";
+    const cmScroll = this.view.scrollDOM;
+    const cmContent = this.view.contentDOM;
+    const cmContentContainer = cmContent.parentElement;
+    const cmGutters = this.view.dom.querySelector(".cm-gutters");
+
+    this.scroller.style.top = cmScroll.offsetTop + "px";
+    this.scroller.style.width = cmContentContainer.clientWidth + "px";
+    this.scroller.style.marginLeft =
+      (cmGutters ? cmGutters.clientWidth : 0) + "px";
+    this.contentContainer.style.height = cmContent.clientHeight + "px";
 
     for (let i = 0; i < this.lines.length; i++) {
       if (this.lineElements.length === i) {
