@@ -20,6 +20,7 @@ export class CreateNoteLineOperation implements Operation {
     const { root } = this;
 
     if (!root.hasSingleCursor()) {
+      this.stopPropagation = true;
       return;
     }
 
