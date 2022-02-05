@@ -17,12 +17,19 @@ export class CreateNoteLineOperation implements Operation {
   }
 
   perform() {
-    const { root } = this;
-
-    if (!root.hasSingleCursor()) {
-      this.stopPropagation = true;
-      return;
+    if (this.root.hasSingleCursor()) {
+      this.performSingleCursor();
+    } else if (this.root.hasSingleSelection()) {
+      this.performSingleSelection();
     }
+  }
+
+  private performSingleSelection() {
+    this.stopPropagation = true;
+  }
+
+  private performSingleCursor() {
+    const { root } = this;
 
     const cursor = root.getCursor();
     const list = root.getListUnderCursor();

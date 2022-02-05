@@ -27,18 +27,28 @@ export class CreateNewItemOperation implements Operation {
   }
 
   perform() {
+    if (this.root.hasSingleCursor()) {
+      this.performSingleCursor();
+    } else if (this.root.hasSingleSelection()) {
+      this.performSingleSelection();
+    }
+  }
+
+  private performSingleSelection() {
     const { root } = this;
 
-    if (!root.hasSingleCursor()) {
-      this.stopPropagation = true;
-      this.updated = true;
-      const list = root.getListUnderLine(
-        minPos(root.getSelections()[0].anchor, root.getSelections()[0].head)
-          .line
-      );
-      root.replaceCursor(list.getFirstLineContentStart());
-      return;
-    }
+    this.stopPropagation = true;
+    this.updated = true;
+
+    const list = root.getListUnderLine(
+      minPos(root.getSelections()[0].anchor, root.getSelections()[0].head).line
+    );
+
+    root.replaceCursor(list.getFirstLineContentStart());
+  }
+
+  private performSingleCursor() {
+    const { root } = this;
 
     const list = root.getListUnderCursor();
     const lines = list.getLinesInfo();
