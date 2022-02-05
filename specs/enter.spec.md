@@ -411,3 +411,37 @@
 	-	two
 	-	|
 ```
+
+# enter should move cursor to the start of the first list item if multiple lines are selected
+
+- applyState:
+
+```md
+|-	one
+	-	two|
+```
+
+- keydown: `Enter`
+- assertState:
+
+```md
+-	|one
+	-	two
+```
+
+# shift-enter should do nothing if multiple lines are selected
+
+- applyState:
+
+```md
+|-	one
+	-	two|
+```
+
+- keydown: `Shift-Enter`
+- assertState:
+
+```md
+|-	one
+	-	two|
+```
