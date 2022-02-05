@@ -5,7 +5,7 @@ import { Feature } from "./Feature";
 import { MyEditor } from "../MyEditor";
 import { ObsidianService } from "../services/ObsidianService";
 
-export class FoldFeature implements Feature {
+export class FoldingCommandsFeature implements Feature {
   constructor(private plugin: Plugin_2, private obsidian: ObsidianService) {}
 
   async load() {

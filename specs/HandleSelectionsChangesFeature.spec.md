@@ -61,59 +61,6 @@
 - |two
 ```
 
-# cursor should be moved to previous line
-
-- applyState:
-
-```md
-- one
-- |two
-```
-
-- keydown: `ArrowLeft`
-- assertState:
-
-```md
-- one|
-- two
-```
-
-# cursor should be moved to previous line when previous item have notes
-
-- applyState:
-
-```md
-- one
-  note
-  - |two
-```
-
-- keydown: `ArrowLeft`
-- assertState:
-
-```md
-- one
-  note|
-  - two
-```
-
-# cursor should be moved to previous note line
-
-- applyState:
-
-```md
-- one
-  |note
-```
-
-- keydown: `ArrowLeft`
-- assertState:
-
-```md
-- one|
-  note
-```
-
 # cursor should be moved to next note line
 
 - applyState:
@@ -129,4 +76,86 @@
 ```md
 - one
   |note
+```
+
+# Shift-Up should select whole list item
+
+- applyState:
+
+```md
+- one
+  - two
+    note
+    - three
+  - fou|r
+```
+
+- keydown: `Shift-ArrowUp`
+- assertState:
+
+```md
+- one
+  - two
+    note
+|    - three
+  - four|
+```
+
+- keydown: `Shift-ArrowUp`
+- assertState:
+
+```md
+- one
+|  - two
+    note
+    - three
+  - four|
+```
+
+- keydown: `Shift-ArrowUp`
+- assertState:
+
+```md
+|- one
+  - two
+    note
+    - three
+  - four|
+```
+
+# Shift-Up should select whole list item with children
+
+- applyState:
+
+```md
+- one
+  - two
+  - three
+    - four
+    - fiv|e
+    - six
+```
+
+- keydown: `Shift-ArrowUp`
+- assertState:
+
+```md
+- one
+  - two
+  - three
+|    - four
+    - five|
+    - six
+```
+
+- keydown: `Shift-ArrowUp`
+- assertState:
+
+```md
+- one
+  - two
+|  - three
+    - four
+    - five
+    - six|
 ```

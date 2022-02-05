@@ -11,7 +11,7 @@ import { ObsidianService } from "../services/ObsidianService";
 import { PerformOperationService } from "../services/PerformOperationService";
 import { SettingsService } from "../services/SettingsService";
 
-export class SelectionShouldIgnoreBulletsFeature implements Feature {
+export class OverrideCmdShiftArrowLeftBehaviourFeature implements Feature {
   constructor(
     private plugin: Plugin_2,
     private settings: SettingsService,
