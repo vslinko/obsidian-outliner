@@ -30,6 +30,15 @@ export class CreateNewItemOperation implements Operation {
     const { root } = this;
 
     if (!root.hasSingleCursor()) {
+      this.stopPropagation = true;
+      this.updated = true;
+      const list = root.getListUnderLine(
+        Math.min(
+          root.getSelections()[0].anchor.line,
+          root.getSelections()[0].head.line
+        )
+      );
+      root.replaceCursor(list.getFirstLineContentStart());
       return;
     }
 
