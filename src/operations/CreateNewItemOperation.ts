@@ -1,6 +1,6 @@
 import { Operation } from "./Operation";
 
-import { List, Position, Root } from "../root";
+import { List, Position, Root, minPos } from "../root";
 import { recalculateNumericBullets } from "../root/recalculateNumericBullets";
 import { isEmptyLineOrEmptyCheckbox } from "../utils/isEmptyLineOrEmptyCheckbox";
 
@@ -33,10 +33,8 @@ export class CreateNewItemOperation implements Operation {
       this.stopPropagation = true;
       this.updated = true;
       const list = root.getListUnderLine(
-        Math.min(
-          root.getSelections()[0].anchor.line,
-          root.getSelections()[0].head.line
-        )
+        minPos(root.getSelections()[0].anchor, root.getSelections()[0].head)
+          .line
       );
       root.replaceCursor(list.getFirstLineContentStart());
       return;
