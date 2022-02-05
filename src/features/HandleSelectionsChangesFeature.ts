@@ -2,20 +2,23 @@ import { Plugin_2 } from "obsidian";
 
 import { EditorState, Transaction } from "@codemirror/state";
 
+import { Feature } from "./Feature";
+
 import { MyEditor } from "../MyEditor";
-import { Feature } from "../features/Feature";
 import { EnsureCursorInListContentOperation } from "../operations/EnsureCursorInListContentOperation";
 import { EnsureCursorIsInUnfoldedLineOperation } from "../operations/EnsureCursorIsInUnfoldedLineOperation";
 import { EnsureMultilineSelectionSelectsWholeTreeOperation } from "../operations/EnsureMultilineSelectionSelectsWholeTreeOperation";
 import { ObsidianService } from "../services/ObsidianService";
+import { ParserService } from "../services/ParserService";
 import { PerformOperationService } from "../services/PerformOperationService";
 import { SettingsService } from "../services/SettingsService";
 
-export class EnsureCursorInListContentFeature implements Feature {
+export class HandleSelectionsChangesFeature implements Feature {
   constructor(
     private plugin: Plugin_2,
     private settings: SettingsService,
     private obsidian: ObsidianService,
+    private parser: ParserService,
     private performOperation: PerformOperationService
   ) {}
 
@@ -35,25 +38,46 @@ export class EnsureCursorInListContentFeature implements Feature {
     const editor = this.obsidian.getEditorFromState(tr.startState);
 
     setImmediate(() => {
-      this.handleCursorActivity(editor);
+      this.handleSelectionsChanges(editor);
     });
 
     return null;
   };
 
-  private handleCursorActivity = (editor: MyEditor) => {
-    this.performOperation.performOperation(
-      (root) => new EnsureMultilineSelectionSelectsWholeTreeOperation(root),
-      editor
-    );
+  private handleSelectionsChanges = (editor: MyEditor) => {
+    const root = this.parser.parse(editor);
 
-    this.performOperation.performOperation(
-      (root) => new EnsureCursorIsInUnfoldedLineOperation(root),
-      editor
-    );
+    if (!root) {
+      return;
+    }
 
-    this.performOperation.performOperation(
-      (root) => new EnsureCursorInListContentOperation(root),
+    {
+      const res = this.performOperation.evalOperation(
+        root,
+        new EnsureMultilineSelectionSelectsWholeTreeOperation(root),
+        editor
+      );
+
+      if (res.shouldStopPropagation) {
+        return;
+      }
+    }
+
+    {
+      const res = this.performOperation.evalOperation(
+        root,
+        new EnsureCursorIsInUnfoldedLineOperation(root),
+        editor
+      );
+
+      if (res.shouldStopPropagation) {
+        return;
+      }
+    }
+
+    this.performOperation.evalOperation(
+      root,
+      new EnsureCursorInListContentOperation(root),
       editor
     );
   };

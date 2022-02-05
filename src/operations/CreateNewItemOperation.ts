@@ -1,6 +1,6 @@
 import { Operation } from "./Operation";
 
-import { List, Position, Root, minPos } from "../root";
+import { List, Position, Root } from "../root";
 import { recalculateNumericBullets } from "../root/recalculateNumericBullets";
 import { isEmptyLineOrEmptyCheckbox } from "../utils/isEmptyLineOrEmptyCheckbox";
 
@@ -27,28 +27,11 @@ export class CreateNewItemOperation implements Operation {
   }
 
   perform() {
-    if (this.root.hasSingleCursor()) {
-      this.performSingleCursor();
-    } else if (this.root.hasSingleSelection()) {
-      this.performSingleSelection();
+    const { root } = this;
+
+    if (!root.hasSingleCursor()) {
+      return;
     }
-  }
-
-  private performSingleSelection() {
-    const { root } = this;
-
-    this.stopPropagation = true;
-    this.updated = true;
-
-    const list = root.getListUnderLine(
-      minPos(root.getSelections()[0].anchor, root.getSelections()[0].head).line
-    );
-
-    root.replaceCursor(list.getFirstLineContentStart());
-  }
-
-  private performSingleCursor() {
-    const { root } = this;
 
     const list = root.getListUnderCursor();
     const lines = list.getLinesInfo();

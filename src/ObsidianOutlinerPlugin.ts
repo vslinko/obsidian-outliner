@@ -1,19 +1,18 @@
 import { Notice, Plugin } from "obsidian";
 
 import { DeleteShouldIgnoreBulletsFeature } from "./features/DeleteShouldIgnoreBulletsFeature";
-import { EnsureCursorInListContentFeature } from "./features/EnsureCursorInListContentFeature";
-import { EnterOutdentIfLineIsEmptyFeature } from "./features/EnterOutdentIfLineIsEmptyFeature";
-import { EnterShouldCreateNewItemFeature } from "./features/EnterShouldCreateNewItemOnChildLevelFeature";
 import { Feature } from "./features/Feature";
 import { FoldFeature } from "./features/FoldFeature";
+import { HandleSelectionsChangesFeature } from "./features/HandleSelectionsChangesFeature";
 import { LinesFeature } from "./features/LinesFeature";
 import { ListsStylesFeature } from "./features/ListsStylesFeature";
 import { MoveCursorToPreviousUnfoldedLineFeature } from "./features/MoveCursorToPreviousUnfoldedLineFeature";
 import { MoveItemsFeature } from "./features/MoveItemsFeature";
+import { OverrideEnterBehaviourFeature } from "./features/OverrideEnterBehaviourFeature";
+import { OverrideShiftEnterBehaviourFeature } from "./features/OverrideShiftEnterBehaviourFeature";
 import { SelectAllFeature } from "./features/SelectAllFeature";
 import { SelectionShouldIgnoreBulletsFeature } from "./features/SelectionShouldIgnoreBulletsFeature";
 import { SettingsTabFeature } from "./features/SettingsTabFeature";
-import { ShiftEnterShouldCreateNoteFeature } from "./features/ShiftEnterShouldCreateNoteFeature";
 import { ApplyChangesService } from "./services/ApplyChangesService";
 import { IMEService } from "./services/IMEService";
 import { LoggerService } from "./services/LoggerService";
@@ -63,26 +62,31 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     this.features = [
       new SettingsTabFeature(this, this.settings),
       new ListsStylesFeature(this.settings, this.obsidian),
-      new EnterOutdentIfLineIsEmptyFeature(
+      new LinesFeature(this, this.settings, this.obsidian, this.parser),
+      new OverrideEnterBehaviourFeature(
         this,
         this.settings,
         this.ime,
         this.obsidian,
+        this.parser,
         this.performOperation
       ),
-      new EnterShouldCreateNewItemFeature(
+      new OverrideShiftEnterBehaviourFeature(
         this,
+        this.obsidian,
         this.settings,
         this.ime,
-        this.obsidian,
+        this.parser,
         this.performOperation
       ),
-      new EnsureCursorInListContentFeature(
+      new HandleSelectionsChangesFeature(
         this,
         this.settings,
         this.obsidian,
+        this.parser,
         this.performOperation
       ),
+
       new MoveCursorToPreviousUnfoldedLineFeature(
         this,
         this.settings,
@@ -119,14 +123,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this.settings,
         this.performOperation
       ),
-      new ShiftEnterShouldCreateNoteFeature(
-        this,
-        this.obsidian,
-        this.settings,
-        this.ime,
-        this.performOperation
-      ),
-      new LinesFeature(this, this.settings, this.obsidian, this.parser),
     ];
 
     for (const feature of this.features) {

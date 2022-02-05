@@ -34,8 +34,10 @@ export class EnsureMultilineSelectionSelectsWholeTreeOperation
     const bottomList = root.getListUnderLine(selectionTill.line);
 
     if (
-      topList === bottomList &&
-      cmpPos(selectionFrom, topList.getFirstLineContentStart()) >= 0
+      !topList ||
+      !bottomList ||
+      (topList === bottomList &&
+        cmpPos(selectionFrom, topList.getFirstLineContentStart()) >= 0)
     ) {
       return;
     }
