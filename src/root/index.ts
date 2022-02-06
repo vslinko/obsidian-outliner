@@ -379,27 +379,54 @@ export class Root {
   }
 
   getListUnderLine(line: number) {
-    if (line < this.start.line || line > this.end.line) {
-      return;
+    const found = this.getListsUnderLines(line, line);
+
+    return found.length > 0 ? found[0] : null;
+  }
+
+  getListsUnderSelections(): List[] {
+    const result = new Set<List>();
+
+    for (const selection of this.selections) {
+      const lists = this.getListsUnderLines(
+        minPos(selection.anchor, selection.head).line,
+        maxPos(selection.anchor, selection.head).line
+      );
+
+      for (const list of lists) {
+        result.add(list);
+      }
     }
 
-    let result: List = null;
-    let index: number = this.start.line;
+    return Array.from(result);
+  }
+
+  getListsUnderLines(from: number, till: number): List[] {
+    from = Math.max(from, this.start.line);
+    till = Math.min(till, this.end.line);
+
+    if (from > till) {
+      return [];
+    }
+
+    const result: List[] = [];
+    let listFromLine: number = this.start.line;
 
     const visitArr = (ll: List[]) => {
       for (const l of ll) {
-        const listFromLine = index;
         const listTillLine = listFromLine + l.getLineCount() - 1;
 
-        if (line >= listFromLine && line <= listTillLine) {
-          result = l;
-        } else {
-          index = listTillLine + 1;
-          visitArr(l.getChildren());
+        if (listFromLine <= till && listTillLine >= from) {
+          result.push(l);
         }
-        if (result !== null) {
+
+        listFromLine = listTillLine + 1;
+
+        if (listFromLine > till) {
           return;
         }
+
+        visitArr(l.getChildren());
       }
     };
 
