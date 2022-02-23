@@ -138,4 +138,5 @@ I want to say thank you to the people who support me, I really appreciate it!
 - [Daniel B.](https://github.com/danieltomasz)
 - Mat Rhein ([@mat_rhein7](http://twitter.com/mat_rhein7))
 - [Ollie Lovell](https://www.ollielovell.com/)
+- Faiz MK ([@faizkhuzaimah](https://twitter.com/faizkhuzaimah))
 - more patrons and anonymous supporters
