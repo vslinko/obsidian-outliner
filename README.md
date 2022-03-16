@@ -126,8 +126,7 @@ Open DevTools (Command+Option+I or Control+Shift+I) to copy the debug logs.
 This plugin is free for everyone, however, if you would like to thank me
 or help with further development, you can donate in one of the following ways:
 
-[![Patreon](https://img.shields.io/badge/patreon-vslinko-orange?logo=patreon&style=social)](https://patreon.com/vslinko)<br>
-[![Paypal](https://img.shields.io/badge/paypal-vslinko-orange?logo=paypal&style=social)](https://www.paypal.me/vslinko)
+[![Patreon](https://img.shields.io/badge/patreon-vslinko-orange?logo=patreon&style=social)](https://patreon.com/vslinko)
 
 ### Patrons & Supporters
 
