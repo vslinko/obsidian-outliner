@@ -8,6 +8,7 @@ const promisify = require("util").promisify;
 const levelup = require("levelup");
 const leveldown = require("leveldown");
 
+const TEST_FILE_PATH = "./test.md";
 const RESULTS_FILE_PATH = "results.json";
 const OBSIDIAN_CONFIG_PATH =
   process.env.HOME + "/Library/Application Support/obsidian/obsidian.json";
@@ -16,9 +17,16 @@ const OBSIDIAN_LOCAL_STORAGE_PATH =
   process.env.HOME +
   "/Library/Application Support/obsidian/Local Storage/leveldb";
 const OBISDIAN_TEST_VAULT_ID = "5a15473126091111";
+const VAULT_CONFIG_PATH = ".obsidian/app.json";
 
 global.originalObsidianConfig = null;
 global.OBSIDIAN_CONFIG_PATH = OBSIDIAN_CONFIG_PATH;
+
+global.originalVaultConfig = null;
+global.VAULT_CONFIG_PATH = VAULT_CONFIG_PATH;
+
+global.originalTestFile = null;
+global.TEST_FILE_PATH = TEST_FILE_PATH;
 
 function wait(t) {
   return new Promise((resolve) => setTimeout(resolve, t));
@@ -67,18 +75,18 @@ async function prepareObsidian() {
 async function prepareVault() {
   debug(`Prepare vault`);
 
-  const vaultConfigFilePath = ".obsidian/app.json";
   const vaultCommunityPluginsConfigFilePath =
     ".obsidian/community-plugins.json";
   const vaultPluginDir = ".obsidian/plugins/obsidian-outliner";
 
-  if (!fs.existsSync(vaultConfigFilePath)) {
+  if (!fs.existsSync(VAULT_CONFIG_PATH)) {
     debug("  Running Obsidian for 5 seconds to setup vault");
     await runForAWhile(5000);
     await wait(1000);
   }
 
-  const vaultConfig = JSON.parse(fs.readFileSync(vaultConfigFilePath));
+  originalVaultConfig = fs.readFileSync(VAULT_CONFIG_PATH);
+  const vaultConfig = JSON.parse(originalVaultConfig);
   const newVaultConfig = {
     ...vaultConfig,
     foldHeading: true,
@@ -88,8 +96,8 @@ async function prepareVault() {
     legacyEditor: false,
   };
   if (JSON.stringify(vaultConfig) !== JSON.stringify(newVaultConfig)) {
-    debug(`  Saving ${vaultConfigFilePath}`);
-    fs.writeFileSync(vaultConfigFilePath, JSON.stringify(newVaultConfig));
+    debug(`  Saving ${VAULT_CONFIG_PATH}`);
+    fs.writeFileSync(VAULT_CONFIG_PATH, JSON.stringify(newVaultConfig));
   }
 
   const vaultCommunityPluginsConfig = fs.existsSync(
@@ -137,6 +145,10 @@ async function prepareVault() {
   if (fs.existsSync(RESULTS_FILE_PATH)) {
     debug(`  Deleting ${RESULTS_FILE_PATH}`);
     fs.unlinkSync(RESULTS_FILE_PATH);
+  }
+
+  if (fs.existsSync(TEST_FILE_PATH)) {
+    originalTestFile = fs.readFileSync(TEST_FILE_PATH, "utf-8");
   }
 }
 

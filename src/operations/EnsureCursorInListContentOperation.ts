@@ -23,8 +23,6 @@ export class EnsureCursorInListContentOperation implements Operation {
       return;
     }
 
-    this.stopPropagation = true;
-
     const cursor = root.getCursor();
     const list = root.getListUnderCursor();
     const contentStart = list.getFirstLineContentStart();
@@ -34,6 +32,7 @@ export class EnsureCursorInListContentOperation implements Operation {
         : list.getNotesIndent().length;
 
     if (cursor.ch < linePrefix) {
+      this.stopPropagation = true;
       this.updated = true;
       root.replaceCursor({
         line: cursor.line,

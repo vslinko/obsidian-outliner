@@ -1,19 +1,22 @@
 import { Notice, Plugin } from "obsidian";
 
-import { DeleteShouldIgnoreBulletsFeature } from "./features/DeleteShouldIgnoreBulletsFeature";
-import { EnsureCursorInListContentFeature } from "./features/EnsureCursorInListContentFeature";
-import { EnterOutdentIfLineIsEmptyFeature } from "./features/EnterOutdentIfLineIsEmptyFeature";
-import { EnterShouldCreateNewItemFeature } from "./features/EnterShouldCreateNewItemOnChildLevelFeature";
 import { Feature } from "./features/Feature";
-import { FoldFeature } from "./features/FoldFeature";
+import { FoldingCommandsFeature } from "./features/FoldingCommandsFeature";
+import { HandleSelectionsChangesFeature } from "./features/HandleSelectionsChangesFeature";
 import { LinesFeature } from "./features/LinesFeature";
 import { ListsStylesFeature } from "./features/ListsStylesFeature";
-import { MoveCursorToPreviousUnfoldedLineFeature } from "./features/MoveCursorToPreviousUnfoldedLineFeature";
-import { MoveItemsFeature } from "./features/MoveItemsFeature";
-import { SelectAllFeature } from "./features/SelectAllFeature";
-import { SelectionShouldIgnoreBulletsFeature } from "./features/SelectionShouldIgnoreBulletsFeature";
+import { MoveItemsCommandsFeature } from "./features/MoveItemsCommandsFeature";
+import { OverrideArrowLeftBehaviourFeature } from "./features/OverrideArrowLeftBehaviourFeature";
+import { OverrideBackspaceBehaviourFeature } from "./features/OverrideBackspaceBehaviourFeature";
+import { OverrideCmdAFeature } from "./features/OverrideCmdAFeature";
+import { OverrideCmdBackspaceBehaviourFeature } from "./features/OverrideCmdBackspaceBehaviourFeature";
+import { OverrideCmdShiftArrowLeftBehaviourFeature } from "./features/OverrideCmdShiftArrowLeftBehaviourFeature";
+import { OverrideDeleteBehaviourFeature } from "./features/OverrideDeleteBehaviourFeature";
+import { OverrideEnterBehaviourFeature } from "./features/OverrideEnterBehaviourFeature";
+import { OverrideShiftEnterBehaviourFeature } from "./features/OverrideShiftEnterBehaviourFeature";
+import { OverrideShiftTabBehaviourFeature } from "./features/OverrideShiftTabBehaviourFeature";
+import { OverrideTabBehaviourFeature } from "./features/OverrideTabBehaviourFeature";
 import { SettingsTabFeature } from "./features/SettingsTabFeature";
-import { ShiftEnterShouldCreateNoteFeature } from "./features/ShiftEnterShouldCreateNoteFeature";
 import { ApplyChangesService } from "./services/ApplyChangesService";
 import { IMEService } from "./services/IMEService";
 import { LoggerService } from "./services/LoggerService";
@@ -62,71 +65,106 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
     this.features = [
       new SettingsTabFeature(this, this.settings),
+      new FoldingCommandsFeature(this, this.obsidian),
+      new MoveItemsCommandsFeature(
+        this,
+        this.ime,
+        this.obsidian,
+        this.performOperation
+      ),
+
+      // styleLists
       new ListsStylesFeature(this.settings, this.obsidian),
-      new EnterOutdentIfLineIsEmptyFeature(
-        this,
-        this.settings,
-        this.ime,
-        this.obsidian,
-        this.performOperation
-      ),
-      new EnterShouldCreateNewItemFeature(
-        this,
-        this.settings,
-        this.ime,
-        this.obsidian,
-        this.performOperation
-      ),
-      new EnsureCursorInListContentFeature(
-        this,
-        this.settings,
-        this.obsidian,
-        this.performOperation
-      ),
-      new MoveCursorToPreviousUnfoldedLineFeature(
-        this,
-        this.settings,
-        this.ime,
-        this.obsidian,
-        this.performOperation
-      ),
-      new DeleteShouldIgnoreBulletsFeature(
-        this,
-        this.settings,
-        this.ime,
-        this.obsidian,
-        this.performOperation
-      ),
-      new SelectionShouldIgnoreBulletsFeature(
-        this,
-        this.settings,
-        this.ime,
-        this.obsidian,
-        this.performOperation
-      ),
-      new FoldFeature(this, this.obsidian),
-      new SelectAllFeature(
-        this,
-        this.settings,
-        this.ime,
-        this.obsidian,
-        this.performOperation
-      ),
-      new MoveItemsFeature(
-        this,
-        this.ime,
-        this.obsidian,
-        this.settings,
-        this.performOperation
-      ),
-      new ShiftEnterShouldCreateNoteFeature(
-        this,
-        this.obsidian,
-        this.settings,
-        this.ime,
-        this.performOperation
-      ),
+
+      // listLines
       new LinesFeature(this, this.settings, this.obsidian, this.parser),
+
+      // stickCursor
+      new HandleSelectionsChangesFeature(
+        this,
+        this.settings,
+        this.obsidian,
+        this.parser,
+        this.performOperation
+      ),
+      new OverrideArrowLeftBehaviourFeature(
+        this,
+        this.settings,
+        this.ime,
+        this.obsidian,
+        this.performOperation
+      ),
+      new OverrideCmdShiftArrowLeftBehaviourFeature(
+        this,
+        this.settings,
+        this.ime,
+        this.obsidian,
+        this.performOperation
+      ),
+      new OverrideBackspaceBehaviourFeature(
+        this,
+        this.settings,
+        this.ime,
+        this.obsidian,
+        this.performOperation
+      ),
+      new OverrideCmdBackspaceBehaviourFeature(
+        this,
+        this.settings,
+        this.ime,
+        this.obsidian,
+        this.performOperation
+      ),
+      new OverrideDeleteBehaviourFeature(
+        this,
+        this.settings,
+        this.ime,
+        this.obsidian,
+        this.performOperation
+      ),
+
+      // betterTab
+      new OverrideTabBehaviourFeature(
+        this,
+        this.ime,
+        this.obsidian,
+        this.settings,
+        this.performOperation
+      ),
+      new OverrideShiftTabBehaviourFeature(
+        this,
+        this.ime,
+        this.obsidian,
+        this.settings,
+        this.performOperation
+      ),
+
+      // betterEnter
+      new OverrideEnterBehaviourFeature(
+        this,
+        this.settings,
+        this.ime,
+        this.obsidian,
+        this.parser,
+        this.performOperation
+      ),
+      new OverrideShiftEnterBehaviourFeature(
+        this,
+        this.obsidian,
+        this.settings,
+        this.ime,
+        this.parser,
+        this.performOperation
+      ),
+
+      // selectAll
+      new OverrideCmdAFeature(
+        this,
+        this.settings,
+        this.ime,
+        this.obsidian,
+        this.performOperation
+      ),
     ];
 
     for (const feature of this.features) {

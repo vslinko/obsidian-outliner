@@ -5,18 +5,18 @@ import { keymap } from "@codemirror/view";
 import { Feature } from "./Feature";
 
 import { MyEditor } from "../MyEditor";
-import { CreateNoteLineOperation } from "../operations/CreateNoteLineOperation";
+import { DeleteAndMergeWithNextLineOperation } from "../operations/DeleteAndMergeWithNextLineOperation";
 import { IMEService } from "../services/IMEService";
 import { ObsidianService } from "../services/ObsidianService";
 import { PerformOperationService } from "../services/PerformOperationService";
 import { SettingsService } from "../services/SettingsService";
 
-export class ShiftEnterShouldCreateNoteFeature implements Feature {
+export class OverrideDeleteBehaviourFeature implements Feature {
   constructor(
     private plugin: Plugin_2,
-    private obsidian: ObsidianService,
     private settings: SettingsService,
     private ime: IMEService,
+    private obsidian: ObsidianService,
     private performOperation: PerformOperationService
   ) {}
 
@@ -24,7 +24,7 @@ export class ShiftEnterShouldCreateNoteFeature implements Feature {
     this.plugin.registerEditorExtension(
       keymap.of([
         {
-          key: "s-Enter",
+          key: "Delete",
           run: this.obsidian.createKeymapRunCallback({
             check: this.check,
             run: this.run,
@@ -37,12 +37,12 @@ export class ShiftEnterShouldCreateNoteFeature implements Feature {
   async unload() {}
 
   private check = () => {
-    return this.settings.betterEnter && !this.ime.isIMEOpened();
+    return this.settings.stickCursor && !this.ime.isIMEOpened();
   };
 
   private run = (editor: MyEditor) => {
     return this.performOperation.performOperation(
-      (root) => new CreateNoteLineOperation(root),
+      (root) => new DeleteAndMergeWithNextLineOperation(root),
       editor
     );
   };

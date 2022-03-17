@@ -23,7 +23,7 @@ export interface Reader {
   getLine(n: number): string;
   lastLine(): number;
   listSelections(): ReaderSelection[];
-  getAllFoldedLines(): number[];
+  getAllFoldedLines(from?: number, till?: number): number[];
 }
 
 interface ParseListList {
@@ -152,7 +152,7 @@ export class ParserService {
     let currentList: ParseListList | null = null;
     let currentIndent = "";
 
-    const foldedLines = editor.getAllFoldedLines();
+    const foldedLines = editor.getAllFoldedLines(listStartLine, listEndLine);
 
     for (let l = listStartLine; l <= listEndLine; l++) {
       const line = editor.getLine(l);

@@ -1,10 +1,8 @@
 import { Plugin_2 } from "obsidian";
 
-import { Prec } from "@codemirror/state";
-import { keymap } from "@codemirror/view";
+import { Feature } from "./Feature";
 
 import { MyEditor } from "../MyEditor";
-import { Feature } from "../features/Feature";
 import { MoveDownOperation } from "../operations/MoveDownOperation";
 import { MoveLeftOperation } from "../operations/MoveLeftOperation";
 import { MoveRightOperation } from "../operations/MoveRightOperation";
@@ -12,14 +10,12 @@ import { MoveUpOperation } from "../operations/MoveUpOperation";
 import { IMEService } from "../services/IMEService";
 import { ObsidianService } from "../services/ObsidianService";
 import { PerformOperationService } from "../services/PerformOperationService";
-import { SettingsService } from "../services/SettingsService";
 
-export class MoveItemsFeature implements Feature {
+export class MoveItemsCommandsFeature implements Feature {
   constructor(
     private plugin: Plugin_2,
     private ime: IMEService,
     private obsidian: ObsidianService,
-    private settings: SettingsService,
     private performOperation: PerformOperationService
   ) {}
 
@@ -69,34 +65,9 @@ export class MoveItemsFeature implements Feature {
       ),
       hotkeys: [],
     });
-
-    this.plugin.registerEditorExtension(
-      Prec.highest(
-        keymap.of([
-          {
-            key: "Tab",
-            run: this.obsidian.createKeymapRunCallback({
-              check: this.check,
-              run: this.moveListElementRight,
-            }),
-          },
-          {
-            key: "s-Tab",
-            run: this.obsidian.createKeymapRunCallback({
-              check: this.check,
-              run: this.moveListElementLeft,
-            }),
-          },
-        ])
-      )
-    );
   }
 
   async unload() {}
-
-  private check = () => {
-    return this.settings.betterTab && !this.ime.isIMEOpened();
-  };
 
   private moveListElementDownCommand = (editor: MyEditor) => {
     const { shouldStopPropagation } = this.performOperation.performOperation(
@@ -121,15 +92,13 @@ export class MoveItemsFeature implements Feature {
       return true;
     }
 
-    return this.moveListElementRight(editor).shouldStopPropagation;
-  };
-
-  private moveListElementRight = (editor: MyEditor) => {
-    return this.performOperation.performOperation(
+    const { shouldStopPropagation } = this.performOperation.performOperation(
       (root) =>
         new MoveRightOperation(root, this.obsidian.getDefaultIndentChars()),
       editor
     );
+
+    return shouldStopPropagation;
   };
 
   private moveListElementLeftCommand = (editor: MyEditor) => {
@@ -137,13 +106,11 @@ export class MoveItemsFeature implements Feature {
       return true;
     }
 
-    return this.moveListElementLeft(editor).shouldStopPropagation;
-  };
-
-  private moveListElementLeft = (editor: MyEditor) => {
-    return this.performOperation.performOperation(
+    const { shouldStopPropagation } = this.performOperation.performOperation(
       (root) => new MoveLeftOperation(root),
       editor
     );
+
+    return shouldStopPropagation;
   };
 }

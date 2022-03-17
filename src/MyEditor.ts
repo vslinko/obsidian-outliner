@@ -108,13 +108,34 @@ export class MyEditor {
     view.dispatch({ effects: [unfoldEffect.of(range)] });
   }
 
-  getAllFoldedLines(): number[] {
-    const c = foldedRanges(this.view.state).iter();
-    const res: number[] = [];
-    while (c.value) {
-      res.push(this.offsetToPos(c.from).line);
-      c.next();
+  getAllPossibleLinesToFold(from = 0, till = this.lastLine()): number[] {
+    const state = this.view.state;
+    const doc = state.doc;
+    const result: number[] = [];
+
+    for (let i = from; i <= till; i++) {
+      const l = doc.line(i + 1);
+      const range = foldable(state, l.from, l.to);
+      if (range && range.from === l.to) {
+        result.push(i);
+      }
     }
+
+    return result;
+  }
+
+  getAllFoldedLines(from = 0, till = this.lastLine()): number[] {
+    const state = this.view.state;
+    const res: number[] = [];
+
+    foldedRanges(state).between(
+      this.posToOffset({ line: from, ch: 0 }),
+      this.posToOffset({ line: till + 1, ch: 0 }),
+      (from) => {
+        res.push(this.offsetToPos(from).line);
+      }
+    );
+
     return res;
   }
 

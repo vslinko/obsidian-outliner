@@ -10,6 +10,15 @@ export function minPos(a: Position, b: Position) {
   return cmpPos(a, b) < 0 ? a : b;
 }
 
+export function isRangesEqual(a: Range, b: Range) {
+  return (
+    a.anchor.line === b.anchor.line &&
+    a.anchor.ch === b.anchor.ch &&
+    a.head.line === b.head.line &&
+    a.head.ch === b.head.ch
+  );
+}
+
 export interface Position {
   ch: number;
   line: number;
@@ -84,6 +93,31 @@ export class List {
 
   getChildren() {
     return this.children.concat();
+  }
+
+  getListRangeWithChildren(): Range {
+    let firstLine: ListLine | null = null;
+    let lastLine: ListLine | null = null;
+
+    const recursive = (l: List) => {
+      const linesInfo = l.getLinesInfo();
+      if (firstLine === null) {
+        firstLine = linesInfo[0];
+      }
+      lastLine = linesInfo[linesInfo.length - 1];
+      const children = l.getChildren();
+
+      if (children.length > 0) {
+        recursive(children[children.length - 1]);
+      }
+    };
+
+    recursive(this);
+
+    return {
+      anchor: firstLine.from,
+      head: lastLine.to,
+    };
   }
 
   getLinesInfo(): ListLine[] {
@@ -345,27 +379,54 @@ export class Root {
   }
 
   getListUnderLine(line: number) {
-    if (line < this.start.line || line > this.end.line) {
-      return;
+    const found = this.getListsUnderLines(line, line);
+
+    return found.length > 0 ? found[0] : null;
+  }
+
+  getListsUnderSelections(): List[] {
+    const result = new Set<List>();
+
+    for (const selection of this.selections) {
+      const lists = this.getListsUnderLines(
+        minPos(selection.anchor, selection.head).line,
+        maxPos(selection.anchor, selection.head).line
+      );
+
+      for (const list of lists) {
+        result.add(list);
+      }
     }
 
-    let result: List = null;
-    let index: number = this.start.line;
+    return Array.from(result);
+  }
+
+  getListsUnderLines(from: number, till: number): List[] {
+    from = Math.max(from, this.start.line);
+    till = Math.min(till, this.end.line);
+
+    if (from > till) {
+      return [];
+    }
+
+    const result: List[] = [];
+    let listFromLine: number = this.start.line;
 
     const visitArr = (ll: List[]) => {
       for (const l of ll) {
-        const listFromLine = index;
         const listTillLine = listFromLine + l.getLineCount() - 1;
 
-        if (line >= listFromLine && line <= listTillLine) {
-          result = l;
-        } else {
-          index = listTillLine + 1;
-          visitArr(l.getChildren());
+        if (listFromLine <= till && listTillLine >= from) {
+          result.push(l);
         }
-        if (result !== null) {
+
+        listFromLine = listTillLine + 1;
+
+        if (listFromLine > till) {
           return;
         }
+
+        visitArr(l.getChildren());
       }
     };
 

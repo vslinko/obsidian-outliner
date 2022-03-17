@@ -3,9 +3,10 @@ import { Notice, Plugin_2 } from "obsidian";
 import { Feature } from "./Feature";
 
 import { MyEditor } from "../MyEditor";
+import { maxPos, minPos } from "../root";
 import { ObsidianService } from "../services/ObsidianService";
 
-export class FoldFeature implements Feature {
+export class FoldingCommandsFeature implements Feature {
   constructor(private plugin: Plugin_2, private obsidian: ObsidianService) {}
 
   async load() {
@@ -45,12 +46,32 @@ export class FoldFeature implements Feature {
       return true;
     }
 
-    const cursor = editor.getCursor();
+    const selections = editor.listSelections();
+
+    if (selections.length > 1) {
+      return true;
+    }
+
+    const selection = selections[0];
+    const selectionFrom = minPos(selection.anchor, selection.head);
+    const selectionTill = maxPos(selection.anchor, selection.head);
 
     if (type === "fold") {
-      editor.fold(cursor.line);
+      const toFold = editor.getAllPossibleLinesToFold(
+        selectionFrom.line,
+        selectionTill.line
+      );
+      for (const l of toFold.reverse()) {
+        editor.fold(l);
+      }
     } else {
-      editor.unfold(cursor.line);
+      const folded = editor.getAllFoldedLines(
+        selectionFrom.line,
+        selectionTill.line
+      );
+      for (const l of folded) {
+        editor.unfold(l);
+      }
     }
 
     return true;

@@ -1,6 +1,6 @@
 import { Operation } from "./Operation";
 
-import { Root } from "../root";
+import { List, Root } from "../root";
 import { recalculateNumericBullets } from "../root/recalculateNumericBullets";
 
 export class MoveRightOperation implements Operation {
@@ -20,13 +20,34 @@ export class MoveRightOperation implements Operation {
   perform() {
     const { root } = this;
 
-    if (!root.hasSingleCursor()) {
+    if (!root.hasSingleSelection()) {
       return;
     }
 
     this.stopPropagation = true;
 
-    const list = root.getListUnderCursor();
+    const lists = root.getListsUnderSelections();
+
+    const minLevel = lists.reduce(
+      (acc, list) => Math.min(acc, list.getLevel()),
+      lists[0].getLevel()
+    );
+    const toIndent = lists.filter((l) => l.getLevel() === minLevel);
+
+    for (let i = 0; i < toIndent.length; i++) {
+      this.indentList(toIndent[i]);
+
+      if (i === 0 && !this.updated) {
+        break;
+      }
+    }
+
+    recalculateNumericBullets(this.root);
+  }
+
+  private indentList(list: List) {
+    const { root } = this;
+
     const parent = list.getParent();
     const prev = parent.getPrevSiblingOf(list);
 
@@ -36,7 +57,7 @@ export class MoveRightOperation implements Operation {
 
     this.updated = true;
 
-    const listStartLineBefore = root.getContentLinesRangeOf(list)[0];
+    const listLinesRangeBefore = list.getListRangeWithChildren();
 
     const indentPos = list.getFirstLineIndent().length;
     let indentChars = "";
@@ -66,15 +87,31 @@ export class MoveRightOperation implements Operation {
     prev.addAfterAll(list);
     list.indentContent(indentPos, indentChars);
 
-    const listStartLineAfter = root.getContentLinesRangeOf(list)[0];
-    const lineDiff = listStartLineAfter - listStartLineBefore;
+    const listLinesRangeAfter = list.getListRangeWithChildren();
+    const lineDiff =
+      listLinesRangeAfter.anchor.line - listLinesRangeBefore.anchor.line;
 
-    const cursor = root.getCursor();
-    root.replaceCursor({
-      line: cursor.line + lineDiff,
-      ch: cursor.ch + indentChars.length,
-    });
+    const selection = root.getSelections()[0];
 
-    recalculateNumericBullets(root);
+    if (
+      selection.anchor.line >= listLinesRangeBefore.anchor.line &&
+      selection.anchor.line <= listLinesRangeBefore.head.line
+    ) {
+      selection.anchor.line += lineDiff;
+
+      if (selection.anchor.ch > 0) {
+        selection.anchor.ch += indentChars.length;
+      }
+    }
+
+    if (
+      selection.head.line >= listLinesRangeBefore.anchor.line &&
+      selection.head.line <= listLinesRangeBefore.head.line
+    ) {
+      selection.head.line += lineDiff;
+      selection.head.ch += indentChars.length;
+    }
+
+    root.replaceSelections([selection]);
   }
 }

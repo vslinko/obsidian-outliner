@@ -117,9 +117,6 @@ Open DevTools (Command+Option+I or Control+Shift+I) to copy the debug logs.
 | ---------- | :-----------: |
 | Debug mode |    `false`    |
 
-## Unsupported (yet) features
-
-- [Manipulation with multiple lines](https://github.com/vslinko/obsidian-outliner/issues/3)
 
 ## Pricing
 

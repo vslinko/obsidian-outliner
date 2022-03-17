@@ -93,3 +93,49 @@
     - three #folded
       - four
 ```
+
+# should fold all selected lists
+
+- applyState:
+
+```md
+- one
+|  - two
+    - three|
+      - four
+  - five
+```
+
+- execute: `obsidian-outliner:fold`
+- assertState:
+
+```md
+- one
+|  - two #folded
+    - three #folded
+      - four|
+  - five
+```
+
+# should unfold all selected lists
+
+- applyState:
+
+```md
+- one
+|  - two #folded
+    - three #folded
+      - four
+  - five|
+```
+
+- execute: `obsidian-outliner:unfold`
+- assertState:
+
+```md
+- one
+|  - two
+    - three
+      - four
+  - five|
+```

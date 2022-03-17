@@ -23,8 +23,6 @@ export class EnsureCursorIsInUnfoldedLineOperation implements Operation {
       return;
     }
 
-    this.stopPropagation = true;
-
     const cursor = root.getCursor();
 
     const list = root.getListUnderCursor();
@@ -36,6 +34,7 @@ export class EnsureCursorIsInUnfoldedLineOperation implements Operation {
     const firstLineEnd = foldRoot.getLinesInfo()[0].to;
 
     if (cursor.line > firstLineEnd.line) {
+      this.stopPropagation = true;
       this.updated = true;
       root.replaceCursor(firstLineEnd);
     }
