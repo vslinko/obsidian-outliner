@@ -47,7 +47,7 @@
   position: absolute;
   width: 5px;
   margin-left: 0.5ch;
-  margin-top: 2em;
+  margin-top: 1.8em;
   z-index: 1;
   cursor: pointer;
   background: transparent;
@@ -60,6 +60,10 @@
   background-repeat: no-repeat;
 }
 
+.outliner-plugin-better-bullets .outliner-plugin-list-line {
+  margin-top: 2em;
+}
+
 .markdown-source-view.mod-cm6.is-readable-line-width
   .outliner-plugin-list-lines-content-container {
   max-width: 700px;
@@ -67,6 +71,12 @@
 }
 
 .markdown-source-view.mod-cm6.is-folding .outliner-plugin-list-line {
+  margin-left: 14px;
+}
+
+.outliner-plugin-better-bullets
+  .markdown-source-view.mod-cm6.is-folding
+  .outliner-plugin-list-line {
   margin-left: 15px;
 }
 
