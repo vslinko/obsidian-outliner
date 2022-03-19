@@ -5,7 +5,12 @@ import { SettingsService } from "../services/SettingsService";
 
 const BETTER_LISTS_CLASS = "outliner-plugin-better-lists";
 const BETTER_BULLETS_CLASS = "outliner-plugin-better-bullets";
-const KNOWN_CLASSES = [BETTER_LISTS_CLASS, BETTER_BULLETS_CLASS];
+const VERTICAL_LINES = "outliner-plugin-vertical-lines";
+const KNOWN_CLASSES = [
+  BETTER_LISTS_CLASS,
+  BETTER_BULLETS_CLASS,
+  VERTICAL_LINES,
+];
 
 export class ListsStylesFeature implements Feature {
   private interval: number;
@@ -28,12 +33,20 @@ export class ListsStylesFeature implements Feature {
   }
 
   private syncListsStyles = () => {
-    if (!this.settings.styleLists || !this.obsidian.isDefaultThemeEnabled()) {
-      this.applyListsStyles([]);
-      return;
+    const classes = [];
+
+    if (this.obsidian.isDefaultThemeEnabled()) {
+      if (this.settings.styleLists) {
+        classes.push(BETTER_LISTS_CLASS);
+        classes.push(BETTER_BULLETS_CLASS);
+      }
+
+      if (this.settings.listLines) {
+        classes.push(VERTICAL_LINES);
+      }
     }
 
-    this.applyListsStyles([BETTER_LISTS_CLASS, BETTER_BULLETS_CLASS]);
+    this.applyListsStyles(classes);
   };
 
   private applyListsStyles(classes: string[]) {

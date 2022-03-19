@@ -18,7 +18,7 @@ import { SettingsService } from "../services/SettingsService";
 interface LineData {
   top: number;
   left: number;
-  height: number;
+  height: string;
   list: List;
 }
 
@@ -93,6 +93,7 @@ class ListLinesViewPluginValue implements PluginValue {
 
     if (
       this.settings.listLines &&
+      this.obsidian.isDefaultThemeEnabled() &&
       this.view.viewportLineBlocks.length > 0 &&
       this.view.visibleRanges.length > 0
     ) {
@@ -181,11 +182,17 @@ class ListLinesViewPluginValue implements PluginValue {
         : this.view.lineBlockAt(tillOffset).bottom;
     const height = bottom - top;
 
-    if (height > 0) {
+    if (height > 0 && !list.isFolded()) {
+      const nextSibling = list.getParent().getNextSiblingOf(list);
+      const hasNextSibling =
+        !!nextSibling &&
+        this.editor.posToOffset(nextSibling.getFirstLineContentStart()) <=
+          visibleTo;
+
       this.lines.push({
-        top,
+        top: top,
         left: this.getIndentSize(list),
-        height,
+        height: `calc(${height}px ${hasNextSibling ? "- 1em" : "- 1.8em"})`,
         list,
       });
     }
@@ -264,13 +271,12 @@ class ListLinesViewPluginValue implements PluginValue {
     const cmScroll = this.view.scrollDOM;
     const cmContent = this.view.contentDOM;
     const cmContentContainer = cmContent.parentElement;
-    const cmGutters = this.view.dom.querySelector(".cm-gutters");
 
     this.scroller.style.top = cmScroll.offsetTop + "px";
     this.scroller.style.width = cmContentContainer.clientWidth + "px";
-    this.scroller.style.marginLeft =
-      (cmGutters ? cmGutters.clientWidth : 0) + "px";
     this.contentContainer.style.height = cmContent.clientHeight + "px";
+    this.contentContainer.style.marginLeft =
+      cmContentContainer.offsetLeft + "px";
 
     for (let i = 0; i < this.lines.length; i++) {
       if (this.lineElements.length === i) {
@@ -286,7 +292,7 @@ class ListLinesViewPluginValue implements PluginValue {
       const e = this.lineElements[i];
       e.style.top = l.top + "px";
       e.style.left = l.left + "px";
-      e.style.height = `calc(${l.height + 4}px - 2em)`;
+      e.style.height = l.height;
       e.style.display = "block";
     }
 
