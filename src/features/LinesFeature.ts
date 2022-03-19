@@ -273,10 +273,11 @@ class ListLinesViewPluginValue implements PluginValue {
     const cmContentContainer = cmContent.parentElement;
 
     this.scroller.style.top = cmScroll.offsetTop + "px";
-    this.scroller.style.width = cmContentContainer.clientWidth + "px";
     this.contentContainer.style.height = cmContent.clientHeight + "px";
     this.contentContainer.style.marginLeft =
       cmContentContainer.offsetLeft + "px";
+    this.contentContainer.style.marginTop =
+      (cmContent.firstElementChild as HTMLElement).offsetTop - 24 + "px";
 
     for (let i = 0; i < this.lines.length; i++) {
       if (this.lineElements.length === i) {
