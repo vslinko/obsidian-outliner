@@ -1,8 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Editor } from "obsidian";
 
-import { foldEffect, foldedRanges, unfoldEffect } from "@codemirror/fold";
-import { foldable } from "@codemirror/language";
+import {
+  foldEffect,
+  foldable,
+  foldedRanges,
+  unfoldEffect,
+} from "@codemirror/language";
 import { EditorView, runScopeHandlers } from "@codemirror/view";
 
 export class MyEditorPosition {
