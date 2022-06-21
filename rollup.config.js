@@ -18,7 +18,6 @@ export default (commandLineArgs) => ({
     "@codemirror/state",
     "@codemirror/view",
     "@codemirror/language",
-    "@codemirror/fold",
   ],
   plugins: [typescript(), nodeResolve({ browser: true }), commonjs()],
 });
