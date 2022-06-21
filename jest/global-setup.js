@@ -92,21 +92,11 @@ async function prepareVault() {
     fs.writeFileSync(vaultConfigFilePath, JSON.stringify(newVaultConfig));
   }
 
-  const vaultCommunityPluginsConfig = fs.existsSync(
-    vaultCommunityPluginsConfigFilePath
-  )
-    ? JSON.parse(fs.readFileSync(vaultCommunityPluginsConfigFilePath))
-    : [];
-  if (!vaultCommunityPluginsConfig.includes("obsidian-outliner")) {
-    debug(`  Enabling obsidian-outliner plugin`);
-    vaultCommunityPluginsConfig.push("obsidian-outliner");
-
-    debug(`  Saving ${vaultCommunityPluginsConfigFilePath}`);
-    fs.writeFileSync(
-      vaultCommunityPluginsConfigFilePath,
-      JSON.stringify(vaultCommunityPluginsConfig)
-    );
-  }
+  debug(`  Saving ${vaultCommunityPluginsConfigFilePath}`);
+  fs.writeFileSync(
+    vaultCommunityPluginsConfigFilePath,
+    JSON.stringify(["obsidian-outliner"])
+  );
 
   debug(`  Disabling Safe Mode`);
   mkdirp.sync(OBSIDIAN_LOCAL_STORAGE_PATH);
@@ -121,18 +111,12 @@ async function prepareVault() {
 
   mkdirp.sync(vaultPluginDir);
 
-  if (!fs.existsSync(`${vaultPluginDir}/main.js`)) {
-    debug(`  Linking ${vaultPluginDir}/main.js`);
-    fs.linkSync("main.js", `${vaultPluginDir}/main.js`);
-  }
-  if (!fs.existsSync(`${vaultPluginDir}/manifest.json`)) {
-    debug(`  Linking ${vaultPluginDir}/manifest.json`);
-    fs.linkSync("manifest.json", `${vaultPluginDir}/manifest.json`);
-  }
-  if (!fs.existsSync(`${vaultPluginDir}/styles.css`)) {
-    debug(`  Linking ${vaultPluginDir}/styles.css`);
-    fs.linkSync("styles.css", `${vaultPluginDir}/styles.css`);
-  }
+  debug(`  Copying ${vaultPluginDir}/main.js`);
+  fs.copyFileSync("main.js", `${vaultPluginDir}/main.js`);
+  debug(`  Copying ${vaultPluginDir}/manifest.json`);
+  fs.copyFileSync("manifest.json", `${vaultPluginDir}/manifest.json`);
+  debug(`  Copying ${vaultPluginDir}/styles.css`);
+  fs.copyFileSync("styles.css", `${vaultPluginDir}/styles.css`);
 
   if (fs.existsSync(RESULTS_FILE_PATH)) {
     debug(`  Deleting ${RESULTS_FILE_PATH}`);
