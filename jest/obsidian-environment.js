@@ -1,7 +1,7 @@
-const NodeEnvironment = require("jest-environment-node");
+const { TestEnvironment } = require("jest-environment-node");
 const WebSocket = require("ws");
 
-module.exports = class CustomEnvironment extends NodeEnvironment {
+module.exports = class CustomEnvironment extends TestEnvironment {
   async setup() {
     await super.setup();
 
