@@ -42,8 +42,8 @@
 - one
   - two #folded
     - three
-  - four|
-  - five
+  - qwe|
+  - ewq
 ```
 
 - keydown: `ArrowDown`
@@ -53,8 +53,8 @@
 - one
   - two #folded
     - three
-  - four
-  - five|
+  - qwe
+  - ewq|
 ```
 
 # should keep subfoldind on change, issue #258
