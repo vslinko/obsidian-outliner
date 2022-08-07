@@ -42,19 +42,19 @@
 - one
   - two #folded
     - three
-  - qwe|
-  - ewq
+  - four|
+  - five
 ```
 
-- keydown: `ArrowDown`
+- keydown: `ArrowRight`
 - assertState:
 
 ```md
 - one
   - two #folded
     - three
-  - qwe
-  - ewq|
+  - four
+  - |five
 ```
 
 # should keep subfoldind on change, issue #258
