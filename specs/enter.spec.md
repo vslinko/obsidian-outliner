@@ -245,6 +245,22 @@
 - [ ] |
 ```
 
+# enter should create unchecked checkbox if current item contains checkbox with custom state
+
+- applyState:
+
+```md
+- [!] one|
+```
+
+- keydown: `Enter`
+- assertState:
+
+```md
+- [!] one
+- [ ] |
+```
+
 # enter should create checkbox if current item contains checkbox and cursor on notes
 
 - applyState:

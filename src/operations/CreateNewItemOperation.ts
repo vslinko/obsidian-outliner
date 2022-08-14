@@ -110,7 +110,7 @@ export class CreateNewItemOperation implements Operation {
         ? list.getChildren()[0].getSpaceAfterBullet()
         : list.getSpaceAfterBullet();
 
-    const prefix = oldLines[0].match(/^\[[ x]\]/) ? "[ ] " : "";
+    const prefix = oldLines[0].match(/^\[.\]/) ? "[ ] " : "";
 
     const newList = new List(
       list.getRoot(),
