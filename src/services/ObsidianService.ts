@@ -19,7 +19,7 @@ export class ObsidianService {
 
   isLegacyEditorEnabled() {
     const config: { legacyEditor: boolean } = {
-      legacyEditor: true,
+      legacyEditor: false,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(this.app.vault as any).config,
     };
