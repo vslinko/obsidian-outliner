@@ -48,7 +48,7 @@ export class ObsidianService {
 
   getObsidianFoldSettings(): ObsidianFoldSettings {
     return {
-      foldIndent: false,
+      foldIndent: true,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(this.app.vault as any).config,
     };
