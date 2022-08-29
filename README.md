@@ -69,7 +69,7 @@ Move lists with children wherever you want without breaking the structure.
 
 | Setting                                |  Default value   |
 | -------------------------------------- | :--------------: |
-| Draw vertical indentation lines        |     `true`       |
+| Draw vertical indentation lines        |     `false`      |
 | Vertical indentation line click action | `Toggle Folding` |
 
 ### Stick the cursor to the content

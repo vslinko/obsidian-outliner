@@ -18,7 +18,7 @@ const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
   betterEnter: true,
   betterTab: true,
   selectAll: true,
-  listLines: true,
+  listLines: false,
   listLineAction: "toggle-folding",
 };
 
