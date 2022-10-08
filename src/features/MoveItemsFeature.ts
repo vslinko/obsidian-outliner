@@ -26,6 +26,7 @@ export class MoveItemsFeature implements Feature {
   async load() {
     this.plugin.addCommand({
       id: "move-list-item-up",
+      icon: "arrow-up",
       name: "Move list and sublists up",
       editorCallback: this.obsidian.createEditorCallback(
         this.moveListElementUpCommand
@@ -40,6 +41,7 @@ export class MoveItemsFeature implements Feature {
 
     this.plugin.addCommand({
       id: "move-list-item-down",
+      icon: "arrow-down",
       name: "Move list and sublists down",
       editorCallback: this.obsidian.createEditorCallback(
         this.moveListElementDownCommand
@@ -54,6 +56,7 @@ export class MoveItemsFeature implements Feature {
 
     this.plugin.addCommand({
       id: "indent-list",
+      icon: "indent",
       name: "Indent the list and sublists",
       editorCallback: this.obsidian.createEditorCallback(
         this.moveListElementRightCommand
@@ -63,6 +66,7 @@ export class MoveItemsFeature implements Feature {
 
     this.plugin.addCommand({
       id: "outdent-list",
+      icon: "outdent",
       name: "Outdent the list and sublists",
       editorCallback: this.obsidian.createEditorCallback(
         this.moveListElementLeftCommand
