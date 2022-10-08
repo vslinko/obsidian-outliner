@@ -310,7 +310,7 @@ class ListLinesViewPluginValue implements PluginValue {
     this.settings.removeCallback("listLines", this.scheduleRecalculate);
     this.view.scrollDOM.removeEventListener("scroll", this.onScroll);
     this.view.dom.removeChild(this.scroller);
-    clearImmediate(this.scheduled);
+    clearTimeout(this.scheduled);
   }
 }
 
