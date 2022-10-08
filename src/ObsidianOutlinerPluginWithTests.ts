@@ -102,10 +102,10 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     (window as any).ObsidianOutlinerPlugin = this;
 
     if (process.env.TEST_PLATFORM) {
-      setImmediate(async () => {
+      setTimeout(async () => {
         await this.wait(1000);
         this.connect();
-      });
+      }, 0);
     }
   }
 

@@ -23,7 +23,7 @@ interface LineData {
 }
 
 class ListLinesViewPluginValue implements PluginValue {
-  private scheduled: ReturnType<typeof setImmediate>;
+  private scheduled: ReturnType<typeof setTimeout>;
   private scroller: HTMLElement;
   private contentContainer: HTMLElement;
   private editor: MyEditor;
@@ -73,8 +73,8 @@ class ListLinesViewPluginValue implements PluginValue {
   };
 
   private scheduleRecalculate = () => {
-    clearImmediate(this.scheduled);
-    this.scheduled = setImmediate(this.calculate);
+    clearTimeout(this.scheduled);
+    this.scheduled = setTimeout(this.calculate, 0);
   };
 
   update(update: ViewUpdate) {

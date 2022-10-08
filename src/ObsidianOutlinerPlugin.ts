@@ -22,17 +22,6 @@ import { ParserService } from "./services/ParserService";
 import { PerformOperationService } from "./services/PerformOperationService";
 import { SettingsService } from "./services/SettingsService";
 
-if (!globalThis.setImmediate) {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error
-  globalThis.setImmediate = (fn: () => void) => setTimeout(fn, 0);
-}
-if (!globalThis.clearImmediate) {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error
-  globalThis.clearImmediate = clearTimeout;
-}
-
 export default class ObsidianOutlinerPlugin extends Plugin {
   private features: Feature[];
   protected settings: SettingsService;
