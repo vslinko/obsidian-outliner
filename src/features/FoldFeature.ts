@@ -11,6 +11,7 @@ export class FoldFeature implements Feature {
   async load() {
     this.plugin.addCommand({
       id: "fold",
+      icon: "chevrons-down-up",
       name: "Fold the list",
       editorCallback: this.obsidian.createEditorCallback(this.fold),
       hotkeys: [
@@ -23,6 +24,7 @@ export class FoldFeature implements Feature {
 
     this.plugin.addCommand({
       id: "unfold",
+      icon: "chevrons-up-down",
       name: "Unfold the list",
       editorCallback: this.obsidian.createEditorCallback(this.unfold),
       hotkeys: [
