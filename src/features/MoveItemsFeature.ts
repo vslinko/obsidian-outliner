@@ -121,10 +121,9 @@ export class MoveItemsFeature implements Feature {
   };
 
   private moveListElementRightCommand = (editor: MyEditor) => {
-    console.log("moveListElementRightCommand", { ime: this.ime.isIMEOpened() });
-    // if (this.ime.isIMEOpened()) {
-    //   return true;
-    // }
+    if (this.ime.isIMEOpened()) {
+      return true;
+    }
 
     return this.moveListElementRight(editor).shouldStopPropagation;
   };
@@ -138,10 +137,9 @@ export class MoveItemsFeature implements Feature {
   };
 
   private moveListElementLeftCommand = (editor: MyEditor) => {
-    console.log("moveListElementLeftCommand", { ime: this.ime.isIMEOpened() });
-    // if (this.ime.isIMEOpened()) {
-    //   return true;
-    // }
+    if (this.ime.isIMEOpened()) {
+      return true;
+    }
 
     return this.moveListElementLeft(editor).shouldStopPropagation;
   };
