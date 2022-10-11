@@ -29,7 +29,7 @@ export class CreateNewItemOperation implements Operation {
   perform() {
     const { root } = this;
 
-    if (!root.hasSingleCursor()) {
+    if (!root.hasSingleSelection()) {
       return;
     }
 
@@ -47,15 +47,17 @@ export class CreateNewItemOperation implements Operation {
       return;
     }
 
+    const [selection] = root.getSelections();
+
     const { oldLines, newLines } = lines.reduce(
       (acc, line) => {
         if (cursor.line > line.from.line) {
           acc.oldLines.push(line.text);
         } else if (cursor.line === line.from.line) {
-          const a = line.text.slice(0, cursor.ch - line.from.ch);
-          const b = line.text.slice(cursor.ch - line.from.ch);
-          acc.oldLines.push(a);
-          acc.newLines.push(b);
+          const left = line.text.slice(0, selection.anchor.ch - line.from.ch);
+          const right = line.text.slice(cursor.ch - line.from.ch);
+          acc.oldLines.push(left);
+          acc.newLines.push(right);
         } else if (cursor.line < line.from.line) {
           acc.newLines.push(line.text);
         }

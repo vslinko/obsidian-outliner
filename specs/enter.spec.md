@@ -427,3 +427,21 @@
 	-	two
 	-	|
 ```
+
+# enter should create new item on the same level and remove selection
+
+- applyState:
+
+```md
+-	one
+	-	two|three|
+```
+
+- keydown: `Enter`
+- assertState:
+
+```md
+-	one
+	-	two
+	-	|
+```
