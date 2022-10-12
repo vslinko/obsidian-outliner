@@ -1,3 +1,5 @@
+import { Platform } from "obsidian";
+
 export class IMEService {
   private composition = false;
 
@@ -12,7 +14,7 @@ export class IMEService {
   }
 
   isIMEOpened() {
-    return this.composition;
+    return this.composition && Platform.isDesktop;
   }
 
   private onCompositionStart = () => {
