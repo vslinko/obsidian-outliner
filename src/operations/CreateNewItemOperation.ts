@@ -33,6 +33,11 @@ export class CreateNewItemOperation implements Operation {
       return;
     }
 
+    const [selection] = root.getSelections();
+    if (!selection || selection.anchor.line !== selection.head.line) {
+      return;
+    }
+
     const list = root.getListUnderCursor();
     const lines = list.getLinesInfo();
 
@@ -46,8 +51,6 @@ export class CreateNewItemOperation implements Operation {
     if (cursor.ch < lineUnderCursor.from.ch) {
       return;
     }
-
-    const [selection] = root.getSelections();
 
     const { oldLines, newLines } = lines.reduce(
       (acc, line) => {
