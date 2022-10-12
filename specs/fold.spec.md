@@ -73,7 +73,7 @@
 - keydown: `ArrowUp`
 - execute: `obsidian-outliner:fold`
 - keydown: `ArrowDown`
-- keydown: `Shift-ArrowRight`
+- keydown: `Cmd-ArrowRight`
 - assertState:
 
 ```md
