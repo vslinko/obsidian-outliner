@@ -65,7 +65,7 @@ function registerTest(desc: TestDesc) {
           break;
         case "assertState":
           // Waiting for all operations to be applied
-          await new Promise((resolve) => setTimeout(resolve, 0));
+          await new Promise((resolve) => setTimeout(resolve, 10));
 
           await expect(await getCurrentState()).toEqualEditorState(
             action.state.lines
