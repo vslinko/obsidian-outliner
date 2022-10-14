@@ -36,7 +36,7 @@
   position: absolute;
   width: 5px;
   margin-left: 0.5ch;
-  margin-top: 1.4em;
+  margin-top: 1em;
   z-index: 1;
   cursor: pointer;
   background: transparent;
@@ -47,6 +47,10 @@
   );
   background-position-x: 2px;
   background-repeat: no-repeat;
+}
+
+.outliner-plugin-better-bullets .outliner-plugin-list-line {
+  margin-top: 1.4em;
 }
 
 .markdown-source-view.mod-cm6.is-readable-line-width
