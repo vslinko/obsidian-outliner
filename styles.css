@@ -21,7 +21,7 @@
   right: 0;
   bottom: 0;
   left: 0;
-  padding: 20px;
+  padding: var(--file-margins);
   padding-left: 0;
   pointer-events: none;
   overflow: hidden;
@@ -36,7 +36,7 @@
   position: absolute;
   width: 5px;
   margin-left: 0.5ch;
-  margin-top: 2.2em;
+  margin-top: 1.4em;
   z-index: 1;
   cursor: pointer;
   background: transparent;

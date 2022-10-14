@@ -173,7 +173,7 @@ class ListLinesViewPluginValue implements PluginValue {
     }
 
     const top =
-      visibleFrom > 0 && fromOffset <= visibleFrom
+      visibleFrom > 0 && fromOffset < visibleFrom
         ? -20
         : this.view.lineBlockAt(fromOffset).top;
     const bottom =
