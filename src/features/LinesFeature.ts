@@ -173,7 +173,7 @@ class ListLinesViewPluginValue implements PluginValue {
     }
 
     const top =
-      visibleFrom > 0 && fromOffset <= visibleFrom
+      visibleFrom > 0 && fromOffset < visibleFrom
         ? -20
         : this.view.lineBlockAt(fromOffset).top;
     const bottom =
@@ -192,7 +192,7 @@ class ListLinesViewPluginValue implements PluginValue {
       this.lines.push({
         top: top,
         left: this.getIndentSize(list),
-        height: `calc(${height}px ${hasNextSibling ? "- 1em" : "- 1.8em"})`,
+        height: `calc(${height}px ${hasNextSibling ? "- 1.5em" : "- 2em"})`,
         list,
       });
     }
@@ -201,7 +201,7 @@ class ListLinesViewPluginValue implements PluginValue {
   private getIndentSize(list: List) {
     const { tabSize } = this.obsidian.getObsidianTabsSettings();
     const indent = list.getFirstLineIndent();
-    const spaceSize = 4.5;
+    const spaceSize = 8;
 
     let spaces = 0;
     for (const char of indent) {
