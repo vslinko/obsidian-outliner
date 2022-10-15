@@ -73,6 +73,7 @@
 - keydown: `ArrowUp`
 - execute: `obsidian-outliner:fold`
 - keydown: `ArrowDown`
+- keydown: `Cmd-ArrowRight`
 - assertState:
 
 ```md
@@ -80,7 +81,7 @@
   - two #folded
     - three  #folded
       - four
-  - |five
+  - five|
 ```
 
 - execute: `obsidian-outliner:move-list-item-up`
@@ -88,7 +89,7 @@
 
 ```md
 - one
-  - |five
+  - five|
   - two #folded
     - three #folded
       - four

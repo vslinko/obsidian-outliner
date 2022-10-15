@@ -33,9 +33,9 @@ export class EnsureCursorInListContentFeature implements Feature {
 
     const editor = this.obsidian.getEditorFromState(tr.startState);
 
-    setImmediate(() => {
+    setTimeout(() => {
       this.handleCursorActivity(editor);
-    });
+    }, 0);
 
     return null;
   };
