@@ -33,7 +33,7 @@ export class CreateNewItemOperation implements Operation {
       return;
     }
 
-    const [selection] = root.getSelections();
+    const selection = root.getSelection();
     if (!selection || selection.anchor.line !== selection.head.line) {
       return;
     }
@@ -57,8 +57,8 @@ export class CreateNewItemOperation implements Operation {
         if (cursor.line > line.from.line) {
           acc.oldLines.push(line.text);
         } else if (cursor.line === line.from.line) {
-          const left = line.text.slice(0, selection.anchor.ch - line.from.ch);
-          const right = line.text.slice(cursor.ch - line.from.ch);
+          const left = line.text.slice(0, selection.from - line.from.ch);
+          const right = line.text.slice(selection.to - line.from.ch);
           acc.oldLines.push(left);
           acc.newLines.push(right);
         } else if (cursor.line < line.from.line) {

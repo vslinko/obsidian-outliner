@@ -445,3 +445,58 @@
 	-	two
 	-	|
 ```
+
+# enter should create new item on the same level and remove selection between words
+
+- applyState:
+
+```md
+-	one
+	-	two|three|four
+```
+
+- keydown: `Enter`
+- assertState:
+
+```md
+-	one
+	-	two
+	-	|four
+```
+# enter should fallback behavior while multiline selection
+
+- applyState:
+
+```md
+-	one
+	-	two|three
+- four|five
+```
+
+- keydown: `Enter`
+- assertState:
+
+```md
+-	one
+	-	two
+  |five
+```
+
+# enter should fallback behavior while multiline selection with nested bullets
+
+- applyState:
+
+```md
+-	|one
+	-	two| three
+- four
+```
+
+- keydown: `Enter`
+- assertState:
+
+```md
+-	
+ |three
+- four
+```

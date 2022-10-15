@@ -325,6 +325,25 @@ export class Root {
     return this.selections.length === 1;
   }
 
+  getSelection() {
+    const selection = this.selections[this.selections.length - 1];
+
+    const from =
+      selection.anchor.ch > selection.head.ch
+        ? selection.head.ch
+        : selection.anchor.ch;
+    const to =
+      selection.anchor.ch > selection.head.ch
+        ? selection.anchor.ch
+        : selection.head.ch;
+
+    return {
+      ...selection,
+      from,
+      to,
+    };
+  }
+
   getCursor() {
     return { ...this.selections[this.selections.length - 1].head };
   }
