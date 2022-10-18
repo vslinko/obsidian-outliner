@@ -39,7 +39,7 @@
     "leveldown": "^6.1.1",
     "levelup": "^5.1.1",
     "mkdirp": "^1.0.4",
-    "obsidian": "^0.15.9",
+    "obsidian": "^0.16.3",
     "prettier": "^2.7.1",
     "rollup": "^2.77.2",
     "ts-node": "^10.9.1",
