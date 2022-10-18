@@ -28,7 +28,6 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Draw vertical indentation lines")
-      .setDesc("Lines only work well with tab size 4.")
       .addToggle((toggle) => {
         toggle.setValue(this.settings.listLines).onChange(async (value) => {
           this.settings.listLines = value;

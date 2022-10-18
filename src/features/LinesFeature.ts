@@ -131,17 +131,11 @@ class ListLinesViewPluginValue implements PluginValue {
     return null;
   }
 
-  private recursive(list: List) {
+  private recursive(list: List, parentCtx: { rootLeft?: number } = {}) {
     const children = list.getChildren();
 
     if (children.length === 0) {
       return;
-    }
-
-    for (const child of children) {
-      if (!child.isEmpty()) {
-        this.recursive(child);
-      }
     }
 
     const fromOffset = this.editor.posToOffset({
@@ -172,6 +166,12 @@ class ListLinesViewPluginValue implements PluginValue {
       return;
     }
 
+    const coords = this.view.coordsAtPos(fromOffset, 1);
+    if (parentCtx.rootLeft === undefined) {
+      parentCtx.rootLeft = coords.left;
+    }
+    const left = Math.floor(coords.right - parentCtx.rootLeft);
+
     const top =
       visibleFrom > 0 && fromOffset < visibleFrom
         ? -20
@@ -191,27 +191,17 @@ class ListLinesViewPluginValue implements PluginValue {
 
       this.lines.push({
         top: top,
-        left: this.getIndentSize(list),
+        left: left,
         height: `calc(${height}px ${hasNextSibling ? "- 1.5em" : "- 2em"})`,
         list,
       });
     }
-  }
 
-  private getIndentSize(list: List) {
-    const { tabSize } = this.obsidian.getObsidianTabsSettings();
-    const indent = list.getFirstLineIndent();
-
-    let spaces = 0;
-    for (const char of indent) {
-      if (char === "\t") {
-        spaces += tabSize;
-      } else {
-        spaces += 1;
+    for (const child of children) {
+      if (!child.isEmpty()) {
+        this.recursive(child, parentCtx);
       }
     }
-
-    return spaces;
   }
 
   private onClick = (e: MouseEvent) => {
@@ -291,7 +281,7 @@ class ListLinesViewPluginValue implements PluginValue {
       const l = this.lines[i];
       const e = this.lineElements[i];
       e.style.top = l.top + "px";
-      e.style.left = l.left / 2 + "em"; // 0.5em = char width
+      e.style.left = l.left + "px";
       e.style.height = l.height;
       e.style.display = "block";
     }
