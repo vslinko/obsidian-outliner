@@ -201,7 +201,6 @@ class ListLinesViewPluginValue implements PluginValue {
   private getIndentSize(list: List) {
     const { tabSize } = this.obsidian.getObsidianTabsSettings();
     const indent = list.getFirstLineIndent();
-    const spaceSize = 8;
 
     let spaces = 0;
     for (const char of indent) {
@@ -212,7 +211,7 @@ class ListLinesViewPluginValue implements PluginValue {
       }
     }
 
-    return spaces * spaceSize;
+    return spaces;
   }
 
   private onClick = (e: MouseEvent) => {
@@ -292,7 +291,7 @@ class ListLinesViewPluginValue implements PluginValue {
       const l = this.lines[i];
       const e = this.lineElements[i];
       e.style.top = l.top + "px";
-      e.style.left = l.left + "px";
+      e.style.left = l.left / 2 + "em"; // 0.5em = char width
       e.style.height = l.height;
       e.style.display = "block";
     }
