@@ -190,8 +190,8 @@ class ListLinesViewPluginValue implements PluginValue {
           visibleTo;
 
       this.lines.push({
-        top: top,
-        left: left,
+        top,
+        left,
         height: `calc(${height}px ${hasNextSibling ? "- 1.5em" : "- 2em"})`,
         list,
       });
