@@ -270,9 +270,21 @@ class ListLinesViewPluginValue implements PluginValue {
     const cmScroll = this.view.scrollDOM;
     const cmContent = this.view.contentDOM;
     const cmContentContainer = cmContent.parentElement;
+    const cmSizer = cmContentContainer.parentElement;
+
+    /**
+     * Obsidian can add additional elements into Content Manager.
+     * The most obvious case is the 'embedded-backlinks' core plugin that adds a menu inside a Content Manager.
+     * We must take heights of all of these elements into account
+     * to be able to calculate the correct size of lines' container.
+     */
+    let cmSizerChildrenSumHeight = 0;
+    for (let i = 0; i < cmSizer.children.length; i++) {
+      cmSizerChildrenSumHeight += cmSizer.children[i].clientHeight;
+    }
 
     this.scroller.style.top = cmScroll.offsetTop + "px";
-    this.contentContainer.style.height = cmContent.clientHeight + "px";
+    this.contentContainer.style.height = cmSizerChildrenSumHeight + "px";
     this.contentContainer.style.marginLeft =
       cmContentContainer.offsetLeft + "px";
     this.contentContainer.style.marginTop =
