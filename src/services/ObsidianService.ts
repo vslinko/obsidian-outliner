@@ -1,4 +1,4 @@
-import { App, Editor, editorViewField } from "obsidian";
+import { App, Editor, editorInfoField } from "obsidian";
 
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
@@ -61,7 +61,7 @@ export class ObsidianService {
   }
 
   getEditorFromState(state: EditorState) {
-    return new MyEditor(state.field(editorViewField).editor);
+    return new MyEditor(state.field(editorInfoField).editor);
   }
 
   createKeymapRunCallback(config: {

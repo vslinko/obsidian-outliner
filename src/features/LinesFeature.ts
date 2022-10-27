@@ -1,4 +1,4 @@
-import { Plugin_2, editorViewField } from "obsidian";
+import { Plugin_2, editorInfoField } from "obsidian";
 
 import {
   EditorView,
@@ -45,7 +45,7 @@ class ListLinesViewPluginValue implements PluginValue {
   }
 
   private waitForEditor = () => {
-    const oe = this.view.state.field(editorViewField).editor;
+    const oe = this.view.state.field(editorInfoField).editor;
     if (!oe) {
       setTimeout(this.waitForEditor, 0);
       return;
@@ -200,6 +200,7 @@ class ListLinesViewPluginValue implements PluginValue {
 
   private getIndentSize(list: List) {
     const { tabSize } = this.obsidian.getObsidianTabsSettings();
+
     const indent = list.getFirstLineIndent();
 
     let spaces = 0;
@@ -231,7 +232,7 @@ class ListLinesViewPluginValue implements PluginValue {
   };
 
   private zoomIn(line: LineData) {
-    const editor = new MyEditor(this.view.state.field(editorViewField).editor);
+    const editor = new MyEditor(this.view.state.field(editorInfoField).editor);
 
     editor.zoomIn(line.list.getFirstLineContentStart().line);
   }
@@ -255,7 +256,7 @@ class ListLinesViewPluginValue implements PluginValue {
       linesToToggle.push(c.getFirstLineContentStart().line);
     }
 
-    const editor = new MyEditor(this.view.state.field(editorViewField).editor);
+    const editor = new MyEditor(this.view.state.field(editorInfoField).editor);
 
     for (const l of linesToToggle) {
       if (needToUnfold) {
