@@ -126,6 +126,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     for (let i = 0; i < 10; i++) {
       await this.wait(1000);
       if (this.app.workspace.activeLeaf) {
+        // TODO: Fix deprecation issue
         this.app.workspace.activeLeaf.openFile(file);
         break;
       }
