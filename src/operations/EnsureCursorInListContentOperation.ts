@@ -30,7 +30,7 @@ export class EnsureCursorInListContentOperation implements Operation {
     const contentStart = list.getFirstLineContentStart();
     const linePrefix =
       contentStart.line === cursor.line
-        ? contentStart.ch
+        ? contentStart.ch + list.getCheckboxLength()
         : list.getNotesIndent().length;
 
     if (cursor.ch < linePrefix) {
