@@ -121,6 +121,7 @@ export class CreateNewItemOperation implements Operation {
       list.getRoot(),
       indent,
       bullet,
+      prefix.length,
       spaceAfterBullet,
       prefix + newLines.shift(),
       false
