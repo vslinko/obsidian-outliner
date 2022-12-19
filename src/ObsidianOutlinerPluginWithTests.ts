@@ -95,6 +95,10 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     this.editor.triggerOnKeyDown(e as KeyboardEvent);
   }
 
+  insertText(text: string) {
+    document.execCommand("insertText", false, text);
+  }
+
   async load() {
     await super.load();
 
@@ -156,6 +160,9 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
             break;
           case "simulateKeydown":
             this.simulateKeydown(data);
+            break;
+          case "insertText":
+            this.insertText(data);
             break;
           case "executeCommandById":
             this.executeCommandById(data);

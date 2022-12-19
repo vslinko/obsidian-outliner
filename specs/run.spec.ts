@@ -22,6 +22,11 @@ interface SimulateKeydown {
   key: string;
 }
 
+interface InsertText {
+  type: "insertText";
+  text: string;
+}
+
 interface ExecuteCommandById {
   type: "executeCommandById";
   command: string;
@@ -37,6 +42,7 @@ type Action =
   | ApplyState
   | AssertState
   | SimulateKeydown
+  | InsertText
   | ExecuteCommandById
   | SetSetting;
 
@@ -56,6 +62,9 @@ function registerTest(desc: TestDesc) {
           break;
         case "simulateKeydown":
           await simulateKeydown(action.key);
+          break;
+        case "insertText":
+          await insertText(action.text);
           break;
         case "executeCommandById":
           await executeCommandById(action.command);
@@ -142,6 +151,17 @@ function parseSimulateKeydown(l: LinesIterator): SimulateKeydown {
   };
 }
 
+function parseInsertText(l: LinesIterator): InsertText {
+  const text = l.line.replace(/- insertText: `([^`]+)`/, "$1");
+
+  l.nextNotEmpty();
+
+  return {
+    type: "insertText",
+    text,
+  };
+}
+
 function parseExecuteCommandById(l: LinesIterator): ExecuteCommandById {
   const command = l.line.replace(/- execute: `([^`]+)`/, "$1");
 
@@ -176,6 +196,8 @@ function parseAction(l: LinesIterator): Action {
     return parseApplyState(l);
   } else if (l.line.startsWith("- keydown:")) {
     return parseSimulateKeydown(l);
+  } else if (l.line.startsWith("- insertText:")) {
+    return parseInsertText(l);
   } else if (l.line.startsWith("- execute:")) {
     return parseExecuteCommandById(l);
   } else if (l.line.startsWith("- setting:")) {

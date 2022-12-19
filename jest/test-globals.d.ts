@@ -26,6 +26,7 @@ declare function applyState(state: string[]): Promise<void>;
 declare function parseState(state: string): Promise<State>;
 declare function parseState(state: string[]): Promise<State>;
 declare function simulateKeydown(keys: string): Promise<void>;
+declare function insertText(text: string): Promise<void>;
 declare function executeCommandById(keys: string): Promise<void>;
 declare function setSetting(opts: { k: string; v: any }): Promise<void>;
 declare function resetSettings(): Promise<void>;

@@ -23,6 +23,8 @@ module.exports = class CustomEnvironment extends TestEnvironment {
     this.global.applyState = (data) => this.runCommand("applyState", data);
     this.global.simulateKeydown = (data) =>
       this.runCommand("simulateKeydown", data);
+    this.global.insertText = (data) =>
+      this.runCommand("insertText", data);
     this.global.executeCommandById = (data) =>
       this.runCommand("executeCommandById", data);
     this.global.setSetting = (data) => this.runCommand("setSetting", data);

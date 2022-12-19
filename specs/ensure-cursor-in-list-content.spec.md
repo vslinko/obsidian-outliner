@@ -172,3 +172,19 @@
 - one
   |note
 ```
+
+# cursor should not be moved when printing wikilink
+
+- applyState:
+
+```md
+- |
+```
+
+- insertText: `[`
+- insertText: `[`
+- assertState:
+
+```md
+- [[|]]
+```
