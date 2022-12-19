@@ -188,3 +188,20 @@
 ```md
 - [[|]]
 ```
+
+# cursor should be moved to previous line after arrowleft when line have checkbox
+
+- applyState:
+
+```md
+- [ ] one
+- [ ] |two
+```
+
+- keydown: `ArrowLeft`
+- assertState:
+
+```md
+- [ ] one|
+- [ ] two
+```
