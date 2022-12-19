@@ -40,18 +40,18 @@
 - [x] |one
 ```
 
-# cursor should be moved to list content with a custom checkbox
+# cursor should not be moved to list content with a custom checkbox
 
 - applyState:
 
 ```md
-- |[!] one
+|- [!] one
 ```
 
 - assertState:
 
 ```md
-- [!] |one
+- |[!] one
 ```
 
 # cursor should not be moved to list content if stickCursor=false
