@@ -2,7 +2,7 @@ import { List, Root } from "../root";
 import { LoggerService } from "../services/LoggerService";
 
 const bulletSign = `(?:[-*+]|\\d+\\.)`;
-const optionalCheckbox = `(?:\\[[ xX]\\]\\s?)?`;
+const optionalCheckbox = `(?:\\[[ xX]\\]( |\t))?`;
 
 const listItemWithoutSpacesRe = new RegExp(`^${bulletSign}( |\t)`);
 const listItemRe = new RegExp(`^[ \t]*${bulletSign}( |\t)`);
