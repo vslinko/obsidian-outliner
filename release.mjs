@@ -1,3 +1,4 @@
+import cp from "node:child_process";
 import fs from "node:fs";
 
 const manifestFile = JSON.parse(fs.readFileSync("manifest.json"));
@@ -25,7 +26,10 @@ fs.writeFileSync("manifest.json", JSON.stringify(manifestFile, null, 2) + "\n");
 const packageLockFile = JSON.parse(fs.readFileSync("package-lock.json"));
 packageLockFile.version = versionString;
 packageLockFile.packages[""].version = versionString;
-fs.writeFileSync("package-lock.json", JSON.stringify(packageLockFile, null, 2) + "\n");
+fs.writeFileSync(
+  "package-lock.json",
+  JSON.stringify(packageLockFile, null, 2) + "\n"
+);
 
 const packageFile = JSON.parse(fs.readFileSync("package.json"));
 packageFile.version = versionString;
@@ -36,4 +40,26 @@ const newVersionsFile = {
   [versionString]: manifestFile.minAppVersion,
   ...versionsFile,
 };
-fs.writeFileSync("versions.json", JSON.stringify(newVersionsFile, null, 2) + "\n");
+fs.writeFileSync(
+  "versions.json",
+  JSON.stringify(newVersionsFile, null, 2) + "\n"
+);
+
+const gitAdd = cp.spawn(
+  "git",
+  [
+    "add",
+    "manifest.json",
+    "package-lock.json",
+    "package.json",
+    "versions.json",
+  ],
+  {
+    stdio: "inherit",
+  }
+);
+gitAdd.on("close", () => {
+  cp.spawn("git", ["commit", "-m", versionString], {
+    stdio: "inherit",
+  });
+});
