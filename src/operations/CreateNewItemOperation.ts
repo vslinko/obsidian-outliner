@@ -2,6 +2,7 @@ import { Operation } from "./Operation";
 
 import { List, Position, Root } from "../root";
 import { recalculateNumericBullets } from "../root/recalculateNumericBullets";
+import { checkboxRe } from "../services/ParserService";
 import { isEmptyLineOrEmptyCheckbox } from "../utils/isEmptyLineOrEmptyCheckbox";
 
 export interface GetZoomRange {
@@ -115,13 +116,13 @@ export class CreateNewItemOperation implements Operation {
         ? list.getChildren()[0].getSpaceAfterBullet()
         : list.getSpaceAfterBullet();
 
-    const prefix = oldLines[0].match(/^\[.\]/) ? "[ ] " : "";
+    const prefix = oldLines[0].match(checkboxRe) ? "[ ] " : "";
 
     const newList = new List(
       list.getRoot(),
       indent,
       bullet,
-      prefix.length,
+      prefix,
       spaceAfterBullet,
       prefix + newLines.shift(),
       false

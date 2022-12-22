@@ -15,6 +15,40 @@
   - |two|
 ```
 
+# cmd-a should select list item content excluding checkbox
+
+- applyState:
+
+```md
+- one
+  - [ ] two|
+```
+
+- keydown: `Cmd-KeyA`
+- assertState:
+
+```md
+- one
+  - [ ] |two|
+```
+
+# cmd-a should select list item content excluding custom checkbox
+
+- applyState:
+
+```md
+- one
+    - [!] two|
+```
+
+- keydown: `Cmd-KeyA`
+- assertState:
+
+```md
+- one
+    - [!] |two|
+```
+
 # cmd-a should select list item content with notes
 
 - applyState:
@@ -69,6 +103,37 @@ b
 
 ```md
 - |one|
+```
+
+# Cmd-Shift-Left should select content only excluding checkbox
+
+- applyState:
+
+```md
+- [ ] one|
+```
+
+- keydown: `Cmd-Shift-ArrowLeft`
+- assertState:
+
+```md
+- [ ] |one|
+```
+
+# Cmd-Shift-Left should select content not including custom checkboxes
+
+- setting: `stickCursor="bullet-and-checkbox"`
+- applyState:
+
+```md
+- [!] one|
+```
+
+- keydown: `Cmd-Shift-ArrowLeft`
+- assertState:
+
+```md
+- [!] |one|
 ```
 
 # Cmd-Shift-Left should select one note line only

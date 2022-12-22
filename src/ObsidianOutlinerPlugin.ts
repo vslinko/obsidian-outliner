@@ -42,7 +42,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
     this.logger = new LoggerService(this.settings);
 
-    this.parser = new ParserService(this.logger);
+    this.parser = new ParserService(this.logger, this.settings);
     this.applyChanges = new ApplyChangesService();
     this.performOperation = new PerformOperationService(
       this.parser,

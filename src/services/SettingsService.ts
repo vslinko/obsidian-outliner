@@ -1,9 +1,10 @@
 export type ListLineAction = "none" | "zoom-in" | "toggle-folding";
+export type StickCursor = "never" | "bullet-only" | "bullet-and-checkbox";
 
 export interface ObsidianOutlinerPluginSettings {
   styleLists: boolean;
   debug: boolean;
-  stickCursor: boolean;
+  stickCursor: StickCursor | boolean;
   betterEnter: boolean;
   betterTab: boolean;
   selectAll: boolean;
@@ -14,7 +15,7 @@ export interface ObsidianOutlinerPluginSettings {
 const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
   styleLists: true,
   debug: false,
-  stickCursor: true,
+  stickCursor: "bullet-and-checkbox",
   betterEnter: true,
   betterTab: true,
   selectAll: true,
@@ -55,9 +56,15 @@ export class SettingsService implements ObsidianOutlinerPluginSettings {
   }
 
   get stickCursor() {
+    // Adaptor for users migrating from older version of the plugin.
+    if (this.values.stickCursor === true) {
+      return "bullet-and-checkbox";
+    } else if (this.values.stickCursor === false) {
+      return "never";
+    }
     return this.values.stickCursor;
   }
-  set stickCursor(value: boolean) {
+  set stickCursor(value: StickCursor) {
     this.set("stickCursor", value);
   }
 

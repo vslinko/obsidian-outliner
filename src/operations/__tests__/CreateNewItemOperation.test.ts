@@ -1,4 +1,4 @@
-import { makeEditor, makeRoot } from "../../__mocks__";
+import { makeEditor, makeRoot, makeSettingsService } from "../../__mocks__";
 import { CreateNewItemOperation } from "../CreateNewItemOperation";
 
 test("should create sibling bullet instead of child bullet if child bullets are folded", () => {
@@ -8,6 +8,7 @@ test("should create sibling bullet instead of child bullet if child bullets are 
       cursor: { line: 0, ch: 5 },
       getAllFoldedLines: () => [0],
     }),
+    settings: makeSettingsService(),
   });
   const getZoomRange = {
     getZoomRange: (): null => null,

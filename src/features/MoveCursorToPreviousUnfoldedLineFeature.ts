@@ -44,7 +44,7 @@ export class MoveCursorToPreviousUnfoldedLineFeature implements Feature {
   async unload() {}
 
   private check = () => {
-    return this.settings.stickCursor && !this.ime.isIMEOpened();
+    return this.settings.stickCursor != "never" && !this.ime.isIMEOpened();
   };
 
   private run = (editor: MyEditor) => {

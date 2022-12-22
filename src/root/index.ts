@@ -36,7 +36,7 @@ export class List {
     private root: Root,
     private indent: string,
     private bullet: string,
-    private checkboxLength: number,
+    private optionalCheckbox: string,
     private spaceAfterBullet: string,
     firstLine: string,
     private foldRoot: boolean
@@ -114,6 +114,15 @@ export class List {
     return {
       line: startLine,
       ch: this.getContentStartCh(),
+    };
+  }
+
+  getFirstLineContentStartAfterCheckbox() {
+    const startLine = this.root.getContentLinesRangeOf(this)[0];
+
+    return {
+      line: startLine,
+      ch: this.getContentStartCh() + this.optionalCheckbox.length,
     };
   }
 
@@ -213,7 +222,7 @@ export class List {
   }
 
   getCheckboxLength() {
-    return this.checkboxLength;
+    return this.optionalCheckbox.length;
   }
 
   replateBullet(bullet: string) {
@@ -287,7 +296,7 @@ export class List {
 }
 
 export class Root {
-  private rootList = new List(this, "", "", 0, "", "", false);
+  private rootList = new List(this, "", "", "", "", "", false);
   private selections: Range[] = [];
 
   constructor(

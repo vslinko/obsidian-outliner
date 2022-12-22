@@ -299,7 +299,7 @@
 
 # enter should not create checkbox if current item contains checkbox but cursor inside checkbox
 
-- setting: `stickCursor=false`
+- setting: `stickCursor="never"`
 - applyState:
 
 ```md
@@ -394,7 +394,7 @@
 
 # enter should not create new item if cursor is before line start
 
-- setting: `stickCursor=false`
+- setting: `stickCursor="never"`
 - applyState:
 
 ```md

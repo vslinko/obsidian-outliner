@@ -1,6 +1,6 @@
 import { Operation } from "./Operation";
 
-import { Root } from "../root";
+import { Position, Root } from "../root";
 
 export class SelectTillLineStartOperation implements Operation {
   private stopPropagation = false;
@@ -30,7 +30,13 @@ export class SelectTillLineStartOperation implements Operation {
     const list = root.getListUnderCursor();
     const lines = list.getLinesInfo();
     const lineNo = lines.findIndex((l) => l.from.line === cursor.line);
+    const offset = lineNo === 0 ? list.getCheckboxLength() : 0;
 
-    root.replaceSelections([{ head: lines[lineNo].from, anchor: cursor }]);
+    const newHead: Position = {
+      ch: lines[lineNo].from.ch + offset,
+      line: lines[lineNo].from.line,
+    };
+
+    root.replaceSelections([{ head: newHead, anchor: cursor }]);
   }
 }

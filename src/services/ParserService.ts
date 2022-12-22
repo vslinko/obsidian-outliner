@@ -1,14 +1,17 @@
+import { SettingsService } from "./SettingsService";
+
 import { List, Root } from "../root";
 import { LoggerService } from "../services/LoggerService";
 
-const bulletSign = `(?:[-*+]|\\d+\\.)`;
-const optionalCheckbox = `(?:\\[[ xX]\\]( |\t))?`;
+const bulletSignRe = `(?:[-*+]|\\d+\\.)`;
+export const checkboxRe = `\\[[^\\[\\]]\\][ \t]`;
+const optionalCheckboxRe = `(?:${checkboxRe})?`;
 
-const listItemWithoutSpacesRe = new RegExp(`^${bulletSign}( |\t)`);
-const listItemRe = new RegExp(`^[ \t]*${bulletSign}( |\t)`);
+const listItemWithoutSpacesRe = new RegExp(`^${bulletSignRe}( |\t)`);
+const listItemRe = new RegExp(`^[ \t]*${bulletSignRe}( |\t)`);
 const stringWithSpacesRe = new RegExp(`^[ \t]+`);
 const parseListItemRe = new RegExp(
-  `^([ \t]*)(${bulletSign})( |\t)((${optionalCheckbox}).*)$`
+  `^([ \t]*)(${bulletSignRe})( |\t)(${optionalCheckboxRe})(.*)$`
 );
 
 export interface ReaderPosition {
@@ -39,7 +42,10 @@ interface ParseListList {
 }
 
 export class ParserService {
-  constructor(private logger: LoggerService) {}
+  constructor(
+    private logger: LoggerService,
+    private settings: SettingsService
+  ) {}
 
   parseRange(editor: Reader, fromLine = 0, toLine = editor.lastLine()): Root[] {
     const lists: Root[] = [];
@@ -162,8 +168,13 @@ export class ParserService {
       const matches = parseListItemRe.exec(line);
 
       if (matches) {
-        const [, indent, bullet, spaceAfterBullet, content, optionalCheckbox] =
-          matches;
+        const [, indent, bullet, spaceAfterBullet] = matches;
+        let [, , , , optionalCheckbox, content] = matches;
+
+        content = optionalCheckbox + content;
+        if (this.settings.stickCursor != "bullet-and-checkbox") {
+          optionalCheckbox = "";
+        }
 
         const compareLength = Math.min(currentIndent.length, indent.length);
         const indentSlice = indent.slice(0, compareLength);
@@ -199,7 +210,7 @@ export class ParserService {
           root,
           indent,
           bullet,
-          optionalCheckbox.length,
+          optionalCheckbox,
           spaceAfterBullet,
           content,
           foldRoot

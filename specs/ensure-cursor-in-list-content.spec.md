@@ -40,8 +40,23 @@
 - [x] |one
 ```
 
-# cursor should not be moved to list content with a custom checkbox
+# cursor should be moved to list content with a custom checkbox
 
+- applyState:
+
+```md
+|- [!] one
+```
+
+- assertState:
+
+```md
+- [!] |one
+```
+
+# cursor should not be moved to list content with a custom checkbox if stickCursor="bullet-only"
+
+- setting: `stickCursor="bullet-only"`
 - applyState:
 
 ```md
@@ -54,9 +69,9 @@
 - |[!] one
 ```
 
-# cursor should not be moved to list content if stickCursor=false
+# cursor should not be moved to list content if stickCursor="never"
 
-- setting: `stickCursor=false`
+- setting: `stickCursor="never"`
 - applyState:
 
 ```md
