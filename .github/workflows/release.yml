@@ -6,7 +6,7 @@ on:
       - created
 
 env:
-  OBSIDIAN_VERSION: "1.0.0"
+  OBSIDIAN_VERSION: "1.1.16"
 
 jobs:
   build:
@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
+          node-version: 18
       - name: Install dependencies
         run: npm ci
       - name: Install Obsidian

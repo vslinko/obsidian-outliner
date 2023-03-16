@@ -480,7 +480,7 @@
 ```md
 -	one
 	-	two
-  |five
+ |five
 ```
 
 # enter should fallback behavior while multiline selection with nested bullets
@@ -488,7 +488,7 @@
 - applyState:
 
 ```md
--	|one
+-	1|one
 	-	two| three
 - four
 ```
@@ -497,7 +497,7 @@
 - assertState:
 
 ```md
--	
+-	1
  |three
 - four
 ```
