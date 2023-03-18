@@ -42,7 +42,7 @@ Try to create a deeply structured list and move items by pressing the hotkeys de
 
 If you liked the styles from the demo above, you can enable them in the plugin settings tab.
 
-> **Disclaimer:** Styles are only compatible with built-in Obsidian themes.
+> **Disclaimer:** Styles are only compatible with built-in Obsidian theme.
 
 | Setting                         | Default value |
 | ------------------------------- | :-----------: |
@@ -64,6 +64,8 @@ Move lists with children wherever you want without breaking the structure.
 | Enhance the Tab key |    `true`     |
 
 ### Draw vertical indentation lines
+
+> **Disclaimer:** vertical indentation lines are only compatible with built-in Obsidian theme.
 
 ![Demo of vertical indentation lines](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/demo2.gif)
 
