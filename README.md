@@ -1,6 +1,6 @@
 # Obsidian Outliner
 
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vslinko/obsidian-outliner/Release?logo=github&style=for-the-badge)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vslinko/obsidian-outliner/release.yml?style=for-the-badge)
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/vslinko/obsidian-outliner?style=for-the-badge&sort=semver)
 
 **Work with your lists like in Workflowy or RoamResearch**
