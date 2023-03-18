@@ -2,7 +2,7 @@ import { Operation } from "./Operation";
 
 import { List, Position, Root } from "../root";
 import { recalculateNumericBullets } from "../root/recalculateNumericBullets";
-import { checkboxRe } from "../services/ParserService";
+import { checkboxRe } from "../utils/checkboxRe";
 import { isEmptyLineOrEmptyCheckbox } from "../utils/isEmptyLineOrEmptyCheckbox";
 
 export interface GetZoomRange {

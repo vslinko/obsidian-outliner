@@ -2,9 +2,9 @@ import { SettingsService } from "./SettingsService";
 
 import { List, Root } from "../root";
 import { LoggerService } from "../services/LoggerService";
+import { checkboxRe } from "../utils/checkboxRe";
 
 const bulletSignRe = `(?:[-*+]|\\d+\\.)`;
-export const checkboxRe = `\\[[^\\[\\]]\\][ \t]`;
 const optionalCheckboxRe = `(?:${checkboxRe})?`;
 
 const listItemWithoutSpacesRe = new RegExp(`^${bulletSignRe}( |\t)`);
