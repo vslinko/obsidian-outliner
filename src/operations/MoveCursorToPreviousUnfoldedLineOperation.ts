@@ -26,11 +26,12 @@ export class MoveCursorToPreviousUnfoldedLineOperation implements Operation {
     const list = this.root.getListUnderCursor();
     const cursor = this.root.getCursor();
     const lines = list.getLinesInfo();
-    const lineNo = lines.findIndex(
-      (l) =>
+    const lineNo = lines.findIndex((l) => {
+      return (
         cursor.ch === l.from.ch + list.getCheckboxLength() &&
         cursor.line === l.from.line
-    );
+      );
+    });
 
     if (lineNo === 0) {
       this.moveCursorToPreviousUnfoldedItem(root, cursor);

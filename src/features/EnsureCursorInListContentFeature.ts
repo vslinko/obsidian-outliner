@@ -27,7 +27,7 @@ export class EnsureCursorInListContentFeature implements Feature {
   async unload() {}
 
   private transactionExtender = (tr: Transaction): null => {
-    if (!this.settings.stickCursor || !tr.selection) {
+    if (this.settings.stickCursor == "never" || !tr.selection) {
       return null;
     }
 

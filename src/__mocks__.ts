@@ -2,6 +2,7 @@
 import { MyEditor } from "./MyEditor";
 import { LoggerService } from "./services/LoggerService";
 import { ParserService } from "./services/ParserService";
+import { SettingsService } from "./services/SettingsService";
 
 export interface EditorMockParams {
   text: string;
@@ -38,14 +39,23 @@ export function makeLoggerService(): LoggerService {
   return logger;
 }
 
+export function makeSettingsService(): SettingsService {
+  const settings: any = {
+    stickCursor: "bullet-and-checkbox",
+  };
+  return settings;
+}
+
 export function makeRoot(options: {
   editor: MyEditor;
+  settings?: SettingsService;
   logger?: LoggerService;
 }) {
-  const { logger, editor } = {
+  const { logger, editor, settings } = {
     logger: makeLoggerService(),
+    settings: makeSettingsService(),
     ...options,
   };
 
-  return new ParserService(logger).parse(editor);
+  return new ParserService(logger, settings).parse(editor);
 }

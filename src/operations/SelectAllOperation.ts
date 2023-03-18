@@ -46,7 +46,7 @@ export class SelectAllOperation implements Operation {
     }
 
     const list = root.getListUnderCursor();
-    const contentStart = list.getFirstLineContentStart();
+    const contentStart = list.getFirstLineContentStartAfterCheckbox();
     const contentEnd = list.getLastLineContentEnd();
 
     if (
@@ -65,10 +65,10 @@ export class SelectAllOperation implements Operation {
       selectionTo.line === contentEnd.line &&
       selectionTo.ch === contentEnd.ch
     ) {
-      // select all list
+      // select whole list
       root.replaceSelections([{ anchor: rootStart, head: rootEnd }]);
     } else {
-      // select all line
+      // select whole line
       root.replaceSelections([{ anchor: contentStart, head: contentEnd }]);
     }
 

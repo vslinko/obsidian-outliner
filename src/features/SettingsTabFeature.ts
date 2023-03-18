@@ -2,7 +2,11 @@ import { App, PluginSettingTab, Plugin_2, Setting } from "obsidian";
 
 import { Feature } from "./Feature";
 
-import { ListLineAction, SettingsService } from "../services/SettingsService";
+import {
+  ListLineAction,
+  SettingsService,
+  StickCursor,
+} from "../services/SettingsService";
 
 class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
   constructor(app: App, plugin: Plugin_2, private settings: SettingsService) {
@@ -54,11 +58,18 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Stick the cursor to the content")
       .setDesc("Don't let the cursor move to the bullet position.")
-      .addToggle((toggle) => {
-        toggle.setValue(this.settings.stickCursor).onChange(async (value) => {
-          this.settings.stickCursor = value;
-          await this.settings.save();
-        });
+      .addDropdown((dropdown) => {
+        dropdown
+          .addOptions({
+            never: "Never",
+            "bullet-only": "Stick cursor out of bullets",
+            "bullet-and-checkbox": "Stick cursor out of bullets and checkboxes",
+          } as { [key in StickCursor]: string })
+          .setValue(this.settings.stickCursor)
+          .onChange(async (value) => {
+            this.settings.stickCursor = value as StickCursor;
+            await this.settings.save();
+          });
       });
 
     new Setting(containerEl)

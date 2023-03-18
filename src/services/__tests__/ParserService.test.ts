@@ -1,19 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { makeEditor, makeLoggerService } from "../../__mocks__";
+import {
+  makeEditor,
+  makeLoggerService,
+  makeSettingsService,
+} from "../../__mocks__";
 import { LoggerService } from "../LoggerService";
 import { ParserService } from "../ParserService";
+import { SettingsService } from "../SettingsService";
 
 function makeParserService(
   options: {
     logger?: LoggerService;
+    settings?: SettingsService;
   } = {}
 ) {
-  const { logger } = {
+  const { logger, settings } = {
     logger: makeLoggerService(),
+    settings: makeSettingsService(),
     ...options,
   };
 
-  return new ParserService(logger);
+  return new ParserService(logger, settings);
 }
 
 describe("parseList", () => {
