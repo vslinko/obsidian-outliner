@@ -8,7 +8,7 @@
         "build-with-tests": "rollup --config rollup.config.mjs --configWithTests",
         "build": "rollup --config rollup.config.mjs",
         "lint": "prettier --check src && eslint src",
-        "test": "killall Obsidian; jest",
+        "test": "jest",
         "prepare": "husky install"
     },
     "author": "Viacheslav Slinko",

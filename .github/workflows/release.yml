@@ -7,10 +7,58 @@ on:
 
 env:
   OBSIDIAN_VERSION: "1.1.16"
+  OBSIDIAN_FLATPAK_COMMIT: f885ddeab17171e10486bce93b83e84494614cf654e8c70a237f5294b05b4c55
 
 jobs:
-  build:
+  build-linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Install Obsidian
+        run: |
+          sudo apt update
+          sudo apt install flatpak dbus-x11 xvfb
+          flatpak remote-add --user flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y flathub md.obsidian.Obsidian
+          flatpak update --user -y --commit=$OBSIDIAN_FLATPAK_COMMIT md.obsidian.Obsidian
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: npm ci
+      - name: Test
+        run: |
+          npm run build-with-tests
+          Xvfb -ac :0 -screen 0 1280x1024x16 &
+          export DISPLAY=:0
+          export $(dbus-launch)
+          npm test
+  build-osx:
     runs-on: macos-12
+    steps:
+      - name: Install Obsidian
+        run: |
+          wget -q https://github.com/obsidianmd/obsidian-releases/releases/download/v$OBSIDIAN_VERSION/Obsidian-$OBSIDIAN_VERSION-universal.dmg
+          sudo hdiutil attach Obsidian-$OBSIDIAN_VERSION-universal.dmg
+          sudo cp -rf "/Volumes/Obsidian $OBSIDIAN_VERSION-universal/Obsidian.app" /Applications
+          sudo hdiutil detach "/Volumes/Obsidian $OBSIDIAN_VERSION-universal"
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: npm ci
+      - name: Test
+        run: |
+          npm run build-with-tests
+          npm test
+  release:
+    runs-on: ubuntu-22.04
+    needs: [build-linux, build-osx]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -20,16 +68,6 @@ jobs:
           node-version: 18
       - name: Install dependencies
         run: npm ci
-      - name: Install Obsidian
-        run: |
-          wget -q https://github.com/obsidianmd/obsidian-releases/releases/download/v$OBSIDIAN_VERSION/Obsidian-$OBSIDIAN_VERSION-universal.dmg
-          sudo hdiutil attach Obsidian-$OBSIDIAN_VERSION-universal.dmg
-          sudo cp -rf "/Volumes/Obsidian $OBSIDIAN_VERSION-universal/Obsidian.app" /Applications
-          sudo hdiutil detach "/Volumes/Obsidian $OBSIDIAN_VERSION-universal"
-      - name: Test
-        run: |
-          npm run build-with-tests
-          npm test
       - name: Build
         run: npm run build
       - name: Upload main.js

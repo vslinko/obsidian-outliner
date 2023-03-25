@@ -112,6 +112,7 @@
 
 # cmd+backspace should remove content only
 
+- platform: `darwin`
 - applyState:
 
 ```md
@@ -130,6 +131,7 @@
 
 # cmd+backspace should remove content only in notes
 
+- platform: `darwin`
 - applyState:
 
 ```md

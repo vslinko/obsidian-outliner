@@ -8,29 +8,57 @@ const promisify = require("util").promisify;
 const levelup = require("levelup");
 const leveldown = require("leveldown");
 
-const RESULTS_FILE_PATH = "results.json";
-const OBSIDIAN_CONFIG_PATH =
-  process.env.HOME + "/Library/Application Support/obsidian/obsidian.json";
-const OBSIDIAN_APP_CMD = "/Applications/Obsidian.app/Contents/MacOS/Obsidian";
+const KILL_CMD =
+  process.platform === "darwin"
+    ? ["killall", "Obsidian"]
+    : ["flatpak", "kill", "md.obsidian.Obsidian"];
+const OBSIDIAN_CONFIG_DIR =
+  process.platform === "darwin"
+    ? process.env.HOME + "/Library/Application Support/obsidian"
+    : process.env.HOME + "/.var/app/md.obsidian.Obsidian/config/obsidian";
+const OBSIDIAN_CONFIG_PATH = OBSIDIAN_CONFIG_DIR + "/obsidian.json";
+const OBSIDIAN_APP_CMD =
+  process.platform === "darwin"
+    ? ["/Applications/Obsidian.app/Contents/MacOS/Obsidian"]
+    : ["flatpak", "run", "md.obsidian.Obsidian"];
 const OBSIDIAN_LOCAL_STORAGE_PATH =
-  process.env.HOME +
-  "/Library/Application Support/obsidian/Local Storage/leveldb";
+  process.platform === "darwin"
+    ? process.env.HOME +
+      "/Library/Application Support/obsidian/Local Storage/leveldb"
+    : process.env.HOME +
+      "/.var/app/md.obsidian.Obsidian/config/obsidian/Local Storage/leveldb";
 const OBISDIAN_TEST_VAULT_ID = "5a15473126091111";
+const VAULT_DIR = process.cwd() + "/vault";
 
 global.originalObsidianConfig = null;
 global.OBSIDIAN_CONFIG_PATH = OBSIDIAN_CONFIG_PATH;
+global.KILL_CMD = KILL_CMD;
 
 function wait(t) {
   return new Promise((resolve) => setTimeout(resolve, t));
 }
 
-function runForAWhile(timeout) {
+function runForAWhile({ timeout, fileToCheck }) {
   return new Promise(async (resolve, reject) => {
-    const obsidian = cp.spawn(OBSIDIAN_APP_CMD);
+    const start = Date.now();
+    const obsidian = cp.spawn(OBSIDIAN_APP_CMD[0], OBSIDIAN_APP_CMD.slice(1));
     obsidian.on("error", reject);
-    await wait(timeout);
-    obsidian.kill("SIGKILL");
-    resolve();
+    const i = setInterval(() => {
+      if (fs.existsSync(fileToCheck)) {
+        clearInterval(i);
+        setTimeout(() => {
+          cp.spawnSync(KILL_CMD[0], KILL_CMD.slice(1));
+          resolve();
+        }, 1000);
+        return;
+      }
+      const diff = Date.now() - start;
+      if (diff > timeout) {
+        clearInterval(i);
+        cp.spawnSync(KILL_CMD[0], KILL_CMD.slice(1));
+        reject();
+      }
+    }, 1000);
   });
 }
 
@@ -38,11 +66,13 @@ async function prepareObsidian() {
   debug(`Preparing Obsidian`);
 
   if (!fs.existsSync(OBSIDIAN_CONFIG_PATH)) {
-    debug("  Running Obsidian for 30 seconds to setup");
-    await runForAWhile(30000);
+    debug("  Running Obsidian for 90 seconds to setup");
+    await runForAWhile({
+      timeout: 90000,
+      fileToCheck: OBSIDIAN_CONFIG_DIR,
+    });
     await wait(1000);
     debug(`  Creating ${OBSIDIAN_CONFIG_PATH}`);
-    mkdirp.sync(path.dirname(OBSIDIAN_CONFIG_PATH));
     fs.writeFileSync(OBSIDIAN_CONFIG_PATH, '{"vaults":{}}');
   }
 
@@ -53,9 +83,9 @@ async function prepareObsidian() {
     debug(`  Closing vault ${obsidianConfig.vaults[key].path}`);
     obsidianConfig.vaults[key].open = false;
   }
-  debug(`  Opening vault ${process.cwd()}`);
+  debug(`  Opening vault ${VAULT_DIR}`);
   obsidianConfig.vaults[OBISDIAN_TEST_VAULT_ID] = {
-    path: process.cwd(),
+    path: VAULT_DIR,
     ts: Date.now(),
     open: true,
   };
@@ -67,14 +97,16 @@ async function prepareObsidian() {
 async function prepareVault() {
   debug(`Prepare vault`);
 
-  const vaultConfigFilePath = ".obsidian/app.json";
-  const vaultCommunityPluginsConfigFilePath =
-    ".obsidian/community-plugins.json";
-  const vaultPluginDir = ".obsidian/plugins/obsidian-outliner";
+  mkdirp.sync(VAULT_DIR);
+  fs.writeFileSync(VAULT_DIR + "/test.md", "");
+
+  const vaultConfigFilePath = `${VAULT_DIR}/.obsidian/app.json`;
+  const vaultCommunityPluginsConfigFilePath = `${VAULT_DIR}/.obsidian/community-plugins.json`;
+  const vaultPluginDir = `${VAULT_DIR}/.obsidian/plugins/obsidian-outliner`;
 
   if (!fs.existsSync(vaultConfigFilePath)) {
-    debug("  Running Obsidian for 10 seconds to setup vault");
-    await runForAWhile(10000);
+    debug("  Running Obsidian for 90 seconds to setup vault");
+    await runForAWhile({ timeout: 90000, fileToCheck: vaultConfigFilePath });
     await wait(1000);
   }
 
@@ -117,17 +149,14 @@ async function prepareVault() {
   fs.copyFileSync("manifest.json", `${vaultPluginDir}/manifest.json`);
   debug(`  Copying ${vaultPluginDir}/styles.css`);
   fs.copyFileSync("styles.css", `${vaultPluginDir}/styles.css`);
-
-  if (fs.existsSync(RESULTS_FILE_PATH)) {
-    debug(`  Deleting ${RESULTS_FILE_PATH}`);
-    fs.unlinkSync(RESULTS_FILE_PATH);
-  }
 }
 
 module.exports = async () => {
   if (process.env.SKIP_OBSIDIAN) {
     return;
   }
+
+  cp.spawnSync(KILL_CMD[0], KILL_CMD.slice(1));
 
   await prepareObsidian();
   await prepareVault();
@@ -136,8 +165,8 @@ module.exports = async () => {
     port: 8080,
   });
 
-  debug(`Running "${OBSIDIAN_APP_CMD}"`);
-  global.obsidian = cp.exec(OBSIDIAN_APP_CMD, {
+  debug(`Running "${OBSIDIAN_APP_CMD[0]}"`);
+  const obsidian = cp.exec(OBSIDIAN_APP_CMD.join(" "), {
     env: {
       ...process.env,
       TEST_PLATFORM: "1",
