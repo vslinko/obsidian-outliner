@@ -7,6 +7,7 @@ import { ObsidianOutlinerPluginSettings } from "./services/SettingsService";
 const keysMap: { [key: string]: number } = {
   Backspace: 8,
   Enter: 13,
+  Home: 36,
   ArrowLeft: 37,
   ArrowUp: 38,
   ArrowRight: 39,
