@@ -11,7 +11,6 @@ import { ListsStylesFeature } from "./features/ListsStylesFeature";
 import { MoveCursorToPreviousUnfoldedLineFeature } from "./features/MoveCursorToPreviousUnfoldedLineFeature";
 import { MoveItemsFeature } from "./features/MoveItemsFeature";
 import { SelectAllFeature } from "./features/SelectAllFeature";
-import { SelectionShouldIgnoreBulletsFeature } from "./features/SelectionShouldIgnoreBulletsFeature";
 import { SettingsTabFeature } from "./features/SettingsTabFeature";
 import { ShiftEnterShouldCreateNoteFeature } from "./features/ShiftEnterShouldCreateNoteFeature";
 import { ApplyChangesService } from "./services/ApplyChangesService";
@@ -83,13 +82,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this.performOperation
       ),
       new DeleteShouldIgnoreBulletsFeature(
-        this,
-        this.settings,
-        this.ime,
-        this.obsidian,
-        this.performOperation
-      ),
-      new SelectionShouldIgnoreBulletsFeature(
         this,
         this.settings,
         this.ime,
