@@ -45,22 +45,22 @@ If you liked the styles from the demo above, you can enable them in the plugin s
 > **Disclaimer:** Styles are only compatible with built-in Obsidian theme.
 
 | Setting                         | Default value |
-| ------------------------------- | :-----------: |
+|---------------------------------|:-------------:|
 | Improve the style of your lists |    `true`     |
 
 ### Move lists back and forth
 
 Move lists with children wherever you want without breaking the structure.
 
-| Command                       |       Default hotkey (Windows/Linux)        |             Default hotkey (MacOS)             |
-| ----------------------------- | :-----------------------------------------: | :--------------------------------------------: |
-| Move list and sublists up     | <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>↑</kbd> | <kbd>Command</kbd><kbd>Shift</kbd><kbd>↑</kbd> |
-| Move list and sublists down   | <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>↓</kbd> | <kbd>Command</kbd><kbd>Shift</kbd><kbd>↓</kbd> |
-| Indent the list and sublists  |                                             |                                                |
-| Outdent the list and sublists |                                             |                                                |
+| Command                       |       Default hotkey (Windows/Linux)        |             Default hotkey (MacOS)             |                                    Mobile Quick Action                                    |
+|-------------------------------|:-------------------------------------------:|:----------------------------------------------:|:-----------------------------------------------------------------------------------------:|
+| Move list and sublists up     | <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>↑</kbd> | <kbd>Command</kbd><kbd>Shift</kbd><kbd>↑</kbd> |  ![](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/icons/move-up.png)  |
+| Move list and sublists down   | <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>↓</kbd> | <kbd>Command</kbd><kbd>Shift</kbd><kbd>↓</kbd> | ![](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/icons/move-down.png) |
+| Indent the list and sublists  |               <kbd>Tab</kbd>                |                 <kbd>Tab</kbd>                 |  ![](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/icons/indent.png)   |
+| Outdent the list and sublists |       <kbd>Shift</kbd><kbd>Tab</kbd>        |         <kbd>Shift</kbd><kbd>Tab</kbd>         |  ![](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/icons/outdent.png)  |
 
 | Setting             | Default value |
-| ------------------- | :-----------: |
+|---------------------|:-------------:|
 | Enhance the Tab key |    `true`     |
 
 ### Draw vertical indentation lines
@@ -70,7 +70,7 @@ Move lists with children wherever you want without breaking the structure.
 ![Demo of vertical indentation lines](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/demo2.gif)
 
 | Setting                                |  Default value   |
-| -------------------------------------- | :--------------: |
+|----------------------------------------|:----------------:|
 | Draw vertical indentation lines        |     `false`      |
 | Vertical indentation line click action | `Toggle Folding` |
 
@@ -79,7 +79,7 @@ Move lists with children wherever you want without breaking the structure.
 Don't let the cursor move to the bullet position. Affects cursor movement, text deletion, text selection.
 
 | Setting                         | Default value |
-| ------------------------------- | :-----------: |
+|---------------------------------|:-------------:|
 | Stick the cursor to the content |    `true`     |
 
 ### Enhance the Enter key
@@ -93,22 +93,22 @@ Make the Enter key behave the same as other outliners:
 [More info](https://github.com/vslinko/obsidian-outliner/discussions/98#discussioncomment-649514)
 
 | Setting               | Default value |
-| --------------------- | :-----------: |
+|-----------------------|:-------------:|
 | Enhance the Enter key |    `true`     |
 
 ### Fold and unfold your lists
 
-| Command         | Default hotkey (Windows/Linux) |     Default hotkey (MacOS)     |
-| --------------- | :----------------------------: | :----------------------------: |
-| Fold the list   |  <kbd>Ctrl</kbd><kbd>↑</kbd>   | <kbd>Command</kbd><kbd>↑</kbd> |
-| Unfold the list |  <kbd>Ctrl</kbd><kbd>↓</kbd>   | <kbd>Command</kbd><kbd>↓</kbd> |
+| Command         | Default hotkey (Windows/Linux) |     Default hotkey (MacOS)     |                                  Mobile Quick Action                                   |
+|-----------------|:------------------------------:|:------------------------------:|:--------------------------------------------------------------------------------------:|
+| Fold the list   |  <kbd>Ctrl</kbd><kbd>↑</kbd>   | <kbd>Command</kbd><kbd>↑</kbd> |  ![](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/icons/fold.png)  |
+| Unfold the list |  <kbd>Ctrl</kbd><kbd>↓</kbd>   | <kbd>Command</kbd><kbd>↓</kbd> | ![](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/icons/unfold.png) |
 
 ### Enhance the <kbd>Ctrl</kbd><kbd>A</kbd> or <kbd>Cmd</kbd><kbd>A</kbd> behavior
 
 Press the hotkey once to select the current list item. Press the hotkey twice to select the entire list.
 
 | Setting                              | Default value |
-| ------------------------------------ | :-----------: |
+|--------------------------------------|:-------------:|
 | Enhance the Ctrl+A or Cmd+A behavior |    `true`     |
 
 ### Debug mode
@@ -116,7 +116,7 @@ Press the hotkey once to select the current list item. Press the hotkey twice to
 Open DevTools (Command+Option+I or Control+Shift+I) to copy the debug logs.
 
 | Setting    | Default value |
-| ---------- | :-----------: |
+|------------|:-------------:|
 | Debug mode |    `false`    |
 
 ## Unsupported (yet) features
@@ -138,4 +138,3 @@ I want to say thank you to the people who support me, I really appreciate it!
 - [Ollie Lovell](https://www.ollielovell.com/)
 - Faiz MK ([@faizkhuzaimah](https://twitter.com/faizkhuzaimah))
 - more patrons and anonymous supporters
-
