@@ -157,7 +157,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       try {
         switch (type) {
           case "applyState":
-            this.applyState(data);
+            await this.applyState(data);
             break;
           case "simulateKeydown":
             this.simulateKeydown(data);
@@ -189,10 +189,10 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     });
   }
 
-  applyState(state: string[]): void;
-  applyState(state: string): void;
-  applyState(state: State): void;
-  applyState(state: State | string | string[]) {
+  async applyState(state: string[]): Promise<void>;
+  async applyState(state: string): Promise<void>;
+  async applyState(state: State): Promise<void>;
+  async applyState(state: State | string | string[]) {
     if (typeof state === "string") {
       state = state.split("\n");
     }
@@ -208,6 +208,8 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     for (const l of state.folds) {
       this.editor.fold(l);
     }
+
+    await this.wait(10);
   }
 
   getCurrentState(): State {
