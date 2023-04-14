@@ -71,7 +71,7 @@ async function prepareObsidian() {
       timeout: 90000,
       fileToCheck: OBSIDIAN_CONFIG_DIR,
     });
-    await wait(1000);
+    await wait(2000);
     debug(`  Creating ${OBSIDIAN_CONFIG_PATH}`);
     fs.writeFileSync(OBSIDIAN_CONFIG_PATH, '{"vaults":{}}');
   }
@@ -107,7 +107,7 @@ async function prepareVault() {
   if (!fs.existsSync(vaultConfigFilePath)) {
     debug("  Running Obsidian for 90 seconds to setup vault");
     await runForAWhile({ timeout: 90000, fileToCheck: vaultConfigFilePath });
-    await wait(1000);
+    await wait(2000);
   }
 
   const vaultConfig = JSON.parse(fs.readFileSync(vaultConfigFilePath));
@@ -157,6 +157,7 @@ module.exports = async () => {
   }
 
   cp.spawnSync(KILL_CMD[0], KILL_CMD.slice(1));
+  await wait(2000);
 
   await prepareObsidian();
   await prepareVault();
