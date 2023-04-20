@@ -11,22 +11,23 @@ import { PerformOperationService } from "src/services/PerformOperationService";
 
 import { Feature } from "../features/Feature";
 
-function isPlaceToMoveIsInsideListToMove(listToMove: List, placeToMove: List) {
-  const visit = (cur: List, check: List) => {
-    if (cur === check) {
-      return true;
-    }
+interface DropVariant {
+  line: number;
+  level: number;
+  left: number;
+  top: number;
+  placeToMove: List;
+  lastChild: List;
+  whereToMove: "after" | "before";
+}
 
-    for (const child of cur.getChildren()) {
-      if (visit(child, check)) {
-        return true;
-      }
-    }
+function getLastChild(list: List) {
+  let lastChild = list;
+  while (lastChild.getChildren().length > 0) {
+    lastChild = lastChild.getChildren().last();
+  }
 
-    return false;
-  };
-
-  return visit(listToMove, placeToMove);
+  return lastChild;
 }
 
 function isClickOnBullet(e: MouseEvent) {
@@ -98,13 +99,13 @@ const draggingField = StateField.define<DecorationSet>({
 
 export class DragNDropFeature implements Feature {
   private dragging = false;
-  private activeView: EditorView;
+  private view: EditorView;
   private editor: MyEditor;
   private root: Root;
   private list: List;
   private dropZone: HTMLDivElement;
-  private nearest: List;
-  private before: boolean;
+  private dropVariants: Map<string, DropVariant> = new Map();
+  private dropVariant: DropVariant;
 
   constructor(
     private plugin: Plugin_2,
@@ -163,25 +164,65 @@ export class DragNDropFeature implements Feature {
     const pos = editor.offsetToPos(view.posAtCoords({ x, y }));
     const root = this.parser.parse(editor, pos);
     const list = root.getListUnderLine(pos.line);
+
+    this.dropVariants.clear();
+    const visit = (lists: List[]) => {
+      for (const placeToMove of lists) {
+        if (placeToMove === list) {
+          continue;
+        }
+
+        let lastChild = placeToMove;
+        while (lastChild.getChildren().length > 0) {
+          lastChild = lastChild.getChildren().last();
+        }
+
+        const lineBefore = placeToMove.getFirstLineContentStart().line;
+        const lineAfter = lastChild.getLastLineContentEnd().line;
+
+        const level = placeToMove.getLevel();
+
+        this.dropVariants.set(`${lineBefore} ${level}`, {
+          line: lineBefore,
+          level,
+          left: 0,
+          top: 0,
+          placeToMove,
+          lastChild,
+          whereToMove: "before",
+        });
+        this.dropVariants.set(`${lineAfter} ${level}`, {
+          line: lineAfter,
+          level,
+          left: 0,
+          top: 0,
+          placeToMove,
+          lastChild,
+          whereToMove: "after",
+        });
+
+        visit(placeToMove.getChildren());
+      }
+    };
+    visit(root.getChildren());
+
+    if (this.dropVariants.size === 0) {
+      return;
+    }
+
     this.dragging = true;
-    this.activeView = view;
+    this.view = view;
     this.root = root;
     this.editor = editor;
     this.list = list;
 
-    let lastChild = list;
-    while (lastChild.getChildren().length > 0) {
-      lastChild = lastChild.getChildren().last();
-    }
+    const fromLine = list.getFirstLineContentStart().line;
+    const tillLine = getLastChild(list).getLastLineContentEnd().line;
     const lines = [];
-    for (
-      let i = list.getFirstLineContentStart().line;
-      i <= lastChild.getLastLineContentEnd().line;
-      i++
-    ) {
+    for (let i = fromLine; i <= tillLine; i++) {
       lines.push(editor.posToOffset({ line: i, ch: 0 }));
     }
-    this.activeView.dispatch({
+    this.view.dispatch({
       effects: [dragStart.of(lines)],
     });
 
@@ -195,72 +236,69 @@ export class DragNDropFeature implements Feature {
       return;
     }
 
-    const startH = this.activeView.coordsAtPos(
-      this.editor.posToOffset(this.root.getRange()[0])
-    ).top;
-    const endH = this.activeView.coordsAtPos(
-      this.editor.posToOffset(this.root.getRange()[1])
-    ).top;
+    const variant = Array.from(this.dropVariants.values())
+      .map((v) => {
+        const { placeToMove } = v;
 
-    let nearest: List | null = null;
-    let before = true;
-    if (y > endH) {
-      before = false;
-      nearest = this.root.getListUnderLine(this.root.getRange()[1].line);
-    } else if (y < startH) {
-      nearest = this.root.getListUnderLine(this.root.getRange()[0].line);
-    } else {
-      const pos = this.editor.offsetToPos(
-        this.activeView.posAtCoords({ x: x, y: y })
-      );
-      nearest = this.root.getListUnderLine(pos.line);
-    }
+        v.left = Math.round(
+          this.view.coordsAtPos(
+            this.editor.posToOffset({
+              line: placeToMove.getFirstLineContentStart().line,
+              ch: placeToMove.getFirstLineIndent().length,
+            })
+          ).left
+        );
 
-    if (isPlaceToMoveIsInsideListToMove(this.list, nearest)) {
-      nearest = null;
-    }
+        if (v.whereToMove === "before") {
+          v.top = Math.round(
+            this.view.coordsAtPos(
+              this.editor.posToOffset(placeToMove.getFirstLineContentStart())
+            ).top
+          );
+        } else {
+          v.top = Math.round(
+            this.view.coordsAtPos(
+              this.editor.posToOffset(v.lastChild.getLastLineContentEnd())
+            ).top + this.view.defaultLineHeight
+          );
+        }
 
-    this.nearest = nearest;
-    this.before = before;
-
-    if (!nearest) {
-      this.dropZone.style.display = "none";
-      return;
-    }
-
-    const left = this.activeView.coordsAtPos(
-      this.editor.posToOffset({
-        line: nearest.getFirstLineContentStart().line,
-        ch: nearest.getFirstLineIndent().length,
+        return v;
       })
-    ).left;
+      .sort((a, b) => {
+        if (a.top === b.top) {
+          return Math.abs(x - a.left) - Math.abs(x - b.left);
+        }
 
-    const top =
-      this.activeView.coordsAtPos(
-        this.editor.posToOffset(
-          before
-            ? nearest.getFirstLineContentStart()
-            : nearest.getLastLineContentEnd()
-        )
-      ).top + (before ? 0 : this.activeView.defaultLineHeight);
+        return Math.abs(y - a.top) - Math.abs(y - b.top);
+      })
+      .first();
+
+    this.dropVariant = variant;
+
+    const width = Math.round(
+      this.view.contentDOM.offsetWidth -
+        (variant.left - this.view.coordsAtPos(0).left)
+    );
+
+    this.dropZone.style.display = "block";
+    this.dropZone.style.top = variant.top + "px";
+    this.dropZone.style.left = variant.left + "px";
+    this.dropZone.style.width = width + "px";
 
     if (
-      before &&
+      variant.whereToMove === "before" &&
       !this.dropZone.classList.contains("outliner-plugin-drop-zone-before")
     ) {
       this.dropZone.classList.remove("outliner-plugin-drop-zone-after");
       this.dropZone.classList.add("outliner-plugin-drop-zone-before");
     } else if (
-      !before &&
+      variant.whereToMove === "after" &&
       !this.dropZone.classList.contains("outliner-plugin-drop-zone-after")
     ) {
       this.dropZone.classList.remove("outliner-plugin-drop-zone-before");
       this.dropZone.classList.add("outliner-plugin-drop-zone-after");
     }
-
-    this.dropZone.style.display = "block";
-    this.dropZone.style.top = top + "px";
-    this.dropZone.style.left = left + "px";
   }
 
   private stopDragging() {
@@ -270,34 +308,37 @@ export class DragNDropFeature implements Feature {
 
     document.body.classList.remove("outliner-plugin-dragging");
 
-    this.activeView.dispatch({
+    this.view.dispatch({
       effects: [dragEnd.of()],
     });
 
-    this.activeView = null;
-    this.dragging = false;
     this.dropZone.style.display = "none";
 
-    if (this.nearest) {
-      const newRoot = this.parser.parse(this.editor, this.root.getRange()[0]);
-      if (!isSameRoots(this.root, newRoot)) {
-        new Notice(
-          `The item cannot be moved. The page content changed during the move.`,
-          5000
-        );
-        return;
-      }
-
+    const newRoot = this.parser.parse(this.editor, this.root.getRange()[0]);
+    if (isSameRoots(this.root, newRoot)) {
       this.performOperation.evalOperation(
         this.root,
         new MoveListToDifferentPositionOperation(
           this.root,
           this.list,
-          this.nearest,
-          this.before ? "before" : "after"
+          this.dropVariant.placeToMove,
+          this.dropVariant.whereToMove
         ),
         this.editor
       );
+    } else {
+      new Notice(
+        `The item cannot be moved. The page content changed during the move.`,
+        5000
+      );
+      return;
     }
+
+    this.dragging = false;
+    this.dropVariant = null;
+    this.view = null;
+    this.root = null;
+    this.editor = null;
+    this.list = null;
   }
 }
