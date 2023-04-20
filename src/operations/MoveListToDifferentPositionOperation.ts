@@ -23,6 +23,10 @@ export class MoveListToDifferentPositionOperation implements Operation {
   }
 
   perform() {
+    if (this.listToMove === this.placeToMove) {
+      return;
+    }
+
     this.stopPropagation = true;
     this.updated = true;
 

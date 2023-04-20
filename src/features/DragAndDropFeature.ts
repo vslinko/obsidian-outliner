@@ -209,17 +209,13 @@ export class DragAndDropFeature implements Feature {
     this.dropVariants.clear();
     const visit = (lists: List[]) => {
       for (const placeToMove of lists) {
-        if (placeToMove === list) {
-          continue;
-        }
-
         let lastChild = placeToMove;
         while (lastChild.getChildren().length > 0) {
           lastChild = lastChild.getChildren().last();
         }
 
         const lineBefore = placeToMove.getFirstLineContentStart().line;
-        const lineAfter = lastChild.getLastLineContentEnd().line;
+        const lineAfter = lastChild.getLastLineContentEnd().line + 1;
 
         const level = placeToMove.getLevel();
 
@@ -242,7 +238,9 @@ export class DragAndDropFeature implements Feature {
           whereToMove: "after",
         });
 
-        visit(placeToMove.getChildren());
+        if (placeToMove !== list) {
+          visit(placeToMove.getChildren());
+        }
       }
     };
     visit(root.getChildren());
