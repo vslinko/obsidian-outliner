@@ -33,7 +33,10 @@ function isClickOnBullet(e: MouseEvent) {
   let el = e.target as HTMLElement;
 
   while (el) {
-    if (el.classList.contains("cm-formatting-list")) {
+    if (
+      el.classList.contains("cm-formatting-list") ||
+      el.classList.contains("cm-fold-indicator")
+    ) {
       return true;
     }
 
@@ -107,40 +110,53 @@ export class DragNDropFeature implements Feature {
     private plugin: Plugin_2,
     private parser: ParserService,
     private performOperation: PerformOperationService
-  ) {
+  ) {}
+
+  async load() {
     this.dropZone = document.createElement("div");
     this.dropZone.classList.add("outliner-plugin-drop-zone");
     this.dropZone.style.display = "none";
     document.body.appendChild(this.dropZone);
-  }
 
-  async load() {
-    this.plugin.registerEditorExtension([
-      draggingField,
-      EditorView.domEventHandlers({
-        mousedown: (e, view) => {
-          if (!isClickOnBullet(e)) {
-            return;
-          }
+    this.plugin.registerEditorExtension(draggingField);
 
-          e.preventDefault();
-          e.stopPropagation();
-
-          this.startDragging(e.x, e.y, view);
-        },
-      }),
-    ]);
-
-    document.addEventListener("mousemove", (e) => {
-      this.detectDropZone(e.x, e.y);
+    document.addEventListener("mousedown", this.handleMouseDown, {
+      capture: true,
     });
-
-    document.addEventListener("mouseup", () => {
-      this.stopDragging();
-    });
+    document.addEventListener("mousemove", this.handleMouseMove);
+    document.addEventListener("mouseup", this.handleMouseUp);
   }
 
   async unload() {}
+
+  private handleMouseDown = (e: MouseEvent) => {
+    if (!isClickOnBullet(e)) {
+      return;
+    }
+
+    let viewElement = e.target as HTMLElement;
+    while (viewElement && !viewElement.classList.contains("cm-editor")) {
+      viewElement = viewElement.parentElement;
+    }
+    const view = EditorView.findFromDOM(viewElement);
+
+    if (!view) {
+      return;
+    }
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    this.startDragging(e.x, e.y, view);
+  };
+
+  private handleMouseMove = (e: MouseEvent) => {
+    this.detectDropZone(e.x, e.y);
+  };
+
+  private handleMouseUp = () => {
+    this.stopDragging();
+  };
 
   private startDragging(x: number, y: number, view: EditorView) {
     const editor = new MyEditor(view.state.field(editorInfoField).editor);

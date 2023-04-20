@@ -72,7 +72,7 @@
 
 /* drag-n-drop */
 .outliner-plugin-dragging-line {
-  background: hsla(var(--interactive-accent-hsl), 0.4);
+  background-color: hsla(var(--interactive-accent-hsl), 0.4);
 }
 
 .outliner-plugin-drop-zone {
@@ -92,8 +92,9 @@
   margin-top: -2px;
 }
 
-html body:not(.outliner-plugin-dragging) .cm-formatting-list {
-  cursor: grab;
+body:not(.outliner-plugin-dragging) .cm-formatting-list,
+body:not(.outliner-plugin-dragging) .cm-fold-indicator .collapse-indicator {
+  cursor: grab !important;
 }
 
 html body.outliner-plugin-dragging {
