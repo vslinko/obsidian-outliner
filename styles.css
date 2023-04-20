@@ -92,11 +92,13 @@
   margin-top: -1px;
 }
 
-body:not(.outliner-plugin-dragging) .cm-formatting-list,
-body:not(.outliner-plugin-dragging) .cm-fold-indicator .collapse-indicator {
+body.outliner-plugin-dnd:not(.outliner-plugin-dragging) .cm-formatting-list,
+body.outliner-plugin-dnd:not(.outliner-plugin-dragging)
+  .cm-fold-indicator
+  .collapse-indicator {
   cursor: grab !important;
 }
 
-html body.outliner-plugin-dragging {
+html body.outliner-plugin-dnd.outliner-plugin-dragging {
   cursor: grabbing !important;
 }

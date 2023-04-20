@@ -1,4 +1,4 @@
-import { Notice, Plugin_2, editorInfoField } from "obsidian";
+import { Notice, Platform, Plugin_2, editorInfoField } from "obsidian";
 
 import { StateEffect, StateField } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
@@ -8,6 +8,7 @@ import { MoveListToDifferentPositionOperation } from "src/operations/MoveListToD
 import { List, Position, Root } from "src/root";
 import { ParserService } from "src/services/ParserService";
 import { PerformOperationService } from "src/services/PerformOperationService";
+import { SettingsService } from "src/services/SettingsService";
 
 import { Feature } from "../features/Feature";
 
@@ -97,6 +98,10 @@ const draggingField = StateField.define<DecorationSet>({
   provide: (f) => EditorView.decorations.from(f),
 });
 
+function isSupported() {
+  return Platform.isDesktop;
+}
+
 export class DragNDropFeature implements Feature {
   private dragging = false;
   private view: EditorView;
@@ -109,11 +114,15 @@ export class DragNDropFeature implements Feature {
 
   constructor(
     private plugin: Plugin_2,
+    private settings: SettingsService,
     private parser: ParserService,
     private performOperation: PerformOperationService
   ) {}
 
   async load() {
+    this.settings.onChange("dndExperiment", this.handleSettingsChange);
+    this.handleSettingsChange(this.settings.dndExperiment);
+
     this.dropZone = document.createElement("div");
     this.dropZone.classList.add("outliner-plugin-drop-zone");
     this.dropZone.style.display = "none";
@@ -131,8 +140,19 @@ export class DragNDropFeature implements Feature {
 
   async unload() {}
 
+  private handleSettingsChange(dndExperiment: boolean) {
+    if (!isSupported()) {
+      return;
+    }
+    if (dndExperiment) {
+      document.body.classList.add("outliner-plugin-dnd");
+    } else {
+      document.body.classList.remove("outliner-plugin-dnd");
+    }
+  }
+
   private handleMouseDown = (e: MouseEvent) => {
-    if (!isClickOnBullet(e)) {
+    if (!isSupported() || !this.settings.dndExperiment || !isClickOnBullet(e)) {
       return;
     }
 
