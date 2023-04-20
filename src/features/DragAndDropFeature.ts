@@ -138,7 +138,20 @@ export class DragAndDropFeature implements Feature {
     document.addEventListener("keydown", this.handleKeyDown);
   }
 
-  async unload() {}
+  async unload() {
+    this.settings.removeCallback("dndExperiment", this.handleSettingsChange);
+    this.handleSettingsChange(false);
+
+    document.body.removeChild(this.dropZone);
+    this.dropZone = null;
+
+    document.removeEventListener("mousedown", this.handleMouseDown, {
+      capture: true,
+    });
+    document.removeEventListener("mousemove", this.handleMouseMove);
+    document.removeEventListener("mouseup", this.handleMouseUp);
+    document.removeEventListener("keydown", this.handleKeyDown);
+  }
 
   private handleSettingsChange(dndExperiment: boolean) {
     if (!isSupported()) {
