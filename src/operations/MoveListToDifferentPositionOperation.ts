@@ -39,7 +39,12 @@ export class MoveListToDifferentPositionOperation implements Operation {
       this.placeToMove.getParent().addAfter(this.placeToMove, this.listToMove);
     }
 
-    // corrent indentation
+    this.listToMove.unindentContent(
+      0,
+      this.listToMove.getFirstLineIndent().length
+    );
+    this.listToMove.indentContent(0, this.placeToMove.getFirstLineIndent());
+
     // handle different indent levels
     // handle cursor
     // handle mouse cursor image
