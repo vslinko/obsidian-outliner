@@ -56,6 +56,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       new DragAndDropFeature(
         this,
         this.settings,
+        this.obsidian,
         this.parser,
         this.performOperation
       ),

@@ -11,7 +11,8 @@ export class MoveListToDifferentPositionOperation implements Operation {
     private root: Root,
     private listToMove: List,
     private placeToMove: List,
-    private whereToMove: "before" | "after"
+    private whereToMove: "before" | "after" | "inside",
+    private defaultIndentChars: string
   ) {}
 
   shouldStopPropagation() {
@@ -34,17 +35,33 @@ export class MoveListToDifferentPositionOperation implements Operation {
 
     this.listToMove.getParent().removeChild(this.listToMove);
 
-    if (this.whereToMove === "before") {
-      this.placeToMove.getParent().addBefore(this.placeToMove, this.listToMove);
-    } else {
-      this.placeToMove.getParent().addAfter(this.placeToMove, this.listToMove);
+    switch (this.whereToMove) {
+      case "before":
+        this.placeToMove
+          .getParent()
+          .addBefore(this.placeToMove, this.listToMove);
+        break;
+
+      case "after":
+        this.placeToMove
+          .getParent()
+          .addAfter(this.placeToMove, this.listToMove);
+        break;
+
+      case "inside":
+        this.placeToMove.addAfterAll(this.listToMove);
+        break;
     }
 
     this.listToMove.unindentContent(
       0,
       this.listToMove.getFirstLineIndent().length
     );
-    this.listToMove.indentContent(0, this.placeToMove.getFirstLineIndent());
+    this.listToMove.indentContent(
+      0,
+      this.placeToMove.getFirstLineIndent() +
+        (this.whereToMove === "inside" ? this.defaultIndentChars : "")
+    );
 
     if (cursorAnchor) {
       const cursorListStart =

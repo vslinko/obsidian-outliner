@@ -6,6 +6,7 @@ import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
 import { MyEditor } from "src/MyEditor";
 import { MoveListToDifferentPositionOperation } from "src/operations/MoveListToDifferentPositionOperation";
 import { List, Position, Root } from "src/root";
+import { ObsidianService } from "src/services/ObsidianService";
 import { ParserService } from "src/services/ParserService";
 import { PerformOperationService } from "src/services/PerformOperationService";
 import { SettingsService } from "src/services/SettingsService";
@@ -19,7 +20,7 @@ interface DropVariant {
   top: number;
   placeToMove: List;
   lastChild: List;
-  whereToMove: "after" | "before";
+  whereToMove: "after" | "before" | "inside";
 }
 
 function getLastChild(list: List) {
@@ -115,6 +116,7 @@ export class DragAndDropFeature implements Feature {
   constructor(
     private plugin: Plugin_2,
     private settings: SettingsService,
+    private obisidian: ObsidianService,
     private parser: ParserService,
     private performOperation: PerformOperationService
   ) {}
@@ -238,6 +240,18 @@ export class DragAndDropFeature implements Feature {
           whereToMove: "after",
         });
 
+        if (placeToMove.getChildren().length === 0) {
+          this.dropVariants.set(`${lineAfter} ${level + 1}`, {
+            line: lineAfter,
+            level: level + 1,
+            left: 0,
+            top: 0,
+            placeToMove,
+            lastChild,
+            whereToMove: "inside",
+          });
+        }
+
         if (placeToMove !== list) {
           visit(placeToMove.getChildren());
         }
@@ -279,27 +293,49 @@ export class DragAndDropFeature implements Feature {
       .map((v) => {
         const { placeToMove } = v;
 
-        v.left = Math.round(
-          this.view.coordsAtPos(
-            this.editor.posToOffset({
-              line: placeToMove.getFirstLineContentStart().line,
-              ch: placeToMove.getFirstLineIndent().length,
-            })
-          ).left
-        );
+        switch (v.whereToMove) {
+          case "before":
+          case "after":
+            v.left = Math.round(
+              this.view.coordsAtPos(
+                this.editor.posToOffset({
+                  line: placeToMove.getFirstLineContentStart().line,
+                  ch: placeToMove.getFirstLineIndent().length,
+                })
+              ).left
+            );
+            break;
 
-        if (v.whereToMove === "before") {
-          v.top = Math.round(
-            this.view.coordsAtPos(
-              this.editor.posToOffset(placeToMove.getFirstLineContentStart())
-            ).top
-          );
-        } else {
-          v.top = Math.round(
-            this.view.coordsAtPos(
-              this.editor.posToOffset(v.lastChild.getLastLineContentEnd())
-            ).top + this.view.defaultLineHeight
-          );
+          case "inside":
+            v.left = Math.round(
+              this.view.coordsAtPos(
+                this.editor.posToOffset({
+                  line: placeToMove.getFirstLineContentStart().line,
+                  ch: placeToMove.getFirstLineIndent().length,
+                })
+              ).left +
+                this.view.defaultCharacterWidth * 2
+            );
+            break;
+        }
+
+        switch (v.whereToMove) {
+          case "before":
+            v.top = Math.round(
+              this.view.coordsAtPos(
+                this.editor.posToOffset(placeToMove.getFirstLineContentStart())
+              ).top
+            );
+            break;
+
+          case "after":
+          case "inside":
+            v.top = Math.round(
+              this.view.coordsAtPos(
+                this.editor.posToOffset(v.lastChild.getLastLineContentEnd())
+              ).top + this.view.defaultLineHeight
+            );
+            break;
         }
 
         return v;
@@ -332,7 +368,7 @@ export class DragAndDropFeature implements Feature {
       this.dropZone.classList.remove("outliner-plugin-drop-zone-after");
       this.dropZone.classList.add("outliner-plugin-drop-zone-before");
     } else if (
-      variant.whereToMove === "after" &&
+      (variant.whereToMove === "after" || variant.whereToMove === "inside") &&
       !this.dropZone.classList.contains("outliner-plugin-drop-zone-after")
     ) {
       this.dropZone.classList.remove("outliner-plugin-drop-zone-before");
@@ -362,7 +398,8 @@ export class DragAndDropFeature implements Feature {
             this.root,
             this.list,
             this.dropVariant.placeToMove,
-            this.dropVariant.whereToMove
+            this.dropVariant.whereToMove,
+            this.obisidian.getDefaultIndentChars()
           ),
           this.editor
         );
