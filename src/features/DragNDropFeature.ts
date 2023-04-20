@@ -11,6 +11,24 @@ import { PerformOperationService } from "src/services/PerformOperationService";
 
 import { Feature } from "../features/Feature";
 
+function isPlaceToMoveIsInsideListToMove(listToMove: List, placeToMove: List) {
+  const visit = (cur: List, check: List) => {
+    if (cur === check) {
+      return true;
+    }
+
+    for (const child of cur.getChildren()) {
+      if (visit(child, check)) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  return visit(listToMove, placeToMove);
+}
+
 function isClickOnBullet(e: MouseEvent) {
   let el = e.target as HTMLElement;
 
@@ -97,155 +115,173 @@ export class DragNDropFeature implements Feature {
   }
 
   async load() {
-    this.plugin.registerEditorExtension(draggingField);
-
-    document.addEventListener("mouseup", () => {
-      if (this.dragging) {
-        document.body.classList.remove("outliner-plugin-dragging");
-
-        this.activeView.dispatch({
-          effects: [dragEnd.of()],
-        });
-
-        this.activeView = null;
-        this.dragging = false;
-        this.dropZone.style.display = "none";
-
-        if (this.nearest) {
-          const newRoot = this.parser.parse(
-            this.editor,
-            this.root.getRange()[0]
-          );
-          if (!isSameRoots(this.root, newRoot)) {
-            new Notice(
-              `The item cannot be moved. The page content changed during the move.`,
-              5000
-            );
-            return;
-          }
-
-          this.performOperation.evalOperation(
-            this.root,
-            new MoveListToDifferentPositionOperation(
-              this.root,
-              this.list,
-              this.nearest,
-              this.before ? "before" : "after"
-            ),
-            this.editor
-          );
-        }
-      }
-    });
-
-    document.addEventListener("mousemove", (e) => {
-      if (this.dragging) {
-        const startH = this.activeView.coordsAtPos(
-          this.editor.posToOffset(this.root.getRange()[0])
-        ).top;
-        const endH = this.activeView.coordsAtPos(
-          this.editor.posToOffset(this.root.getRange()[1])
-        ).top;
-
-        let nearest: List | null = null;
-        let before = true;
-        if (e.y > endH) {
-          before = false;
-          nearest = this.root.getListUnderLine(this.root.getRange()[1].line);
-        } else if (e.y < startH) {
-          nearest = this.root.getListUnderLine(this.root.getRange()[0].line);
-        } else {
-          const pos = this.editor.offsetToPos(
-            this.activeView.posAtCoords({ x: e.x, y: e.y })
-          );
-          nearest = this.root.getListUnderLine(pos.line);
-        }
-
-        this.nearest = nearest;
-        this.before = before;
-
-        if (!nearest) {
-          this.dropZone.style.display = "none";
-          return;
-        }
-
-        const left = this.activeView.coordsAtPos(
-          this.editor.posToOffset({
-            line: nearest.getFirstLineContentStart().line,
-            ch: nearest.getFirstLineIndent().length,
-          })
-        ).left;
-
-        const top =
-          this.activeView.coordsAtPos(
-            this.editor.posToOffset(
-              before
-                ? nearest.getFirstLineContentStart()
-                : nearest.getLastLineContentEnd()
-            )
-          ).top + (before ? 0 : this.activeView.defaultLineHeight);
-
-        if (
-          before &&
-          !this.dropZone.classList.contains("outliner-plugin-drop-zone-before")
-        ) {
-          this.dropZone.classList.remove("outliner-plugin-drop-zone-after");
-          this.dropZone.classList.add("outliner-plugin-drop-zone-before");
-        } else if (
-          !before &&
-          !this.dropZone.classList.contains("outliner-plugin-drop-zone-after")
-        ) {
-          this.dropZone.classList.remove("outliner-plugin-drop-zone-before");
-          this.dropZone.classList.add("outliner-plugin-drop-zone-after");
-        }
-
-        this.dropZone.style.display = "block";
-        this.dropZone.style.top = top + "px";
-        this.dropZone.style.left = left + "px";
-      }
-    });
-
-    this.plugin.registerEditorExtension(
+    this.plugin.registerEditorExtension([
+      draggingField,
       EditorView.domEventHandlers({
         mousedown: (e, view) => {
           if (!isClickOnBullet(e)) {
             return;
           }
-          const coords = { x: e.x, y: e.y };
-          const editor = new MyEditor(view.state.field(editorInfoField).editor);
-          const pos = editor.offsetToPos(view.posAtCoords(coords));
-          const root = this.parser.parse(editor, pos);
-          const list = root.getListUnderLine(pos.line);
-          this.dragging = true;
-          this.activeView = view;
-          this.root = root;
-          this.editor = editor;
-          this.list = list;
-
-          let lastChild = list;
-          while (lastChild.getChildren().length > 0) {
-            lastChild = lastChild.getChildren().last();
-          }
-          const lines = [];
-          for (
-            let i = list.getFirstLineContentStart().line;
-            i <= lastChild.getLastLineContentEnd().line;
-            i++
-          ) {
-            lines.push(editor.posToOffset({ line: i, ch: 0 }));
-          }
-          this.activeView.dispatch({
-            effects: [dragStart.of(lines)],
-          });
-
-          document.body.classList.add("outliner-plugin-dragging");
 
           e.preventDefault();
           e.stopPropagation();
+
+          this.startDragging(e.x, e.y, view);
         },
-      })
-    );
+      }),
+    ]);
+
+    document.addEventListener("mousemove", (e) => {
+      this.detectDropZone(e.x, e.y);
+    });
+
+    document.addEventListener("mouseup", () => {
+      this.stopDragging();
+    });
   }
 
   async unload() {}
+
+  private startDragging(x: number, y: number, view: EditorView) {
+    const editor = new MyEditor(view.state.field(editorInfoField).editor);
+    const pos = editor.offsetToPos(view.posAtCoords({ x, y }));
+    const root = this.parser.parse(editor, pos);
+    const list = root.getListUnderLine(pos.line);
+    this.dragging = true;
+    this.activeView = view;
+    this.root = root;
+    this.editor = editor;
+    this.list = list;
+
+    let lastChild = list;
+    while (lastChild.getChildren().length > 0) {
+      lastChild = lastChild.getChildren().last();
+    }
+    const lines = [];
+    for (
+      let i = list.getFirstLineContentStart().line;
+      i <= lastChild.getLastLineContentEnd().line;
+      i++
+    ) {
+      lines.push(editor.posToOffset({ line: i, ch: 0 }));
+    }
+    this.activeView.dispatch({
+      effects: [dragStart.of(lines)],
+    });
+
+    document.body.classList.add("outliner-plugin-dragging");
+
+    this.detectDropZone(x, y);
+  }
+
+  private detectDropZone(x: number, y: number) {
+    if (!this.dragging) {
+      return;
+    }
+
+    const startH = this.activeView.coordsAtPos(
+      this.editor.posToOffset(this.root.getRange()[0])
+    ).top;
+    const endH = this.activeView.coordsAtPos(
+      this.editor.posToOffset(this.root.getRange()[1])
+    ).top;
+
+    let nearest: List | null = null;
+    let before = true;
+    if (y > endH) {
+      before = false;
+      nearest = this.root.getListUnderLine(this.root.getRange()[1].line);
+    } else if (y < startH) {
+      nearest = this.root.getListUnderLine(this.root.getRange()[0].line);
+    } else {
+      const pos = this.editor.offsetToPos(
+        this.activeView.posAtCoords({ x: x, y: y })
+      );
+      nearest = this.root.getListUnderLine(pos.line);
+    }
+
+    if (isPlaceToMoveIsInsideListToMove(this.list, nearest)) {
+      nearest = null;
+    }
+
+    this.nearest = nearest;
+    this.before = before;
+
+    if (!nearest) {
+      this.dropZone.style.display = "none";
+      return;
+    }
+
+    const left = this.activeView.coordsAtPos(
+      this.editor.posToOffset({
+        line: nearest.getFirstLineContentStart().line,
+        ch: nearest.getFirstLineIndent().length,
+      })
+    ).left;
+
+    const top =
+      this.activeView.coordsAtPos(
+        this.editor.posToOffset(
+          before
+            ? nearest.getFirstLineContentStart()
+            : nearest.getLastLineContentEnd()
+        )
+      ).top + (before ? 0 : this.activeView.defaultLineHeight);
+
+    if (
+      before &&
+      !this.dropZone.classList.contains("outliner-plugin-drop-zone-before")
+    ) {
+      this.dropZone.classList.remove("outliner-plugin-drop-zone-after");
+      this.dropZone.classList.add("outliner-plugin-drop-zone-before");
+    } else if (
+      !before &&
+      !this.dropZone.classList.contains("outliner-plugin-drop-zone-after")
+    ) {
+      this.dropZone.classList.remove("outliner-plugin-drop-zone-before");
+      this.dropZone.classList.add("outliner-plugin-drop-zone-after");
+    }
+
+    this.dropZone.style.display = "block";
+    this.dropZone.style.top = top + "px";
+    this.dropZone.style.left = left + "px";
+  }
+
+  private stopDragging() {
+    if (!this.dragging) {
+      return;
+    }
+
+    document.body.classList.remove("outliner-plugin-dragging");
+
+    this.activeView.dispatch({
+      effects: [dragEnd.of()],
+    });
+
+    this.activeView = null;
+    this.dragging = false;
+    this.dropZone.style.display = "none";
+
+    if (this.nearest) {
+      const newRoot = this.parser.parse(this.editor, this.root.getRange()[0]);
+      if (!isSameRoots(this.root, newRoot)) {
+        new Notice(
+          `The item cannot be moved. The page content changed during the move.`,
+          5000
+        );
+        return;
+      }
+
+      this.performOperation.evalOperation(
+        this.root,
+        new MoveListToDifferentPositionOperation(
+          this.root,
+          this.list,
+          this.nearest,
+          this.before ? "before" : "after"
+        ),
+        this.editor
+      );
+    }
+  }
 }
