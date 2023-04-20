@@ -69,3 +69,33 @@
   .cm-indent::before {
   content: none;
 }
+
+/* drag-n-drop */
+.outliner-plugin-dragging-line {
+  background: hsla(var(--interactive-accent-hsl), 0.4);
+}
+
+.outliner-plugin-drop-zone {
+  width: 300px;
+  height: 4px;
+  background: var(--color-accent);
+  z-index: 999;
+  position: absolute;
+  pointer-events: none;
+}
+
+.outliner-plugin-drop-zone-before {
+  margin-top: -8px;
+}
+
+.outliner-plugin-drop-zone-after {
+  margin-top: -2px;
+}
+
+html body:not(.outliner-plugin-dragging) .cm-formatting-list {
+  cursor: grab;
+}
+
+html body.outliner-plugin-dragging {
+  cursor: grabbing !important;
+}

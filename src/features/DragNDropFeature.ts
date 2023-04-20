@@ -1,6 +1,7 @@
 import { Notice, Plugin_2, editorInfoField } from "obsidian";
 
-import { EditorView } from "@codemirror/view";
+import { StateEffect, StateField } from "@codemirror/state";
+import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
 
 import { MyEditor } from "src/MyEditor";
 import { MoveListToDifferentPositionOperation } from "src/operations/MoveListToDifferentPositionOperation";
@@ -42,14 +43,44 @@ function isSameRoots(a: Root, b: Root) {
   return a.print() === b.print();
 }
 
+const dragStart = StateEffect.define<number[]>({
+  map: (lines, change) => lines.map((l) => change.mapPos(l)),
+});
+const dragEnd = StateEffect.define<void>();
+
+const draggingMark = Decoration.line({
+  class: "outliner-plugin-dragging-line",
+});
+
+const draggingField = StateField.define<DecorationSet>({
+  create() {
+    return Decoration.none;
+  },
+  update(draggingLines, tr) {
+    draggingLines = draggingLines.map(tr.changes);
+
+    for (const e of tr.effects) {
+      if (e.is(dragEnd)) {
+        draggingLines = Decoration.none;
+      }
+      if (e.is(dragStart)) {
+        draggingLines = draggingLines.update({
+          add: e.value.map((l) => draggingMark.range(l, l)),
+        });
+      }
+    }
+
+    return draggingLines;
+  },
+  provide: (f) => EditorView.decorations.from(f),
+});
+
 export class DragNDropFeature implements Feature {
   private dragging = false;
   private activeView: EditorView;
   private editor: MyEditor;
   private root: Root;
   private list: List;
-  private content: HTMLPreElement;
-  private box: HTMLDivElement;
   private dropZone: HTMLDivElement;
   private nearest: List;
   private before: boolean;
@@ -59,41 +90,25 @@ export class DragNDropFeature implements Feature {
     private parser: ParserService,
     private performOperation: PerformOperationService
   ) {
-    this.content = document.createElement("pre");
-    this.content.style.fontFamily = "sans-serif";
-    this.content.style.fontStyle = "italic";
-
-    this.box = document.createElement("div");
-    this.box.style.width = "300px";
-    this.box.style.maxHeight = "100px";
-    this.box.style.background = "red";
-    this.box.style.zIndex = "1000";
-    this.box.style.position = "absolute";
-    this.box.style.display = "none";
-    this.box.style.pointerEvents = "none";
-    this.box.style.margin = "16px 0 0 16px";
-    this.box.style.padding = "4px";
-    this.box.style.overflow = "hidden";
-    this.box.appendChild(this.content);
-    document.body.appendChild(this.box);
-
     this.dropZone = document.createElement("div");
-    this.dropZone.style.width = "300px";
-    this.dropZone.style.height = "4px";
-    this.dropZone.style.background = "green";
-    this.dropZone.style.zIndex = "999";
-    this.dropZone.style.position = "absolute";
+    this.dropZone.classList.add("outliner-plugin-drop-zone");
     this.dropZone.style.display = "none";
-    this.dropZone.style.pointerEvents = "none";
     document.body.appendChild(this.dropZone);
   }
 
   async load() {
+    this.plugin.registerEditorExtension(draggingField);
+
     document.addEventListener("mouseup", () => {
       if (this.dragging) {
+        document.body.classList.remove("outliner-plugin-dragging");
+
+        this.activeView.dispatch({
+          effects: [dragEnd.of()],
+        });
+
         this.activeView = null;
         this.dragging = false;
-        this.box.style.display = "none";
         this.dropZone.style.display = "none";
 
         if (this.nearest) {
@@ -125,9 +140,6 @@ export class DragNDropFeature implements Feature {
 
     document.addEventListener("mousemove", (e) => {
       if (this.dragging) {
-        this.box.style.top = e.y + "px";
-        this.box.style.left = e.x + "px";
-
         const startH = this.activeView.coordsAtPos(
           this.editor.posToOffset(this.root.getRange()[0])
         ).top;
@@ -157,14 +169,39 @@ export class DragNDropFeature implements Feature {
           return;
         }
 
-        const offset = before
-          ? this.editor.posToOffset(nearest.getFirstLineContentStart())
-          : this.editor.posToOffset(nearest.getLastLineContentEnd()) + 1;
-        const start = this.activeView.coordsAtPos(offset);
+        const left = this.activeView.coordsAtPos(
+          this.editor.posToOffset({
+            line: nearest.getFirstLineContentStart().line,
+            ch: nearest.getFirstLineIndent().length,
+          })
+        ).left;
+
+        const top =
+          this.activeView.coordsAtPos(
+            this.editor.posToOffset(
+              before
+                ? nearest.getFirstLineContentStart()
+                : nearest.getLastLineContentEnd()
+            )
+          ).top + (before ? 0 : this.activeView.defaultLineHeight);
+
+        if (
+          before &&
+          !this.dropZone.classList.contains("outliner-plugin-drop-zone-before")
+        ) {
+          this.dropZone.classList.remove("outliner-plugin-drop-zone-after");
+          this.dropZone.classList.add("outliner-plugin-drop-zone-before");
+        } else if (
+          !before &&
+          !this.dropZone.classList.contains("outliner-plugin-drop-zone-after")
+        ) {
+          this.dropZone.classList.remove("outliner-plugin-drop-zone-before");
+          this.dropZone.classList.add("outliner-plugin-drop-zone-after");
+        }
 
         this.dropZone.style.display = "block";
-        this.dropZone.style.top = start.top + "px";
-        this.dropZone.style.left = start.left + "px";
+        this.dropZone.style.top = top + "px";
+        this.dropZone.style.left = left + "px";
       }
     });
 
@@ -179,15 +216,30 @@ export class DragNDropFeature implements Feature {
           const pos = editor.offsetToPos(view.posAtCoords(coords));
           const root = this.parser.parse(editor, pos);
           const list = root.getListUnderLine(pos.line);
-          this.box.style.display = "block";
-          this.box.style.top = e.y + "px";
-          this.box.style.left = e.x + "px";
           this.dragging = true;
           this.activeView = view;
           this.root = root;
           this.editor = editor;
           this.list = list;
-          this.content.innerText = list.print();
+
+          let lastChild = list;
+          while (lastChild.getChildren().length > 0) {
+            lastChild = lastChild.getChildren().last();
+          }
+          const lines = [];
+          for (
+            let i = list.getFirstLineContentStart().line;
+            i <= lastChild.getLastLineContentEnd().line;
+            i++
+          ) {
+            lines.push(editor.posToOffset({ line: i, ch: 0 }));
+          }
+          this.activeView.dispatch({
+            effects: [dragStart.of(lines)],
+          });
+
+          document.body.classList.add("outliner-plugin-dragging");
+
           e.preventDefault();
           e.stopPropagation();
         },
