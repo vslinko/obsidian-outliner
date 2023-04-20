@@ -126,6 +126,7 @@ export class DragNDropFeature implements Feature {
     });
     document.addEventListener("mousemove", this.handleMouseMove);
     document.addEventListener("mouseup", this.handleMouseUp);
+    document.addEventListener("keydown", this.handleKeyDown);
   }
 
   async unload() {}
@@ -157,6 +158,13 @@ export class DragNDropFeature implements Feature {
 
   private handleMouseUp = () => {
     this.stopDragging();
+  };
+
+  private handleKeyDown = (e: KeyboardEvent) => {
+    if (this.dragging && e.code === "Escape") {
+      this.dropVariant = null;
+      this.stopDragging();
+    }
   };
 
   private startDragging(x: number, y: number, view: EditorView) {
@@ -314,24 +322,26 @@ export class DragNDropFeature implements Feature {
 
     this.dropZone.style.display = "none";
 
-    const newRoot = this.parser.parse(this.editor, this.root.getRange()[0]);
-    if (isSameRoots(this.root, newRoot)) {
-      this.performOperation.evalOperation(
-        this.root,
-        new MoveListToDifferentPositionOperation(
+    if (this.dropVariant) {
+      const newRoot = this.parser.parse(this.editor, this.root.getRange()[0]);
+      if (isSameRoots(this.root, newRoot)) {
+        this.performOperation.evalOperation(
           this.root,
-          this.list,
-          this.dropVariant.placeToMove,
-          this.dropVariant.whereToMove
-        ),
-        this.editor
-      );
-    } else {
-      new Notice(
-        `The item cannot be moved. The page content changed during the move.`,
-        5000
-      );
-      return;
+          new MoveListToDifferentPositionOperation(
+            this.root,
+            this.list,
+            this.dropVariant.placeToMove,
+            this.dropVariant.whereToMove
+          ),
+          this.editor
+        );
+      } else {
+        new Notice(
+          `The item cannot be moved. The page content changed during the move.`,
+          5000
+        );
+        return;
+      }
     }
 
     this.dragging = false;
