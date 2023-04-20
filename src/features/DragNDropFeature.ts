@@ -1,10 +1,10 @@
-import { Plugin_2, editorInfoField } from "obsidian";
+import { Notice, Plugin_2, editorInfoField } from "obsidian";
 
 import { EditorView } from "@codemirror/view";
 
 import { MyEditor } from "src/MyEditor";
 import { MoveListToDifferentPositionOperation } from "src/operations/MoveListToDifferentPositionOperation";
-import { List, Root } from "src/root";
+import { List, Position, Root } from "src/root";
 import { ParserService } from "src/services/ParserService";
 import { PerformOperationService } from "src/services/PerformOperationService";
 
@@ -22,6 +22,24 @@ function isClickOnBullet(e: MouseEvent) {
   }
 
   return false;
+}
+
+function isSamePositions(a: Position, b: Position) {
+  return a.line === b.line && a.ch === b.ch;
+}
+
+function isSameRoots(a: Root, b: Root) {
+  const aRange = a.getRange();
+  const bRange = b.getRange();
+
+  if (
+    !isSamePositions(aRange[0], bRange[0]) ||
+    !isSamePositions(aRange[1], bRange[1])
+  ) {
+    return false;
+  }
+
+  return a.print() === b.print();
 }
 
 export class DragNDropFeature implements Feature {
@@ -79,6 +97,18 @@ export class DragNDropFeature implements Feature {
         this.dropZone.style.display = "none";
 
         if (this.nearest) {
+          const newRoot = this.parser.parse(
+            this.editor,
+            this.root.getRange()[0]
+          );
+          if (!isSameRoots(this.root, newRoot)) {
+            new Notice(
+              `The item cannot be moved. The page content changed during the move.`,
+              5000
+            );
+            return;
+          }
+
           this.performOperation.evalOperation(
             this.root,
             new MoveListToDifferentPositionOperation(

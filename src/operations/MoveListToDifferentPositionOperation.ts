@@ -61,7 +61,6 @@ export class MoveListToDifferentPositionOperation implements Operation {
     // handle mouse cursor image
     // handle when list have fold/unfold
     // try to draw pretty box
-    // handle when root is changed while moving
     // some e2e tests?
 
     recalculateNumericBullets(this.root);
