@@ -10,7 +10,7 @@ import { ParserService } from "src/services/ParserService";
 import { PerformOperationService } from "src/services/PerformOperationService";
 import { SettingsService } from "src/services/SettingsService";
 
-import { Feature } from "../features/Feature";
+import { Feature } from "./Feature";
 
 interface DropVariant {
   line: number;
@@ -102,7 +102,7 @@ function isSupported() {
   return Platform.isDesktop;
 }
 
-export class DragNDropFeature implements Feature {
+export class DragAndDropFeature implements Feature {
   private dragging = false;
   private view: EditorView;
   private editor: MyEditor;
