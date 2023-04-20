@@ -23,7 +23,6 @@ export class MoveListToDifferentPositionOperation implements Operation {
   }
 
   perform() {
-    // handle move to itself and children
     if (this.listToMove === this.placeToMove) {
       return;
     }
@@ -56,12 +55,6 @@ export class MoveListToDifferentPositionOperation implements Operation {
         ch: cursorListStart.ch + cursorAnchor.chDiff,
       });
     }
-
-    // handle different indent levels
-    // handle mouse cursor image
-    // handle when list have fold/unfold
-    // try to draw pretty box
-    // some e2e tests?
 
     recalculateNumericBullets(this.root);
   }
