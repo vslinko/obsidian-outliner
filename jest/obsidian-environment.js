@@ -23,14 +23,16 @@ module.exports = class CustomEnvironment extends TestEnvironment {
     this.global.applyState = (data) => this.runCommand("applyState", data);
     this.global.simulateKeydown = (data) =>
       this.runCommand("simulateKeydown", data);
-    this.global.insertText = (data) =>
-      this.runCommand("insertText", data);
+    this.global.insertText = (data) => this.runCommand("insertText", data);
     this.global.executeCommandById = (data) =>
       this.runCommand("executeCommandById", data);
     this.global.setSetting = (data) => this.runCommand("setSetting", data);
     this.global.resetSettings = () => this.runCommand("resetSettings");
     this.global.parseState = (data) => this.runCommand("parseState", data);
     this.global.getCurrentState = () => this.runCommand("getCurrentState");
+    this.global.drag = (data) => this.runCommand("drag", data);
+    this.global.move = (data) => this.runCommand("move", data);
+    this.global.drop = () => this.runCommand("drop");
   }
 
   async runCommand(type, data) {

@@ -105,6 +105,15 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
+      .setName("Drag-and-Drop (Experimental)")
+      .addToggle((toggle) => {
+        toggle.setValue(this.settings.dndExperiment).onChange(async (value) => {
+          this.settings.dndExperiment = value;
+          await this.settings.save();
+        });
+      });
+
+    new Setting(containerEl)
       .setName("Debug mode")
       .setDesc(
         "Open DevTools (Command+Option+I or Control+Shift+I) to copy the debug logs."

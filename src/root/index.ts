@@ -139,6 +139,21 @@ export class List {
     };
   }
 
+  getContentEndIncludingChildren() {
+    return this.getLastChild().getLastLineContentEnd();
+  }
+
+  private getLastChild() {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let lastChild: List = this;
+
+    while (!lastChild.isEmpty()) {
+      lastChild = lastChild.getChildren().last();
+    }
+
+    return lastChild;
+  }
+
   private getContentStartCh() {
     return this.indent.length + this.bullet.length + 1;
   }

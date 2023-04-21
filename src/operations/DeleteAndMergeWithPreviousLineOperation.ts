@@ -63,7 +63,7 @@ export class DeleteAndMergeWithPreviousLineOperation implements Operation {
   }
 
   private mergeWithPreviousItem(root: Root, cursor: Position, list: List) {
-    if (root.getChildren()[0] === list && list.getChildren().length === 0) {
+    if (root.getChildren()[0] === list && list.isEmpty()) {
       return;
     }
 

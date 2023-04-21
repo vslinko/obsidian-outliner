@@ -10,6 +10,7 @@ export interface ObsidianOutlinerPluginSettings {
   selectAll: boolean;
   listLines: boolean;
   listLineAction: ListLineAction;
+  dndExperiment: boolean;
 }
 
 const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
@@ -21,6 +22,7 @@ const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
   selectAll: true,
   listLines: false,
   listLineAction: "toggle-folding",
+  dndExperiment: false,
 };
 
 export interface Storage {
@@ -73,6 +75,13 @@ export class SettingsService implements ObsidianOutlinerPluginSettings {
   }
   set betterEnter(value: boolean) {
     this.set("betterEnter", value);
+  }
+
+  get dndExperiment() {
+    return this.values.dndExperiment;
+  }
+  set dndExperiment(value: boolean) {
+    this.set("dndExperiment", value);
   }
 
   get betterTab() {

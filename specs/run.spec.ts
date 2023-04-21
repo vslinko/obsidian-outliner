@@ -27,6 +27,22 @@ interface Platform {
   platform: string;
 }
 
+interface Drag {
+  type: "drag";
+  from: { line: number; ch: 0 };
+}
+
+interface Move {
+  type: "move";
+  to: { line: number; ch: 0 };
+  offsetX: number;
+  offsetY: number;
+}
+
+interface Drop {
+  type: "drop";
+}
+
 interface InsertText {
   type: "insertText";
   text: string;
@@ -50,6 +66,9 @@ type Action =
   | InsertText
   | ExecuteCommandById
   | Platform
+  | Drag
+  | Move
+  | Drop
   | SetSetting;
 
 interface TestDesc {
@@ -83,6 +102,19 @@ function registerTest(desc: TestDesc) {
           break;
         case "setSetting":
           await setSetting({ k: action.k, v: action.v });
+          break;
+        case "drag":
+          await drag({ from: action.from });
+          break;
+        case "move":
+          await move({
+            to: action.to,
+            offsetX: action.offsetX,
+            offsetY: action.offsetY,
+          });
+          break;
+        case "drop":
+          await drop();
           break;
         case "assertState":
           // Waiting for all operations to be applied
@@ -174,6 +206,40 @@ function parsePlatform(l: LinesIterator): Platform {
   };
 }
 
+function parseDrag(l: LinesIterator): Drag {
+  const { from } = JSON.parse(l.line.replace(/- drag: `([^`]+)`/, "$1"));
+
+  l.nextNotEmpty();
+
+  return {
+    type: "drag",
+    from,
+  };
+}
+
+function parseMove(l: LinesIterator): Move {
+  const { to, offsetX, offsetY } = JSON.parse(
+    l.line.replace(/- move: `([^`]+)`/, "$1")
+  );
+
+  l.nextNotEmpty();
+
+  return {
+    type: "move",
+    to,
+    offsetX: offsetX || 0,
+    offsetY: offsetY || 0,
+  };
+}
+
+function parseDrop(l: LinesIterator): Drop {
+  l.nextNotEmpty();
+
+  return {
+    type: "drop",
+  };
+}
+
 function parseInsertText(l: LinesIterator): InsertText {
   const text = l.line.replace(/- insertText: `([^`]+)`/, "$1");
 
@@ -229,6 +295,12 @@ function parseAction(l: LinesIterator): Action {
     return parseAssertState(l);
   } else if (l.line.startsWith("- platform:")) {
     return parsePlatform(l);
+  } else if (l.line.startsWith("- drag:")) {
+    return parseDrag(l);
+  } else if (l.line.startsWith("- move:")) {
+    return parseMove(l);
+  } else if (l.line.startsWith("- drop")) {
+    return parseDrop(l);
   }
 
   throw new Error(`parseAction: Unknown action "${l.line}"`);

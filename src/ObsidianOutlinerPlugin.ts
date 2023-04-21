@@ -1,6 +1,7 @@
 import { Plugin } from "obsidian";
 
 import { DeleteShouldIgnoreBulletsFeature } from "./features/DeleteShouldIgnoreBulletsFeature";
+import { DragAndDropFeature } from "./features/DragAndDropFeature";
 import { EnsureCursorInListContentFeature } from "./features/EnsureCursorInListContentFeature";
 import { EnterOutdentIfLineIsEmptyFeature } from "./features/EnterOutdentIfLineIsEmptyFeature";
 import { EnterShouldCreateNewItemFeature } from "./features/EnterShouldCreateNewItemOnChildLevelFeature";
@@ -52,6 +53,13 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     await this.ime.load();
 
     this.features = [
+      new DragAndDropFeature(
+        this,
+        this.settings,
+        this.obsidian,
+        this.parser,
+        this.performOperation
+      ),
       new SettingsTabFeature(this, this.settings),
       new ListsStylesFeature(this.settings, this.obsidian),
       new EnterOutdentIfLineIsEmptyFeature(
