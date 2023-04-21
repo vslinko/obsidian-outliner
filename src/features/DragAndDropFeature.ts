@@ -353,7 +353,13 @@ export class DragAndDropFeature implements Feature {
 
     const width = Math.round(
       this.view.contentDOM.offsetWidth -
-        (variant.left - this.view.coordsAtPos(0).left)
+        (variant.left -
+          this.view.coordsAtPos(
+            this.editor.posToOffset({
+              line: this.list.getFirstLineContentStart().line,
+              ch: 0,
+            })
+          ).left)
     );
 
     this.dropZone.style.display = "block";
