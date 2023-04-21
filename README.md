@@ -111,6 +111,14 @@ Press the hotkey once to select the current list item. Press the hotkey twice to
 |--------------------------------------|:-------------:|
 | Enhance the Ctrl+A or Cmd+A behavior |    `true`     |
 
+### Drag-and-Drop (Experimental)
+
+![Demo of Drag-and-Drop](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/demo3.gif)
+
+| Setting                      | Default value |
+|------------------------------|:-------------:|
+| Drag-and-Drop (Experimental) |    `false`    |
+
 ### Debug mode
 
 Open DevTools (Command+Option+I or Control+Shift+I) to copy the debug logs.
