@@ -31,3 +31,12 @@ declare function executeCommandById(keys: string): Promise<void>;
 declare function setSetting(opts: { k: string; v: any }): Promise<void>;
 declare function resetSettings(): Promise<void>;
 declare function getCurrentState(): Promise<State>;
+declare function drag(opts: {
+  from: { line: number; ch: number };
+}): Promise<void>;
+declare function move(opts: {
+  to: { line: number; ch: number };
+  offsetX: number;
+  offsetY: number;
+}): Promise<void>;
+declare function drop(): Promise<void>;

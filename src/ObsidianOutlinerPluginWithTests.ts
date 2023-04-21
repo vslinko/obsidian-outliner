@@ -1,5 +1,7 @@
 import { MarkdownView } from "obsidian";
 
+import { EditorView } from "@codemirror/view";
+
 import { MyEditor, MyEditorPosition } from "./MyEditor";
 import ObsidianOutlinerPlugin from "./ObsidianOutlinerPlugin";
 import { ObsidianOutlinerPluginSettings } from "./services/SettingsService";
@@ -168,6 +170,15 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
           case "executeCommandById":
             this.executeCommandById(data);
             break;
+          case "drag":
+            this.drag(data);
+            break;
+          case "move":
+            this.move(data);
+            break;
+          case "drop":
+            this.drop();
+            break;
           case "resetSettings":
             await this.resetSettings();
             break;
@@ -187,6 +198,53 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
 
       ws.send(JSON.stringify({ id, data: result, error }));
     });
+  }
+
+  private drag(opts: { from: { line: number; ch: number } }) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const view: EditorView = (this.editor as any).view;
+    const coords = view.coordsAtPos(this.editor.posToOffset(opts.from));
+    const x = coords.left;
+    const y = coords.top;
+    const e = new MouseEvent("mousedown", {
+      screenX: x,
+      screenY: y,
+      clientX: x,
+      clientY: y,
+    });
+    const { node } = view.domAtPos(this.editor.posToOffset(opts.from));
+    let el = node instanceof HTMLElement ? node : node.parentElement;
+    while (!el.classList.contains("cm-line")) {
+      el = el.parentElement;
+    }
+    el =
+      el.querySelector(".cm-formatting-list") ||
+      el.querySelector(".cm-fold-indicator");
+    el.dispatchEvent(e);
+  }
+
+  private move(opts: {
+    to: { line: number; ch: number };
+    offsetX: number;
+    offsetY: number;
+  }) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const view: EditorView = (this.editor as any).view;
+    const coords = view.coordsAtPos(this.editor.posToOffset(opts.to));
+    const x = coords.left + opts.offsetX;
+    const y = coords.top + opts.offsetY;
+    const e = new MouseEvent("mousemove", {
+      screenX: x,
+      screenY: y,
+      clientX: x,
+      clientY: y,
+    });
+    document.dispatchEvent(e);
+  }
+
+  private drop() {
+    const e = new MouseEvent("mouseup");
+    document.dispatchEvent(e);
   }
 
   async applyState(state: string[]): Promise<void>;
