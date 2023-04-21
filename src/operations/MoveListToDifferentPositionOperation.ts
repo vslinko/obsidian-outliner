@@ -71,6 +71,8 @@ export class MoveListToDifferentPositionOperation implements Operation {
         line: cursorListStart.line + cursorAnchor.lineDiff,
         ch: cursorListStart.ch + cursorAnchor.chDiff,
       });
+    } else {
+      this.root.replaceCursor(this.listToMove.getLastLineContentEnd());
     }
 
     recalculateNumericBullets(this.root);
