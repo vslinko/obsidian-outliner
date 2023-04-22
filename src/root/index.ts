@@ -308,6 +308,25 @@ export class List {
 
     return res;
   }
+
+  clone(newRoot: Root) {
+    const clone = new List(
+      newRoot,
+      this.indent,
+      this.bullet,
+      this.optionalCheckbox,
+      this.spaceAfterBullet,
+      "",
+      this.foldRoot
+    );
+    clone.lines = this.lines.concat();
+    clone.notesIndent = this.notesIndent;
+    for (const child of this.children) {
+      clone.addAfterAll(child.clone(newRoot));
+    }
+
+    return clone;
+  }
 }
 
 export class Root {
@@ -461,5 +480,15 @@ export class Root {
     }
 
     return res.replace(/\n$/, "");
+  }
+
+  clone() {
+    const clone = new Root(
+      { ...this.start },
+      { ...this.end },
+      this.getSelections()
+    );
+    clone.rootList = this.rootList.clone(clone);
+    return clone;
   }
 }
