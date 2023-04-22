@@ -38,6 +38,13 @@ describe("applyChanges", () => {
       .getChildren()[0]
       .addAfterAll(new List(newRoot, "  ", "-", "[ ]", " ", "", false));
     newRoot.getChildren()[2].getParent().removeChild(newRoot.getChildren()[2]);
+    const l = newRoot.getChildren()[2];
+    const p = l.getParent();
+    p.removeChild(l);
+    p.addBeforeAll(l);
+    newRoot.replaceSelections([
+      { anchor: { line: 5, ch: 8 }, head: { line: 5, ch: 8 } },
+    ]);
     const currentEditor: any = {
       getRange: (...args: any[]) => {
         actions.push(["getRange", ...args]);

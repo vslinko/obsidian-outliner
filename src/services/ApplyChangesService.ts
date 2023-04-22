@@ -1,67 +1,41 @@
-export interface ApplyChangesEditorPosition {
-  line: number;
-  ch: number;
-}
+import { MyEditor } from "../MyEditor";
+import { List, Root, cmpPos } from "../root";
 
-export interface ApplyChangesEditorSelection {
-  anchor: ApplyChangesEditorPosition;
-  head: ApplyChangesEditorPosition;
-}
-
-export interface ApplyChangesEditor {
-  getRange(
-    from: ApplyChangesEditorPosition,
-    to: ApplyChangesEditorPosition
-  ): string;
-  replaceRange(
-    replacement: string,
-    from: ApplyChangesEditorPosition,
-    to: ApplyChangesEditorPosition
-  ): void;
-  setSelections(selections: ApplyChangesEditorSelection[]): void;
-  fold(n: number): void;
-  unfold(n: number): void;
-}
-
-export interface ApplyChangesList {
-  getID(): number;
-  isFoldRoot(): boolean;
-  getChildren(): ApplyChangesList[];
-  getFirstLineContentStart(): { line: number };
-  compareContent(list: ApplyChangesList): boolean;
-  getParent(): ApplyChangesList;
-  getPrevSiblingOf(list: ApplyChangesList): ApplyChangesList | null;
-}
-
-export interface ApplyChangesRoot {
-  getRange(): [ApplyChangesEditorPosition, ApplyChangesEditorPosition];
-  getSelections(): {
-    anchor: ApplyChangesEditorPosition;
-    head: ApplyChangesEditorPosition;
-  }[];
-  print(): string;
-  getChildren(): ApplyChangesList[];
-}
-
-function getAllChildrenReduceFn(
-  acc: Map<number, ApplyChangesList>,
-  child: ApplyChangesList
-) {
+function getAllChildrenReduceFn(acc: Map<number, List>, child: List) {
   acc.set(child.getID(), child);
   child.getChildren().reduce(getAllChildrenReduceFn, acc);
   return acc;
 }
 
-function getAllChildren(root: ApplyChangesRoot): Map<number, ApplyChangesList> {
+function getAllChildren(root: Root): Map<number, List> {
   return root.getChildren().reduce(getAllChildrenReduceFn, new Map());
 }
 
+function areSelectionsSame(a: Root, b: Root) {
+  const aSelections = a.getSelections();
+  const bSelections = b.getSelections();
+
+  if (aSelections.length !== bSelections.length) {
+    return false;
+  }
+
+  for (let i = 0; i < aSelections.length; i++) {
+    const aSelection = aSelections[i];
+    const bSelection = bSelections[i];
+
+    if (
+      cmpPos(aSelection.anchor, bSelection.anchor) !== 0 ||
+      cmpPos(aSelection.head, bSelection.head) !== 0
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 export class ApplyChangesService {
-  applyChanges(
-    editor: ApplyChangesEditor,
-    prevRoot: ApplyChangesRoot,
-    newRoot: ApplyChangesRoot
-  ) {
+  applyChanges(editor: MyEditor, prevRoot: Root, newRoot: Root) {
     const prevLists = getAllChildren(prevRoot);
     const newLists = getAllChildren(newRoot);
     const operations: any = [];
@@ -70,6 +44,24 @@ export class ApplyChangesService {
       const prevList = prevLists.get(newList.getID());
 
       if (prevList) {
+        if (newList.getID() === 7) {
+          console.log(
+            prevList.getParent().getID(),
+            newList.getParent().getID()
+          );
+        }
+        if (
+          prevList.getParent().getID() !== newList.getParent().getID() ||
+          prevList.getParent().getChildren().indexOf(prevList) !==
+            newList.getParent().getChildren().indexOf(newList)
+        ) {
+          operations.push([
+            "move",
+            prevList.getParent().getID(),
+            newList.getParent().getID(),
+          ]);
+        }
+
         if (!prevList.compareContent(newList)) {
           operations.push(["update", prevList.getID()]);
         }
@@ -87,12 +79,16 @@ export class ApplyChangesService {
       operations.push(["delete", prevList.getID()]);
     }
 
+    if (!areSelectionsSame(prevRoot, newRoot)) {
+      operations.push(["updateSelections"]);
+    }
+
     console.log(prevRoot.print());
     console.log(newRoot.print());
     console.log(operations);
   }
 
-  private applyChangesOld(editor: ApplyChangesEditor, root: ApplyChangesRoot) {
+  private applyChangesOld(editor: MyEditor, root: Root) {
     const rootRange = root.getRange();
     const oldString = editor.getRange(rootRange[0], rootRange[1]);
     const newString = root.print();
@@ -150,7 +146,7 @@ export class ApplyChangesService {
 
     editor.setSelections(root.getSelections());
 
-    function recursive(list: ApplyChangesList) {
+    function recursive(list: List) {
       for (const c of list.getChildren()) {
         recursive(c);
       }
