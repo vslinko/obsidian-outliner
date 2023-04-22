@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { makeEditor, makeRoot } from "../../__mocks__";
+import { List } from "../../root";
 import { ApplyChangesService } from "../ApplyChangesService";
 
 const BEFORE = `
@@ -8,6 +9,8 @@ const BEFORE = `
    - 3
   - [ ] 4
 - 5
+- 6
+- 7
 `;
 
 const AFTER = `
@@ -22,11 +25,23 @@ const AFTER = `
 describe("applyChanges", () => {
   test("should effectively apply the changes", () => {
     const actions: any = [];
-    const applyChanges = new ApplyChangesService();
+    const prevRoot = makeRoot({
+      editor: makeEditor({
+        text: BEFORE,
+        cursor: { line: 4, ch: 9 },
+        getAllFoldedLines: () => [2],
+      }),
+    });
+    const newRoot = prevRoot.clone();
+    newRoot.getChildren()[1].replateBullet("*");
+    newRoot
+      .getChildren()[0]
+      .addAfterAll(new List(newRoot, "  ", "-", "[ ]", " ", "", false));
+    newRoot.getChildren()[2].getParent().removeChild(newRoot.getChildren()[2]);
     const currentEditor: any = {
       getRange: (...args: any[]) => {
         actions.push(["getRange", ...args]);
-        return BEFORE.trim();
+        return prevRoot.print();
       },
       unfold: (...args: any[]) => {
         actions.push(["unfold", ...args]);
@@ -41,15 +56,9 @@ describe("applyChanges", () => {
         actions.push(["fold", ...args]);
       },
     };
-    const newRoot = makeRoot({
-      editor: makeEditor({
-        text: AFTER,
-        cursor: { line: 5, ch: 8 },
-        getAllFoldedLines: () => [2],
-      }),
-    });
+    const applyChanges = new ApplyChangesService();
 
-    applyChanges.applyChanges(currentEditor, newRoot);
+    applyChanges.applyChanges(currentEditor, prevRoot, newRoot);
 
     expect(actions).toStrictEqual([
       ["getRange", ...newRoot.getRange()],

@@ -26,7 +26,10 @@ export interface Range {
   head: Position;
 }
 
+let idSeq = 0;
+
 export class List {
+  private id: number;
   private parent: List | null = null;
   private children: List[] = [];
   private notesIndent: string | null = null;
@@ -41,7 +44,12 @@ export class List {
     firstLine: string,
     private foldRoot: boolean
   ) {
+    this.id = idSeq++;
     this.lines.push(firstLine);
+  }
+
+  getID() {
+    return this.id;
   }
 
   getNotesIndent(): string | null {
@@ -290,13 +298,39 @@ export class List {
     return this.children.length === 0;
   }
 
+  compareContent(other: List) {
+    if (
+      this.indent !== other.indent ||
+      this.bullet !== other.bullet ||
+      this.spaceAfterBullet !== other.spaceAfterBullet
+    ) {
+      return false;
+    }
+
+    if (this.lines.length !== other.lines.length) {
+      return false;
+    }
+
+    if (this.lines.length > 1 && this.notesIndent !== other.notesIndent) {
+      return false;
+    }
+
+    for (let i = 0; i < this.lines.length; i++) {
+      if (this.lines[i] !== other.lines[i]) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   print() {
     let res = "";
 
     for (let i = 0; i < this.lines.length; i++) {
       res +=
         i === 0
-          ? this.indent + this.bullet + this.spaceAfterBullet
+          ? this.indent + this.bullet + this.spaceAfterBullet + `#{${this.id}}`
           : this.notesIndent;
       res += this.lines[i];
       res += "\n";
@@ -319,6 +353,7 @@ export class List {
       "",
       this.foldRoot
     );
+    clone.id = this.id;
     clone.lines = this.lines.concat();
     clone.notesIndent = this.notesIndent;
     for (const child of this.children) {

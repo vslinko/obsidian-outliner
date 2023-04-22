@@ -24,9 +24,13 @@ export interface ApplyChangesEditor {
 }
 
 export interface ApplyChangesList {
+  getID(): number;
   isFoldRoot(): boolean;
   getChildren(): ApplyChangesList[];
   getFirstLineContentStart(): { line: number };
+  compareContent(list: ApplyChangesList): boolean;
+  getParent(): ApplyChangesList;
+  getPrevSiblingOf(list: ApplyChangesList): ApplyChangesList | null;
 }
 
 export interface ApplyChangesRoot {
@@ -39,8 +43,56 @@ export interface ApplyChangesRoot {
   getChildren(): ApplyChangesList[];
 }
 
+function getAllChildrenReduceFn(
+  acc: Map<number, ApplyChangesList>,
+  child: ApplyChangesList
+) {
+  acc.set(child.getID(), child);
+  child.getChildren().reduce(getAllChildrenReduceFn, acc);
+  return acc;
+}
+
+function getAllChildren(root: ApplyChangesRoot): Map<number, ApplyChangesList> {
+  return root.getChildren().reduce(getAllChildrenReduceFn, new Map());
+}
+
 export class ApplyChangesService {
-  applyChanges(editor: ApplyChangesEditor, root: ApplyChangesRoot) {
+  applyChanges(
+    editor: ApplyChangesEditor,
+    prevRoot: ApplyChangesRoot,
+    newRoot: ApplyChangesRoot
+  ) {
+    const prevLists = getAllChildren(prevRoot);
+    const newLists = getAllChildren(newRoot);
+    const operations: any = [];
+
+    for (const newList of newLists.values()) {
+      const prevList = prevLists.get(newList.getID());
+
+      if (prevList) {
+        if (!prevList.compareContent(newList)) {
+          operations.push(["update", prevList.getID()]);
+        }
+        prevLists.delete(prevList.getID());
+      } else {
+        operations.push([
+          "insertAfter",
+          newList.getParent().getPrevSiblingOf(newList).getID(),
+          newList.getID(),
+        ]);
+      }
+    }
+
+    for (const prevList of prevLists.values()) {
+      operations.push(["delete", prevList.getID()]);
+    }
+
+    console.log(prevRoot.print());
+    console.log(newRoot.print());
+    console.log(operations);
+  }
+
+  private applyChangesOld(editor: ApplyChangesEditor, root: ApplyChangesRoot) {
     const rootRange = root.getRange();
     const oldString = editor.getRange(rootRange[0], rootRange[1]);
     const newString = root.print();
