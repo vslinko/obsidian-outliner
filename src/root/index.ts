@@ -10,6 +10,13 @@ export function minPos(a: Position, b: Position) {
   return cmpPos(a, b) < 0 ? a : b;
 }
 
+export function isRangesIntersects(
+  a: [Position, Position],
+  b: [Position, Position]
+) {
+  return cmpPos(a[1], b[0]) >= 0 && cmpPos(a[0], b[1]) <= 0;
+}
+
 export interface Position {
   ch: number;
   line: number;
@@ -26,7 +33,10 @@ export interface Range {
   head: Position;
 }
 
+let idSeq = 0;
+
 export class List {
+  private id: number;
   private parent: List | null = null;
   private children: List[] = [];
   private notesIndent: string | null = null;
@@ -41,7 +51,12 @@ export class List {
     firstLine: string,
     private foldRoot: boolean
   ) {
+    this.id = idSeq++;
     this.lines.push(firstLine);
+  }
+
+  getID() {
+    return this.id;
   }
 
   getNotesIndent(): string | null {
@@ -308,6 +323,26 @@ export class List {
 
     return res;
   }
+
+  clone(newRoot: Root) {
+    const clone = new List(
+      newRoot,
+      this.indent,
+      this.bullet,
+      this.optionalCheckbox,
+      this.spaceAfterBullet,
+      "",
+      this.foldRoot
+    );
+    clone.id = this.id;
+    clone.lines = this.lines.concat();
+    clone.notesIndent = this.notesIndent;
+    for (const child of this.children) {
+      clone.addAfterAll(child.clone(newRoot));
+    }
+
+    return clone;
+  }
 }
 
 export class Root {
@@ -461,5 +496,15 @@ export class Root {
     }
 
     return res.replace(/\n$/, "");
+  }
+
+  clone() {
+    const clone = new Root(
+      { ...this.start },
+      { ...this.end },
+      this.getSelections()
+    );
+    clone.rootList = this.rootList.clone(clone);
+    return clone;
   }
 }

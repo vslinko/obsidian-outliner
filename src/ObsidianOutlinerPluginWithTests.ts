@@ -39,11 +39,13 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
   }) {
     this.settings.set(k, v);
     await this.settings.save();
+    await this.wait(10);
   }
 
   async resetSettings() {
     this.settings.reset();
     await this.settings.save();
+    await this.wait(10);
   }
 
   simulateKeydown(keys: string) {

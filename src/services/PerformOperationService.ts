@@ -12,10 +12,12 @@ export class PerformOperationService {
   ) {}
 
   evalOperation(root: Root, op: Operation, editor: MyEditor) {
+    const prevRoot = root.clone();
+
     op.perform();
 
     if (op.shouldUpdate()) {
-      this.applyChanges.applyChanges(editor, root);
+      this.applyChanges.applyChanges(editor, prevRoot, root);
     }
 
     return {
