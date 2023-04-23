@@ -325,32 +325,6 @@ export class List {
     return this.children.length === 0;
   }
 
-  compareContent(other: List) {
-    if (
-      this.indent !== other.indent ||
-      this.bullet !== other.bullet ||
-      this.spaceAfterBullet !== other.spaceAfterBullet
-    ) {
-      return false;
-    }
-
-    if (this.lines.length !== other.lines.length) {
-      return false;
-    }
-
-    if (this.lines.length > 1 && this.notesIndent !== other.notesIndent) {
-      return false;
-    }
-
-    for (let i = 0; i < this.lines.length; i++) {
-      if (this.lines[i] !== other.lines[i]) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
   print() {
     let res = "";
 
