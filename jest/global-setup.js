@@ -177,26 +177,40 @@ module.exports = async () => {
     debug(`Obsidian exited with code ${code}`);
   });
 
+  debug("Waiting for Obsidian WebSocket connection");
   const obsidianWs = await new Promise((resolve) => {
     wss.once("connection", (ws) => {
-      resolve(ws);
+      debug("Waiting for Obsidian ready message");
+      ws.once("message", (msg) => {
+        if (msg.toString() === "ready") {
+          resolve(ws);
+        }
+      });
     });
   });
+  debug("Obsidian WebSocket ready");
 
   const callbacks = new Map();
 
   obsidianWs.on("message", (message) => {
     const { id, data, error } = JSON.parse(message);
+    debug(`Response from Obsidian ${id}`);
     const cb = callbacks.get(id);
     if (cb) {
       callbacks.delete(id);
       cb(error, data);
+    } else {
+      debug(`Callback not found for ${id}`);
+      process.exit(1);
     }
   });
 
+  debug("Waiting for test environment connection");
   wss.on("connection", (ws) => {
+    debug("Test environment connected");
     ws.on("message", (message) => {
       const { id, type, data } = JSON.parse(message);
+      debug(`Request to Obsidian ${type} ${id}`);
       callbacks.set(id, (error, data) => {
         ws.send(JSON.stringify({ id, error, data }));
       });

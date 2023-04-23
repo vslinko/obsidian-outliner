@@ -1,6 +1,8 @@
 const { TestEnvironment } = require("jest-environment-node");
 const WebSocket = require("ws");
 
+let idSeq = 1;
+
 module.exports = class CustomEnvironment extends TestEnvironment {
   async setup() {
     await super.setup();
@@ -37,7 +39,7 @@ module.exports = class CustomEnvironment extends TestEnvironment {
 
   async runCommand(type, data) {
     return new Promise((resolve, reject) => {
-      const id = Math.random().toString();
+      const id = String(idSeq++);
 
       this.callbacks.set(id, (error, data) => {
         if (error) {

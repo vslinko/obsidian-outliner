@@ -30,7 +30,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     (this.app as any).commands.executeCommandById(id);
   }
 
-  async setSetting<T extends keyof ObsidianOutlinerPluginSettings>({
+  setSetting<T extends keyof ObsidianOutlinerPluginSettings>({
     k,
     v,
   }: {
@@ -38,14 +38,10 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     v: ObsidianOutlinerPluginSettings[T];
   }) {
     this.settings.set(k, v);
-    await this.settings.save();
-    await this.wait(10);
   }
 
-  async resetSettings() {
+  resetSettings() {
     this.settings.reset();
-    await this.settings.save();
-    await this.wait(10);
   }
 
   simulateKeydown(keys: string) {
@@ -148,9 +144,9 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
   }
 
   async connect() {
-    await this.prepareForTests();
-
     const ws = new WebSocket("ws://127.0.0.1:8080/");
+    await this.prepareForTests();
+    ws.send("ready");
 
     ws.addEventListener("message", async (event) => {
       const { id, type, data } = JSON.parse(event.data);
@@ -182,10 +178,10 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
             this.drop();
             break;
           case "resetSettings":
-            await this.resetSettings();
+            this.resetSettings();
             break;
           case "setSetting":
-            await this.setSetting(data);
+            this.setSetting(data);
             break;
           case "parseState":
             result = this.parseState(data);
