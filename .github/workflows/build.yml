@@ -13,7 +13,21 @@ env:
   OBSIDIAN_FLATPAK_COMMIT: f885ddeab17171e10486bce93b83e84494614cf654e8c70a237f5294b05b4c55
 
 jobs:
-  build-linux:
+  lint:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: |
+          npm run lint
+  test-on-linux:
     runs-on: ubuntu-22.04
     steps:
       - name: Install Obsidian
@@ -31,9 +45,6 @@ jobs:
           node-version: 18
       - name: Install dependencies
         run: npm ci
-      - name: Lint
-        run: |
-          npm run lint
       - name: Test
         run: |
           npm run build-with-tests
@@ -41,7 +52,7 @@ jobs:
           export DISPLAY=:0
           export $(dbus-launch)
           npm test
-  build-osx:
+  test-on-osx:
     runs-on: macos-12
     steps:
       - name: Install Obsidian
@@ -58,9 +69,6 @@ jobs:
           node-version: 18
       - name: Install dependencies
         run: npm ci
-      - name: Lint
-        run: |
-          npm run lint
       - name: Test
         run: |
           npm run build-with-tests
