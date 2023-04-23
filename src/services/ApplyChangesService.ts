@@ -1,47 +1,31 @@
 import { MyEditor } from "../MyEditor";
-import {
-  List,
-  Position,
-  Root,
-  isRangesIntersects,
-  isSelectionsSame,
-} from "../root";
+import { List, Position, Root, isRangesIntersects } from "../root";
 
 export class ApplyChangesService {
   applyChanges(editor: MyEditor, prevRoot: Root, newRoot: Root) {
     const changes = this.calculateChanges(editor, prevRoot, newRoot);
+    if (changes) {
+      const { replacement, changeFrom, changeTo } = changes;
 
-    if (!changes) {
-      return;
+      const { unfold, fold } = this.calculateFoldingOprations(
+        prevRoot,
+        newRoot,
+        changeFrom,
+        changeTo
+      );
+
+      for (const line of unfold) {
+        editor.unfold(line);
+      }
+
+      editor.replaceRange(replacement, changeFrom, changeTo);
+
+      for (const line of fold) {
+        editor.fold(line);
+      }
     }
 
-    const { replacement, changeFrom, changeTo } = changes;
-
-    const shouldReplaceSelections = this.shouldReplaceSelections(
-      prevRoot,
-      newRoot
-    );
-
-    const { unfold, fold } = this.calculateFoldingOprations(
-      prevRoot,
-      newRoot,
-      changeFrom,
-      changeTo
-    );
-
-    for (const line of unfold) {
-      editor.unfold(line);
-    }
-
-    editor.replaceRange(replacement, changeFrom, changeTo);
-
-    if (shouldReplaceSelections) {
-      editor.setSelections(newRoot.getSelections());
-    }
-
-    for (const line of fold) {
-      editor.fold(line);
-    }
+    editor.setSelections(newRoot.getSelections());
   }
 
   private calculateChanges(editor: MyEditor, prevRoot: Root, newRoot: Root) {
@@ -148,10 +132,6 @@ export class ApplyChangesService {
     fold.sort((a, b) => b - a);
 
     return { unfold, fold };
-  }
-
-  private shouldReplaceSelections(prevRoot: Root, newRoot: Root) {
-    return !isSelectionsSame(prevRoot.getSelections(), newRoot.getSelections());
   }
 }
 

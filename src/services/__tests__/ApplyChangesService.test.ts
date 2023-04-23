@@ -81,37 +81,11 @@ describe("applyChanges", () => {
         { line: 1, ch: 0 },
         { line: 5, ch: 3 },
       ],
+      ["fold", 3],
       [
         "setSelections",
         [{ anchor: { line: 1, ch: 3 }, head: { line: 1, ch: 3 } }],
       ],
-      ["fold", 3],
-    ]);
-  });
-
-  test("should not change selections if they are not changed", () => {
-    const { actions, editor, prevRoot, newRoot } = makeArgs({
-      editor: makeEditor({
-        text: `
-- 1
-  - 2
-- 3
-`,
-        cursor: { line: 2, ch: 5 },
-        getAllFoldedLines: () => [],
-      }),
-
-      changes: (root) => {
-        root.getChildren()[0].getChildren()[0].replaceLines(["0"]);
-      },
-    });
-    const applyChanges = new ApplyChangesService();
-
-    applyChanges.applyChanges(editor, prevRoot, newRoot);
-
-    expect(actions).toStrictEqual([
-      ["getRange", ...newRoot.getRange()],
-      ["replaceRange", "  - 0", { line: 2, ch: 0 }, { line: 2, ch: 5 }],
     ]);
   });
 });
