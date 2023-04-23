@@ -10,6 +10,33 @@ export function minPos(a: Position, b: Position) {
   return cmpPos(a, b) < 0 ? a : b;
 }
 
+export function isSelectionsSame(aSelections: Range[], bSelections: Range[]) {
+  if (aSelections.length !== bSelections.length) {
+    return false;
+  }
+
+  for (let i = 0; i < aSelections.length; i++) {
+    const aSelection = aSelections[i];
+    const bSelection = bSelections[i];
+
+    if (
+      cmpPos(aSelection.anchor, bSelection.anchor) !== 0 ||
+      cmpPos(aSelection.head, bSelection.head) !== 0
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+export function isRangesIntersects(
+  a: [Position, Position],
+  b: [Position, Position]
+) {
+  return cmpPos(a[1], b[0]) >= 0 && cmpPos(a[0], b[1]) <= 0;
+}
+
 export interface Position {
   ch: number;
   line: number;
@@ -330,7 +357,7 @@ export class List {
     for (let i = 0; i < this.lines.length; i++) {
       res +=
         i === 0
-          ? this.indent + this.bullet + this.spaceAfterBullet + `#{${this.id}}`
+          ? this.indent + this.bullet + this.spaceAfterBullet
           : this.notesIndent;
       res += this.lines[i];
       res += "\n";

@@ -1,88 +1,125 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { MyEditor } from "src/MyEditor";
+
 import { makeEditor, makeRoot } from "../../__mocks__";
-import { List } from "../../root";
+import { List, Root } from "../../root";
 import { ApplyChangesService } from "../ApplyChangesService";
 
-const BEFORE = `
-- 1
-  - 2
-   - 3
-  - [ ] 4
-- 5
-- 6
-- 7
-`;
-
-const AFTER = `
-- 1
-  - 2
-   - 3
-  - [ ] 4
-  - [ ] 
-- 5
-`;
-
 describe("applyChanges", () => {
-  test("should effectively apply the changes", () => {
-    const actions: any = [];
-    const prevRoot = makeRoot({
+  test("should not touch folded lists if they are not changed", () => {
+    const { actions, editor, prevRoot, newRoot } = makeArgs({
       editor: makeEditor({
-        text: BEFORE,
+        text: `
+- 1
+  - 2
+    - 3
+  - [ ] 4
+- 5
+`,
         cursor: { line: 4, ch: 9 },
         getAllFoldedLines: () => [2],
       }),
+
+      changes: (root) => {
+        root
+          .getChildren()[0]
+          .addAfterAll(new List(root, "  ", "-", "[ ]", " ", "[ ] ", false));
+        root.replaceCursor({ line: 5, ch: 8 });
+      },
     });
-    const newRoot = prevRoot.clone();
-    newRoot.getChildren()[1].replateBullet("*");
-    newRoot
-      .getChildren()[0]
-      .addAfterAll(new List(newRoot, "  ", "-", "[ ]", " ", "", false));
-    newRoot.getChildren()[2].getParent().removeChild(newRoot.getChildren()[2]);
-    const l = newRoot.getChildren()[2];
-    const p = l.getParent();
-    p.removeChild(l);
-    p.addBeforeAll(l);
-    newRoot.replaceSelections([
-      { anchor: { line: 5, ch: 8 }, head: { line: 5, ch: 8 } },
-    ]);
-    const currentEditor: any = {
-      getRange: (...args: any[]) => {
-        actions.push(["getRange", ...args]);
-        return prevRoot.print();
-      },
-      unfold: (...args: any[]) => {
-        actions.push(["unfold", ...args]);
-      },
-      replaceRange: (...args: any[]) => {
-        actions.push(["replaceRange", ...args]);
-      },
-      setSelections: (...args: any[]) => {
-        actions.push(["setSelections", ...args]);
-      },
-      fold: (...args: any[]) => {
-        actions.push(["fold", ...args]);
-      },
-    };
     const applyChanges = new ApplyChangesService();
 
-    applyChanges.applyChanges(currentEditor, prevRoot, newRoot);
+    applyChanges.applyChanges(editor, prevRoot, newRoot);
 
     expect(actions).toStrictEqual([
       ["getRange", ...newRoot.getRange()],
-      ["unfold", 1],
-      ["unfold", 2],
-      ["unfold", 3],
-      ["unfold", 4],
-      ["unfold", 5],
-      ["unfold", 6],
       [
         "replaceRange",
         "  - [ ] 4\n  - [ ] ",
         { line: 4, ch: 0 },
-        { line: 5, ch: 9 },
+        { line: 4, ch: 9 },
       ],
-      ["setSelections", newRoot.getSelections()],
-      ["fold", 2],
+      [
+        "setSelections",
+        [{ anchor: { line: 5, ch: 8 }, head: { line: 5, ch: 8 } }],
+      ],
+    ]);
+  });
+
+  test("should touch folded lists if they are changed", () => {
+    const { actions, editor, prevRoot, newRoot } = makeArgs({
+      editor: makeEditor({
+        text: `
+- 1
+  - 2
+    - 3
+  - [ ] 4
+- 5
+`,
+        cursor: { line: 5, ch: 3 },
+        getAllFoldedLines: () => [2],
+      }),
+
+      changes: (root) => {
+        const list5 = root.getChildren()[1];
+        const list5Parent = list5.getParent();
+        list5Parent.removeChild(list5);
+        list5Parent.addBeforeAll(list5);
+        root.replaceCursor({ line: 1, ch: 3 });
+      },
+    });
+    const applyChanges = new ApplyChangesService();
+
+    applyChanges.applyChanges(editor, prevRoot, newRoot);
+
+    expect(actions).toStrictEqual([
+      ["getRange", ...newRoot.getRange()],
+      ["unfold", 2],
+      [
+        "replaceRange",
+        "- 5\n- 1\n  - 2\n    - 3\n  - [ ] 4",
+        { line: 1, ch: 0 },
+        { line: 5, ch: 3 },
+      ],
+      [
+        "setSelections",
+        [{ anchor: { line: 1, ch: 3 }, head: { line: 1, ch: 3 } }],
+      ],
+      ["fold", 3],
     ]);
   });
 });
+
+function makeArgs(opts: { editor: MyEditor; changes: (root: Root) => void }) {
+  const actions: any = [];
+  const prevRoot = makeRoot({
+    editor: opts.editor,
+  });
+  const newRoot = prevRoot.clone();
+  opts.changes(newRoot);
+  const mockedEditor: MyEditor = {
+    getRange: (...args: any[]) => {
+      actions.push(["getRange", ...args]);
+      return prevRoot.print();
+    },
+    unfold: (...args: any[]) => {
+      actions.push(["unfold", ...args]);
+    },
+    replaceRange: (...args: any[]) => {
+      actions.push(["replaceRange", ...args]);
+    },
+    setSelections: (...args: any[]) => {
+      actions.push(["setSelections", ...args]);
+    },
+    fold: (...args: any[]) => {
+      actions.push(["fold", ...args]);
+    },
+  } as any;
+
+  return {
+    actions,
+    editor: mockedEditor,
+    prevRoot,
+    newRoot,
+  };
+}

@@ -1,4 +1,42 @@
+import { Position, isRangesIntersects } from "..";
+
 import { makeEditor, makeRoot } from "../../__mocks__";
+
+function parseRanges(str: string): {
+  a: [Position, Position];
+  b: [Position, Position];
+} {
+  return {
+    a: [
+      { line: 0, ch: str.indexOf("[") },
+      { line: 0, ch: str.indexOf("]") },
+    ],
+    b: [
+      { line: 0, ch: str.indexOf("(") },
+      { line: 0, ch: str.indexOf(")") },
+    ],
+  };
+}
+
+describe("isRangesIntersects", () => {
+  const cases = [
+    ["[--(-]--)", true],
+    ["(--[-)--]", true],
+    ["[--(--)--]", true],
+    ["(--[--]--)", true],
+    ["[--](--)", false],
+    ["(--)[--]", false],
+  ];
+
+  test.each(cases)(
+    "when ranges are '%s' then result is %s",
+    (ranges: string, result: boolean) => {
+      const { a, b } = parseRanges(ranges);
+
+      expect(isRangesIntersects(a, b)).toBe(result);
+    }
+  );
+});
 
 describe("Root", () => {
   describe("getListUnderLine", () => {
