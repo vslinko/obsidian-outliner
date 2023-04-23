@@ -1,9 +1,12 @@
 name: Build
 
 on:
-  pull_request:
   push:
-    branches: "**"
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 env:
   OBSIDIAN_VERSION: "1.1.16"
