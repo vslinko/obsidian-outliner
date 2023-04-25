@@ -11,6 +11,7 @@ export interface ObsidianOutlinerPluginSettings {
   listLines: boolean;
   listLineAction: ListLineAction;
   dndExperiment: boolean;
+  previousRelease: string | null;
 }
 
 const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
@@ -23,6 +24,7 @@ const DEFAULT_SETTINGS: ObsidianOutlinerPluginSettings = {
   listLines: false,
   listLineAction: "toggle-folding",
   dndExperiment: false,
+  previousRelease: null,
 };
 
 export interface Storage {
@@ -110,6 +112,13 @@ export class SettingsService implements ObsidianOutlinerPluginSettings {
   }
   set listLineAction(value: ListLineAction) {
     this.set("listLineAction", value);
+  }
+
+  get previousRelease() {
+    return this.values.previousRelease;
+  }
+  set previousRelease(value: string | null) {
+    this.set("previousRelease", value);
   }
 
   onChange<T extends K>(key: T, cb: Callback<T>) {
