@@ -42,6 +42,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
 
   resetSettings() {
     this.settings.reset();
+    this.settings.previousRelease = "999.999.999";
   }
 
   simulateKeydown(keys: string) {
@@ -344,5 +345,10 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       selections: [{ anchor: acc.anchor, head: acc.head }],
       value: acc.lines.join("\n"),
     };
+  }
+
+  async setPreviousRelease(previousRelease: string | null = null) {
+    this.settings.previousRelease = previousRelease;
+    await this.settings.save();
   }
 }

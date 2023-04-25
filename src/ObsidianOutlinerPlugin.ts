@@ -1,5 +1,6 @@
 import { Plugin } from "obsidian";
 
+import { ChangelogModalFeature } from "./features/ChangelogModalFeature";
 import { DeleteShouldIgnoreBulletsFeature } from "./features/DeleteShouldIgnoreBulletsFeature";
 import { DragAndDropFeature } from "./features/DragAndDropFeature";
 import { EnsureCursorInListContentFeature } from "./features/EnsureCursorInListContentFeature";
@@ -21,6 +22,11 @@ import { ObsidianService } from "./services/ObsidianService";
 import { ParserService } from "./services/ParserService";
 import { PerformOperationService } from "./services/PerformOperationService";
 import { SettingsService } from "./services/SettingsService";
+
+declare global {
+  const PLUGIN_VERSION: string;
+  const CHANGELOG_MD: string;
+}
 
 export default class ObsidianOutlinerPlugin extends Plugin {
   private features: Feature[];
@@ -53,6 +59,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     await this.ime.load();
 
     this.features = [
+      new ChangelogModalFeature(this, this.settings),
       new DragAndDropFeature(
         this,
         this.settings,
