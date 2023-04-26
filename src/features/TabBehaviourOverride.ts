@@ -6,7 +6,7 @@ import { keymap } from "@codemirror/view";
 import { Feature } from "./Feature";
 
 import { MyEditor } from "../MyEditor";
-import { MoveRightOperation } from "../operations/MoveRightOperation";
+import { IndentList } from "../operations/IndentList";
 import { IMEService } from "../services/IMEService";
 import { ObsidianService } from "../services/ObsidianService";
 import { PerformOperationService } from "../services/PerformOperationService";
@@ -45,8 +45,7 @@ export class TabBehaviourOverride implements Feature {
 
   private run = (editor: MyEditor) => {
     return this.performOperation.performOperation(
-      (root) =>
-        new MoveRightOperation(root, this.obsidian.getDefaultIndentChars()),
+      (root) => new IndentList(root, this.obsidian.getDefaultIndentChars()),
       editor
     );
   };

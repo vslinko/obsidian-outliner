@@ -5,7 +5,7 @@ import { keymap } from "@codemirror/view";
 import { Feature } from "./Feature";
 
 import { MyEditor } from "../MyEditor";
-import { DeleteAndMergeWithNextLineOperation } from "../operations/DeleteAndMergeWithNextLineOperation";
+import { DeleteTillNextLineContentStart } from "../operations/DeleteTillNextLineContentStart";
 import { IMEService } from "../services/IMEService";
 import { ObsidianService } from "../services/ObsidianService";
 import { PerformOperationService } from "../services/PerformOperationService";
@@ -42,7 +42,7 @@ export class DeleteBehaviourOverride implements Feature {
 
   private run = (editor: MyEditor) => {
     return this.performOperation.performOperation(
-      (root) => new DeleteAndMergeWithNextLineOperation(root),
+      (root) => new DeleteTillNextLineContentStart(root),
       editor
     );
   };

@@ -5,8 +5,8 @@ import { EditorState, Transaction } from "@codemirror/state";
 import { Feature } from "./Feature";
 
 import { MyEditor } from "../MyEditor";
-import { EnsureCursorInListContentOperation } from "../operations/EnsureCursorInListContentOperation";
-import { EnsureCursorIsInUnfoldedLineOperation } from "../operations/EnsureCursorIsInUnfoldedLineOperation";
+import { KeepCursorOutsideFoldedLines } from "../operations/KeepCursorOutsideFoldedLines";
+import { KeepCursorWithinListContent } from "../operations/KeepCursorWithinListContent";
 import { ObsidianService } from "../services/ObsidianService";
 import { ParserService } from "../services/ParserService";
 import { PerformOperationService } from "../services/PerformOperationService";
@@ -51,20 +51,20 @@ export class EditorSelectionsBehaviourOverride implements Feature {
     }
 
     {
-      const res = this.performOperation.evalOperation(
+      const { shouldStopPropagation } = this.performOperation.evalOperation(
         root,
-        new EnsureCursorIsInUnfoldedLineOperation(root),
+        new KeepCursorOutsideFoldedLines(root),
         editor
       );
 
-      if (res.shouldStopPropagation) {
+      if (shouldStopPropagation) {
         return;
       }
     }
 
     this.performOperation.evalOperation(
       root,
-      new EnsureCursorInListContentOperation(root),
+      new KeepCursorWithinListContent(root),
       editor
     );
   };

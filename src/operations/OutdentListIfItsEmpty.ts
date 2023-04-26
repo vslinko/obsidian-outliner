@@ -1,22 +1,22 @@
-import { MoveLeftOperation } from "./MoveLeftOperation";
 import { Operation } from "./Operation";
+import { OutdentList } from "./OutdentList";
 
 import { Root } from "../root";
 import { isEmptyLineOrEmptyCheckbox } from "../utils/isEmptyLineOrEmptyCheckbox";
 
-export class OutdentIfLineIsEmptyOperation implements Operation {
-  private moveLeftOp: MoveLeftOperation;
+export class OutdentListIfItsEmpty implements Operation {
+  private outdentList: OutdentList;
 
   constructor(private root: Root) {
-    this.moveLeftOp = new MoveLeftOperation(root);
+    this.outdentList = new OutdentList(root);
   }
 
   shouldStopPropagation() {
-    return this.moveLeftOp.shouldStopPropagation();
+    return this.outdentList.shouldStopPropagation();
   }
 
   shouldUpdate() {
-    return this.moveLeftOp.shouldUpdate();
+    return this.outdentList.shouldUpdate();
   }
 
   perform() {
@@ -37,6 +37,6 @@ export class OutdentIfLineIsEmptyOperation implements Operation {
       return;
     }
 
-    this.moveLeftOp.perform();
+    this.outdentList.perform();
   }
 }

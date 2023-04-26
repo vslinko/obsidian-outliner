@@ -2,7 +2,7 @@ import { Operation } from "./Operation";
 
 import { ListLine, Position, Root } from "../root";
 
-export class MoveCursorToPreviousUnfoldedLineOperation implements Operation {
+export class MoveCursorToPreviousUnfoldedLine implements Operation {
   private stopPropagation = false;
   private updated = false;
 

@@ -1,22 +1,22 @@
-import { DeleteAndMergeWithPreviousLineOperation } from "./DeleteAndMergeWithPreviousLineOperation";
+import { DeleteTillPreviousLineContentEnd } from "./DeleteTillPreviousLineContentEnd";
 import { Operation } from "./Operation";
 
 import { Root } from "../root";
 
-export class DeleteAndMergeWithNextLineOperation implements Operation {
-  private deleteAndMergeWithPrevious: DeleteAndMergeWithPreviousLineOperation;
+export class DeleteTillNextLineContentStart implements Operation {
+  private deleteTillPreviousLineContentEnd: DeleteTillPreviousLineContentEnd;
 
   constructor(private root: Root) {
-    this.deleteAndMergeWithPrevious =
-      new DeleteAndMergeWithPreviousLineOperation(root);
+    this.deleteTillPreviousLineContentEnd =
+      new DeleteTillPreviousLineContentEnd(root);
   }
 
   shouldStopPropagation() {
-    return this.deleteAndMergeWithPrevious.shouldStopPropagation();
+    return this.deleteTillPreviousLineContentEnd.shouldStopPropagation();
   }
 
   shouldUpdate() {
-    return this.deleteAndMergeWithPrevious.shouldUpdate();
+    return this.deleteTillPreviousLineContentEnd.shouldUpdate();
   }
 
   perform() {
@@ -41,10 +41,10 @@ export class DeleteAndMergeWithNextLineOperation implements Operation {
         return;
       }
       root.replaceCursor(nextList.getFirstLineContentStart());
-      this.deleteAndMergeWithPrevious.perform();
+      this.deleteTillPreviousLineContentEnd.perform();
     } else if (lineNo >= 0) {
       root.replaceCursor(lines[lineNo + 1].from);
-      this.deleteAndMergeWithPrevious.perform();
+      this.deleteTillPreviousLineContentEnd.perform();
     }
   }
 }

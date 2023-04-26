@@ -5,7 +5,7 @@ import { keymap } from "@codemirror/view";
 import { Feature } from "./Feature";
 
 import { MyEditor } from "../MyEditor";
-import { MoveCursorToPreviousUnfoldedLineOperation } from "../operations/MoveCursorToPreviousUnfoldedLineOperation";
+import { MoveCursorToPreviousUnfoldedLine } from "../operations/MoveCursorToPreviousUnfoldedLine";
 import { IMEService } from "../services/IMEService";
 import { ObsidianService } from "../services/ObsidianService";
 import { PerformOperationService } from "../services/PerformOperationService";
@@ -50,7 +50,7 @@ export class ArrowLeftAndCtrlArrowLeftBehaviourOverride implements Feature {
 
   private run = (editor: MyEditor) => {
     return this.performOperation.performOperation(
-      (root) => new MoveCursorToPreviousUnfoldedLineOperation(root),
+      (root) => new MoveCursorToPreviousUnfoldedLine(root),
       editor
     );
   };

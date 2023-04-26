@@ -9,7 +9,7 @@ interface CursorAnchor {
   chDiff: number;
 }
 
-export class MoveListToDifferentPositionOperation implements Operation {
+export class MoveListToDifferentPosition implements Operation {
   private stopPropagation = false;
   private updated = false;
 

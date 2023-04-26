@@ -3,7 +3,7 @@ import { Operation } from "./Operation";
 import { Root } from "../root";
 import { recalculateNumericBullets } from "../root/recalculateNumericBullets";
 
-export class MoveDownOperation implements Operation {
+export class MoveListUp implements Operation {
   private stopPropagation = false;
   private updated = false;
 
@@ -29,22 +29,22 @@ export class MoveDownOperation implements Operation {
     const list = root.getListUnderCursor();
     const parent = list.getParent();
     const grandParent = parent.getParent();
-    const next = parent.getNextSiblingOf(list);
+    const prev = parent.getPrevSiblingOf(list);
 
     const listStartLineBefore = root.getContentLinesRangeOf(list)[0];
 
-    if (!next && grandParent) {
-      const newParent = grandParent.getNextSiblingOf(parent);
+    if (!prev && grandParent) {
+      const newParent = grandParent.getPrevSiblingOf(parent);
 
       if (newParent) {
         this.updated = true;
         parent.removeChild(list);
-        newParent.addBeforeAll(list);
+        newParent.addAfterAll(list);
       }
-    } else if (next) {
+    } else if (prev) {
       this.updated = true;
       parent.removeChild(list);
-      parent.addAfter(next, list);
+      parent.addBefore(prev, list);
     }
 
     if (!this.updated) {

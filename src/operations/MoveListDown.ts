@@ -3,7 +3,7 @@ import { Operation } from "./Operation";
 import { Root } from "../root";
 import { recalculateNumericBullets } from "../root/recalculateNumericBullets";
 
-export class MoveLeftOperation implements Operation {
+export class MoveListDown implements Operation {
   private stopPropagation = false;
   private updated = false;
 
@@ -29,29 +29,35 @@ export class MoveLeftOperation implements Operation {
     const list = root.getListUnderCursor();
     const parent = list.getParent();
     const grandParent = parent.getParent();
+    const next = parent.getNextSiblingOf(list);
 
-    if (!grandParent) {
+    const listStartLineBefore = root.getContentLinesRangeOf(list)[0];
+
+    if (!next && grandParent) {
+      const newParent = grandParent.getNextSiblingOf(parent);
+
+      if (newParent) {
+        this.updated = true;
+        parent.removeChild(list);
+        newParent.addBeforeAll(list);
+      }
+    } else if (next) {
+      this.updated = true;
+      parent.removeChild(list);
+      parent.addAfter(next, list);
+    }
+
+    if (!this.updated) {
       return;
     }
 
-    this.updated = true;
-
-    const listStartLineBefore = root.getContentLinesRangeOf(list)[0];
-    const indentRmFrom = parent.getFirstLineIndent().length;
-    const indentRmTill = list.getFirstLineIndent().length;
-
-    parent.removeChild(list);
-    grandParent.addAfter(parent, list);
-    list.unindentContent(indentRmFrom, indentRmTill);
-
     const listStartLineAfter = root.getContentLinesRangeOf(list)[0];
     const lineDiff = listStartLineAfter - listStartLineBefore;
-    const chDiff = indentRmTill - indentRmFrom;
 
     const cursor = root.getCursor();
     root.replaceCursor({
       line: cursor.line + lineDiff,
-      ch: cursor.ch - chDiff,
+      ch: cursor.ch,
     });
 
     recalculateNumericBullets(root);

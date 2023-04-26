@@ -6,7 +6,7 @@ import { keymap } from "@codemirror/view";
 import { Feature } from "./Feature";
 
 import { MyEditor } from "../MyEditor";
-import { MoveLeftOperation } from "../operations/MoveLeftOperation";
+import { OutdentList } from "../operations/OutdentList";
 import { IMEService } from "../services/IMEService";
 import { ObsidianService } from "../services/ObsidianService";
 import { PerformOperationService } from "../services/PerformOperationService";
@@ -45,7 +45,7 @@ export class ShiftTabBehaviourOverride implements Feature {
 
   private run = (editor: MyEditor) => {
     return this.performOperation.performOperation(
-      (root) => new MoveLeftOperation(root),
+      (root) => new OutdentList(root),
       editor
     );
   };

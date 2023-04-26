@@ -9,7 +9,7 @@ export interface GetZoomRange {
   getZoomRange(): { from: Position; to: Position } | null;
 }
 
-export class CreateNewItemOperation implements Operation {
+export class CreateNewItem implements Operation {
   private stopPropagation = false;
   private updated = false;
 

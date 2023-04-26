@@ -3,7 +3,7 @@ import { Operation } from "./Operation";
 import { List, ListLine, Position, Root } from "../root";
 import { recalculateNumericBullets } from "../root/recalculateNumericBullets";
 
-export class DeleteAndMergeWithPreviousLineOperation implements Operation {
+export class DeleteTillPreviousLineContentEnd implements Operation {
   private stopPropagation = false;
   private updated = false;
 

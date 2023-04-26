@@ -2,7 +2,7 @@ import { Operation } from "./Operation";
 
 import { Root, maxPos, minPos } from "../root";
 
-export class SelectAllOperation implements Operation {
+export class SelectAllContent implements Operation {
   private stopPropagation = false;
   private updated = false;
 

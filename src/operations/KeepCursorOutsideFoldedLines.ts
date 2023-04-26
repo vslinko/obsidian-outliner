@@ -2,7 +2,7 @@ import { Operation } from "./Operation";
 
 import { Root } from "../root";
 
-export class DeleteTillLineStartOperation implements Operation {
+export class KeepCursorOutsideFoldedLines implements Operation {
   private stopPropagation = false;
   private updated = false;
 
@@ -23,19 +23,20 @@ export class DeleteTillLineStartOperation implements Operation {
       return;
     }
 
-    this.stopPropagation = true;
-    this.updated = true;
-
     const cursor = root.getCursor();
+
     const list = root.getListUnderCursor();
-    const lines = list.getLinesInfo();
-    const lineNo = lines.findIndex((l) => l.from.line === cursor.line);
+    if (!list.isFolded()) {
+      return;
+    }
 
-    lines[lineNo].text = lines[lineNo].text.slice(
-      cursor.ch - lines[lineNo].from.ch
-    );
+    const foldRoot = list.getTopFoldRoot();
+    const firstLineEnd = foldRoot.getLinesInfo()[0].to;
 
-    list.replaceLines(lines.map((l) => l.text));
-    root.replaceCursor(lines[lineNo].from);
+    if (cursor.line > firstLineEnd.line) {
+      this.updated = true;
+      this.stopPropagation = true;
+      root.replaceCursor(firstLineEnd);
+    }
   }
 }

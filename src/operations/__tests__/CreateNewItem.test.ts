@@ -1,5 +1,5 @@
 import { makeEditor, makeRoot, makeSettingsService } from "../../__mocks__";
-import { CreateNewItemOperation } from "../CreateNewItemOperation";
+import { CreateNewItem } from "../CreateNewItem";
 
 test("should create sibling bullet instead of child bullet if child bullets are folded", () => {
   const root = makeRoot({
@@ -14,7 +14,7 @@ test("should create sibling bullet instead of child bullet if child bullets are 
     getZoomRange: (): null => null,
   };
 
-  const op = new CreateNewItemOperation(root, "  ", getZoomRange);
+  const op = new CreateNewItem(root, "  ", getZoomRange);
   op.perform();
 
   expect(root.print()).toBe("- one\n  - two\n- ");

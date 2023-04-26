@@ -3,7 +3,7 @@ import { Operation } from "./Operation";
 import { Root } from "../root";
 import { recalculateNumericBullets } from "../root/recalculateNumericBullets";
 
-export class MoveRightOperation implements Operation {
+export class IndentList implements Operation {
   private stopPropagation = false;
   private updated = false;
 

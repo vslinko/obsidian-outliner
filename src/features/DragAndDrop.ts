@@ -6,7 +6,7 @@ import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
 import { Feature } from "./Feature";
 
 import { MyEditor } from "../MyEditor";
-import { MoveListToDifferentPositionOperation } from "../operations/MoveListToDifferentPositionOperation";
+import { MoveListToDifferentPosition } from "../operations/MoveListToDifferentPosition";
 import { List, Root, cmpPos } from "../root";
 import { ObsidianService } from "../services/ObsidianService";
 import { ParserService } from "../services/ParserService";
@@ -180,7 +180,7 @@ export class DragAndDrop implements Feature {
 
     this.performOperation.evalOperation(
       root,
-      new MoveListToDifferentPositionOperation(
+      new MoveListToDifferentPosition(
         root,
         list,
         dropVariant.placeToMove,

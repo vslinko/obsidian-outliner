@@ -5,7 +5,7 @@ import { keymap } from "@codemirror/view";
 import { Feature } from "./Feature";
 
 import { MyEditor } from "../MyEditor";
-import { SelectAllOperation } from "../operations/SelectAllOperation";
+import { SelectAllContent } from "../operations/SelectAllContent";
 import { IMEService } from "../services/IMEService";
 import { ObsidianService } from "../services/ObsidianService";
 import { PerformOperationService } from "../services/PerformOperationService";
@@ -43,7 +43,7 @@ export class CtrlAAndCmdABehaviourOverride implements Feature {
 
   private run = (editor: MyEditor) => {
     return this.performOperation.performOperation(
-      (root) => new SelectAllOperation(root),
+      (root) => new SelectAllContent(root),
       editor
     );
   };

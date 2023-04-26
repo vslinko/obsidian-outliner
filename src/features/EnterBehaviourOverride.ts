@@ -3,13 +3,13 @@ import { Plugin_2 } from "obsidian";
 import { Prec } from "@codemirror/state";
 import { keymap } from "@codemirror/view";
 
-import { CreateNewItemOperation } from "src/operations/CreateNewItemOperation";
+import { CreateNewItem } from "src/operations/CreateNewItem";
 import { ParserService } from "src/services/ParserService";
 
 import { Feature } from "./Feature";
 
 import { MyEditor } from "../MyEditor";
-import { OutdentIfLineIsEmptyOperation } from "../operations/OutdentIfLineIsEmptyOperation";
+import { OutdentListIfItsEmpty } from "../operations/OutdentListIfItsEmpty";
 import { IMEService } from "../services/IMEService";
 import { ObsidianService } from "../services/ObsidianService";
 import { PerformOperationService } from "../services/PerformOperationService";
@@ -60,7 +60,7 @@ export class EnterBehaviourOverride implements Feature {
     {
       const res = this.performOperation.evalOperation(
         root,
-        new OutdentIfLineIsEmptyOperation(root),
+        new OutdentListIfItsEmpty(root),
         editor
       );
 
@@ -70,17 +70,15 @@ export class EnterBehaviourOverride implements Feature {
     }
 
     {
+      const defaultIndentChars = this.obsidian.getDefaultIndentChars();
       const zoomRange = editor.getZoomRange();
+      const getZoomRange = {
+        getZoomRange: () => zoomRange,
+      };
 
       const res = this.performOperation.evalOperation(
         root,
-        new CreateNewItemOperation(
-          root,
-          this.obsidian.getDefaultIndentChars(),
-          {
-            getZoomRange: () => zoomRange,
-          }
-        ),
+        new CreateNewItem(root, defaultIndentChars, getZoomRange),
         editor
       );
 

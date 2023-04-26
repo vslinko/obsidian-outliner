@@ -2,7 +2,7 @@ import { Operation } from "./Operation";
 
 import { Root } from "../root";
 
-export class EnsureCursorIsInUnfoldedLineOperation implements Operation {
+export class KeepCursorWithinListContent implements Operation {
   private stopPropagation = false;
   private updated = false;
 
@@ -24,19 +24,20 @@ export class EnsureCursorIsInUnfoldedLineOperation implements Operation {
     }
 
     const cursor = root.getCursor();
-
     const list = root.getListUnderCursor();
-    if (!list.isFolded()) {
-      return;
-    }
+    const contentStart = list.getFirstLineContentStartAfterCheckbox();
+    const linePrefix =
+      contentStart.line === cursor.line
+        ? contentStart.ch
+        : list.getNotesIndent().length;
 
-    const foldRoot = list.getTopFoldRoot();
-    const firstLineEnd = foldRoot.getLinesInfo()[0].to;
-
-    if (cursor.line > firstLineEnd.line) {
+    if (cursor.ch < linePrefix) {
       this.updated = true;
       this.stopPropagation = true;
-      root.replaceCursor(firstLineEnd);
+      root.replaceCursor({
+        line: cursor.line,
+        ch: linePrefix,
+      });
     }
   }
 }

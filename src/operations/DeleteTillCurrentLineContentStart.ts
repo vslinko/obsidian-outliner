@@ -2,7 +2,7 @@ import { Operation } from "./Operation";
 
 import { Root } from "../root";
 
-export class EnsureCursorInListContentOperation implements Operation {
+export class DeleteTillCurrentLineContentStart implements Operation {
   private stopPropagation = false;
   private updated = false;
 
@@ -23,21 +23,19 @@ export class EnsureCursorInListContentOperation implements Operation {
       return;
     }
 
+    this.stopPropagation = true;
+    this.updated = true;
+
     const cursor = root.getCursor();
     const list = root.getListUnderCursor();
-    const contentStart = list.getFirstLineContentStartAfterCheckbox();
-    const linePrefix =
-      contentStart.line === cursor.line
-        ? contentStart.ch
-        : list.getNotesIndent().length;
+    const lines = list.getLinesInfo();
+    const lineNo = lines.findIndex((l) => l.from.line === cursor.line);
 
-    if (cursor.ch < linePrefix) {
-      this.updated = true;
-      this.stopPropagation = true;
-      root.replaceCursor({
-        line: cursor.line,
-        ch: linePrefix,
-      });
-    }
+    lines[lineNo].text = lines[lineNo].text.slice(
+      cursor.ch - lines[lineNo].from.ch
+    );
+
+    list.replaceLines(lines.map((l) => l.text));
+    root.replaceCursor(lines[lineNo].from);
   }
 }
