@@ -46,6 +46,10 @@ export class EditorSelectionsBehaviourOverride implements Feature {
   private handleSelectionsChanges = (editor: MyEditor) => {
     const root = this.parser.parse(editor);
 
+    if (!root) {
+      return;
+    }
+
     {
       const res = this.performOperation.evalOperation(
         root,

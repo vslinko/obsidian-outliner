@@ -1,4 +1,4 @@
-# obsidian-outliner:outdent-list should outdent line
+# Shift-Tab should outdent line
 
 - applyState:
 
@@ -7,7 +7,7 @@
   - qwe|
 ```
 
-- execute: `obsidian-outliner:outdent-list`
+- keydown: `Shift-Tab`
 - assertState:
 
 ```md
@@ -15,7 +15,7 @@
 - qwe|
 ```
 
-# obsidian-outliner:outdent-list should outdent children
+# Shift-Tab should outdent children
 
 - applyState:
 
@@ -25,7 +25,7 @@
     - qwe
 ```
 
-- execute: `obsidian-outliner:outdent-list`
+- keydown: `Shift-Tab`
 - assertState:
 
 ```md
@@ -34,7 +34,7 @@
   - qwe
 ```
 
-# obsidian-outliner:outdent-list should outdent in case #144
+# Shift-Tab should outdent in case #144
 
 - applyState:
 
@@ -46,7 +46,7 @@
   - qwe|
 ```
 
-- execute: `obsidian-outliner:outdent-list`
+- keydown: `Shift-Tab`
 - assertState:
 
 ```md

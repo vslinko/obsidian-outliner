@@ -1,7 +1,8 @@
 /**
  * @jest-environment ./jest/obsidian-environment
  */
-import { readFileSync, readdirSync } from "fs";
+import { readFileSync } from "fs";
+import { globSync } from "glob";
 
 interface State {
   lines: string[];
@@ -365,16 +366,11 @@ class LinesIterator {
   }
 }
 
-for (const file of readdirSync(__dirname)) {
-  const matches = /^(.+)\.spec.md$/.exec(file);
-
-  if (!matches) {
-    continue;
-  }
-
-  describe(matches[1], () => {
+const files = globSync("**/*.spec.md", { cwd: __dirname });
+for (const file of files) {
+  describe(file, () => {
     const l = new LinesIterator(
-      readFileSync(__dirname + "/" + file, "utf-8").split("\n")
+      readFileSync(`${__dirname}/${file}`, "utf-8").split("\n")
     );
 
     for (const test of parseTests(l)) {
