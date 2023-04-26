@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { MyEditor } from "./MyEditor";
-import { LoggerService } from "./services/LoggerService";
-import { ParserService } from "./services/ParserService";
-import { SettingsService } from "./services/SettingsService";
+import { Logger } from "./services/Logger";
+import { Parser } from "./services/Parser";
+import { Settings } from "./services/Settings";
 
 export interface EditorMockParams {
   text: string;
@@ -26,7 +26,7 @@ export function makeEditor(params: EditorMockParams): MyEditor {
   return editor;
 }
 
-export function makeLoggerService(): LoggerService {
+export function makeLogger(): Logger {
   const log = jest.fn();
 
   const logger: any = {
@@ -39,7 +39,7 @@ export function makeLoggerService(): LoggerService {
   return logger;
 }
 
-export function makeSettingsService(): SettingsService {
+export function makeSettings(): Settings {
   const settings: any = {
     stickCursor: "bullet-and-checkbox",
   };
@@ -48,14 +48,14 @@ export function makeSettingsService(): SettingsService {
 
 export function makeRoot(options: {
   editor: MyEditor;
-  settings?: SettingsService;
-  logger?: LoggerService;
+  settings?: Settings;
+  logger?: Logger;
 }) {
   const { logger, editor, settings } = {
-    logger: makeLoggerService(),
-    settings: makeSettingsService(),
+    logger: makeLogger(),
+    settings: makeSettings(),
     ...options,
   };
 
-  return new ParserService(logger, settings).parse(editor);
+  return new Parser(logger, settings).parse(editor);
 }

@@ -7,18 +7,19 @@ import { Feature } from "./Feature";
 
 import { MyEditor } from "../MyEditor";
 import { IndentList } from "../operations/IndentList";
-import { IMEService } from "../services/IMEService";
-import { ObsidianService } from "../services/ObsidianService";
-import { PerformOperationService } from "../services/PerformOperationService";
-import { SettingsService } from "../services/SettingsService";
+import { IMEDetector } from "../services/IMEDetector";
+import { ObsidianSettings } from "../services/ObsidianSettings";
+import { OperationPerformer } from "../services/OperationPerformer";
+import { Settings } from "../services/Settings";
+import { createKeymapRunCallback } from "../utils/createKeymapRunCallback";
 
 export class TabBehaviourOverride implements Feature {
   constructor(
     private plugin: Plugin_2,
-    private ime: IMEService,
-    private obsidian: ObsidianService,
-    private settings: SettingsService,
-    private performOperation: PerformOperationService
+    private imeDetector: IMEDetector,
+    private obsidianSettings: ObsidianSettings,
+    private settings: Settings,
+    private operationPerformer: OperationPerformer
   ) {}
 
   async load() {
@@ -27,7 +28,7 @@ export class TabBehaviourOverride implements Feature {
         keymap.of([
           {
             key: "Tab",
-            run: this.obsidian.createKeymapRunCallback({
+            run: createKeymapRunCallback({
               check: this.check,
               run: this.run,
             }),
@@ -40,12 +41,13 @@ export class TabBehaviourOverride implements Feature {
   async unload() {}
 
   private check = () => {
-    return this.settings.betterTab && !this.ime.isIMEOpened();
+    return this.settings.overrideTabBehaviour && !this.imeDetector.isOpened();
   };
 
   private run = (editor: MyEditor) => {
-    return this.performOperation.performOperation(
-      (root) => new IndentList(root, this.obsidian.getDefaultIndentChars()),
+    return this.operationPerformer.perform(
+      (root) =>
+        new IndentList(root, this.obsidianSettings.getDefaultIndentChars()),
       editor
     );
   };

@@ -1,31 +1,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  makeEditor,
-  makeLoggerService,
-  makeSettingsService,
-} from "../../__mocks__";
-import { LoggerService } from "../LoggerService";
-import { ParserService } from "../ParserService";
-import { SettingsService } from "../SettingsService";
+import { makeEditor, makeLogger, makeSettings } from "../../__mocks__";
+import { Logger } from "../Logger";
+import { Parser } from "../Parser";
+import { Settings } from "../Settings";
 
-function makeParserService(
+function makeParser(
   options: {
-    logger?: LoggerService;
-    settings?: SettingsService;
+    logger?: Logger;
+    settings?: Settings;
   } = {}
 ) {
   const { logger, settings } = {
-    logger: makeLoggerService(),
-    settings: makeSettingsService(),
+    logger: makeLogger(),
+    settings: makeSettings(),
     ...options,
   };
 
-  return new ParserService(logger, settings);
+  return new Parser(logger, settings);
 }
 
 describe("parseList", () => {
   test("should parse list with notes and sublists", () => {
-    const parser = makeParserService();
+    const parser = makeParser();
     const editor = makeEditor({
       text: `
 - one
@@ -83,7 +79,7 @@ describe("parseList", () => {
   });
 
   test("should parse second list", () => {
-    const parser = makeParserService();
+    const parser = makeParser();
     const editor = makeEditor({
       text: `
 - one
@@ -102,8 +98,8 @@ describe("parseList", () => {
   });
 
   test("should error if indent is not match 1", () => {
-    const logger = makeLoggerService();
-    const parser = makeParserService({ logger });
+    const logger = makeLogger();
+    const parser = makeParser({ logger });
     const editor = makeEditor({
       text: "- one\n  - two\n\t- three",
       cursor: { line: 0, ch: 0 },
@@ -119,8 +115,8 @@ describe("parseList", () => {
   });
 
   test("should error if indent is not match 2", () => {
-    const logger = makeLoggerService();
-    const parser = makeParserService({ logger });
+    const logger = makeLogger();
+    const parser = makeParser({ logger });
     const editor = makeEditor({
       text: "- one\n\t- two\n  - three",
       cursor: { line: 0, ch: 0 },
@@ -136,8 +132,8 @@ describe("parseList", () => {
   });
 
   test("should error if note indent is not match", () => {
-    const logger = makeLoggerService();
-    const parser = makeParserService({ logger });
+    const logger = makeLogger();
+    const parser = makeParser({ logger });
     const editor = makeEditor({
       text: "- one\n\t- two\n  three",
       cursor: { line: 0, ch: 0 },
@@ -153,8 +149,8 @@ describe("parseList", () => {
   });
 
   test("should parse list with tab just after the list", () => {
-    const logger = makeLoggerService();
-    const parser = makeParserService({ logger });
+    const logger = makeLogger();
+    const parser = makeParser({ logger });
     const editor = makeEditor({
       text: "- one\n\t- two\n\t\n",
       cursor: { line: 0, ch: 0 },

@@ -1,7 +1,7 @@
-import { SettingsService } from "./SettingsService";
+import { Logger } from "./Logger";
+import { Settings } from "./Settings";
 
 import { List, Root } from "../root";
-import { LoggerService } from "../services/LoggerService";
 import { checkboxRe } from "../utils/checkboxRe";
 
 const bulletSignRe = `(?:[-*+]|\\d+\\.)`;
@@ -41,11 +41,8 @@ interface ParseListList {
   addAfterAll(list: ParseListList): void;
 }
 
-export class ParserService {
-  constructor(
-    private logger: LoggerService,
-    private settings: SettingsService
-  ) {}
+export class Parser {
+  constructor(private logger: Logger, private settings: Settings) {}
 
   parseRange(editor: Reader, fromLine = 0, toLine = editor.lastLine()): Root[] {
     const lists: Root[] = [];
@@ -172,7 +169,7 @@ export class ParserService {
         let [, , , , optionalCheckbox, content] = matches;
 
         content = optionalCheckbox + content;
-        if (this.settings.stickCursor !== "bullet-and-checkbox") {
+        if (this.settings.keepCursorWithinContent !== "bullet-and-checkbox") {
           optionalCheckbox = "";
         }
 

@@ -17,13 +17,13 @@ import { SettingsTab } from "./features/SettingsTab";
 import { ShiftTabBehaviourOverride } from "./features/ShiftTabBehaviourOverride";
 import { TabBehaviourOverride } from "./features/TabBehaviourOverride";
 import { VerticalLines } from "./features/VerticalLines";
-import { ApplyChangesService } from "./services/ApplyChangesService";
-import { IMEService } from "./services/IMEService";
-import { LoggerService } from "./services/LoggerService";
-import { ObsidianService } from "./services/ObsidianService";
-import { ParserService } from "./services/ParserService";
-import { PerformOperationService } from "./services/PerformOperationService";
-import { SettingsService } from "./services/SettingsService";
+import { ChangesApplicator } from "./services/ChangesApplicator";
+import { IMEDetector } from "./services/IMEDetector";
+import { Logger } from "./services/Logger";
+import { ObsidianSettings } from "./services/ObsidianSettings";
+import { OperationPerformer } from "./services/OperationPerformer";
+import { Parser } from "./services/Parser";
+import { Settings } from "./services/Settings";
 
 declare global {
   const PLUGIN_VERSION: string;
@@ -32,33 +32,33 @@ declare global {
 
 export default class ObsidianOutlinerPlugin extends Plugin {
   private features: Feature[];
-  protected settings: SettingsService;
-  private logger: LoggerService;
-  private obsidian: ObsidianService;
-  private parser: ParserService;
-  private applyChanges: ApplyChangesService;
-  private performOperation: PerformOperationService;
-  private ime: IMEService;
+  protected settings: Settings;
+  private logger: Logger;
+  private obsidianSettings: ObsidianSettings;
+  private parser: Parser;
+  private changesApplicator: ChangesApplicator;
+  private operationPerformer: OperationPerformer;
+  private imeDetector: IMEDetector;
 
   async onload() {
     console.log(`Loading obsidian-outliner`);
 
-    this.obsidian = new ObsidianService(this.app);
+    this.obsidianSettings = new ObsidianSettings(this.app);
 
-    this.settings = new SettingsService(this);
+    this.settings = new Settings(this);
     await this.settings.load();
 
-    this.logger = new LoggerService(this.settings);
+    this.logger = new Logger(this.settings);
 
-    this.parser = new ParserService(this.logger, this.settings);
-    this.applyChanges = new ApplyChangesService();
-    this.performOperation = new PerformOperationService(
+    this.parser = new Parser(this.logger, this.settings);
+    this.changesApplicator = new ChangesApplicator();
+    this.operationPerformer = new OperationPerformer(
       this.parser,
-      this.applyChanges
+      this.changesApplicator
     );
 
-    this.ime = new IMEService();
-    await this.ime.load();
+    this.imeDetector = new IMEDetector();
+    await this.imeDetector.load();
 
     this.features = [
       // service features
@@ -66,94 +66,96 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       new SettingsTab(this, this.settings),
 
       // general features
-      new ListsMovementCommands(this, this.obsidian, this.performOperation),
-      new ListsFoldingCommands(this, this.obsidian),
+      new ListsMovementCommands(
+        this,
+        this.obsidianSettings,
+        this.operationPerformer
+      ),
+      new ListsFoldingCommands(this, this.obsidianSettings),
 
-      // features based on settings.stickCursor
+      // features based on settings.keepCursorWithinContent
       new EditorSelectionsBehaviourOverride(
         this,
         this.settings,
-        this.obsidian,
         this.parser,
-        this.performOperation
+        this.operationPerformer
       ),
       new ArrowLeftAndCtrlArrowLeftBehaviourOverride(
         this,
         this.settings,
-        this.ime,
-        this.obsidian,
-        this.performOperation
+        this.imeDetector,
+        this.operationPerformer
       ),
       new BackspaceBehaviourOverride(
         this,
         this.settings,
-        this.ime,
-        this.obsidian,
-        this.performOperation
+        this.imeDetector,
+        this.operationPerformer
       ),
       new MetaBackspaceBehaviourOverride(
         this,
         this.settings,
-        this.ime,
-        this.obsidian,
-        this.performOperation
+        this.imeDetector,
+        this.operationPerformer
       ),
       new DeleteBehaviourOverride(
         this,
         this.settings,
-        this.ime,
-        this.obsidian,
-        this.performOperation
+        this.imeDetector,
+        this.operationPerformer
       ),
 
-      // features based on settings.betterTab
+      // features based on settings.overrideTabBehaviour
       new TabBehaviourOverride(
         this,
-        this.ime,
-        this.obsidian,
+        this.imeDetector,
+        this.obsidianSettings,
         this.settings,
-        this.performOperation
+        this.operationPerformer
       ),
       new ShiftTabBehaviourOverride(
         this,
-        this.ime,
-        this.obsidian,
+        this.imeDetector,
         this.settings,
-        this.performOperation
+        this.operationPerformer
       ),
 
-      // features based on settings.betterEnter
+      // features based on settings.overrideEnterBehaviour
       new EnterBehaviourOverride(
         this,
         this.settings,
-        this.ime,
-        this.obsidian,
+        this.imeDetector,
+        this.obsidianSettings,
         this.parser,
-        this.performOperation
+        this.operationPerformer
       ),
 
-      // features based on settings.selectAll
+      // features based on settings.overrideSelectAllBehaviour
       new CtrlAAndCmdABehaviourOverride(
         this,
         this.settings,
-        this.ime,
-        this.obsidian,
-        this.performOperation
+        this.imeDetector,
+        this.operationPerformer
       ),
 
-      // features based on settings.styleLists
-      new BetterListsStyles(this.settings, this.obsidian),
+      // features based on settings.betterListsStyles
+      new BetterListsStyles(this.settings, this.obsidianSettings),
 
-      // features based on settings.listLines
-      new VerticalLines(this, this.settings, this.obsidian, this.parser),
+      // features based on settings.verticalLines
+      new VerticalLines(
+        this,
+        this.settings,
+        this.obsidianSettings,
+        this.parser
+      ),
 
-      // features based on settings.dndExperiment
+      // features based on settings.dragAndDrop
       new DragAndDrop(
         this,
         this.settings,
-        this.obsidian,
+        this.obsidianSettings,
         this.parser,
-        this.performOperation
+        this.operationPerformer
       ),
     ];
 
@@ -165,7 +167,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   async onunload() {
     console.log(`Unloading obsidian-outliner`);
 
-    await this.ime.unload();
+    await this.imeDetector.unload();
 
     for (const feature of this.features) {
       await feature.unload();

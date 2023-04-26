@@ -2,7 +2,7 @@ import { MarkdownRenderer, Modal, Plugin_2 } from "obsidian";
 
 import { Feature } from "./Feature";
 
-import { SettingsService } from "../services/SettingsService";
+import { Settings } from "../services/Settings";
 
 class ReleaseNotesModal extends Modal {
   constructor(
@@ -48,7 +48,7 @@ function compareReleases(a: string, b: string) {
 export class ReleaseNotesAnnouncement implements Feature {
   private modal: ReleaseNotesModal | null = null;
 
-  constructor(private plugin: Plugin_2, private settings: SettingsService) {}
+  constructor(private plugin: Plugin_2, private settings: Settings) {}
 
   async load() {
     this.plugin.addCommand({

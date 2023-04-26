@@ -97,6 +97,9 @@
 - one
 - two|
 - three
+
+
+
 ```
 
 - drag: `{"from": {"line": 0, "ch": 0}}`
@@ -108,6 +111,9 @@
 - two|
 - three
 - one
+
+
+
 ```
 
 # list should move inside another list if the mouse is moved slightly to the right

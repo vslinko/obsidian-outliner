@@ -1,6 +1,6 @@
 import { Platform } from "obsidian";
 
-export class IMEService {
+export class IMEDetector {
   private composition = false;
 
   async load() {
@@ -13,7 +13,7 @@ export class IMEService {
     document.removeEventListener("compositionstart", this.onCompositionStart);
   }
 
-  isIMEOpened() {
+  isOpened() {
     return this.composition && Platform.isDesktop;
   }
 

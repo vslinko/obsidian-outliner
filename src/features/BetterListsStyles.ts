@@ -1,7 +1,7 @@
 import { Feature } from "./Feature";
 
-import { ObsidianService } from "../services/ObsidianService";
-import { SettingsService } from "../services/SettingsService";
+import { ObsidianSettings } from "../services/ObsidianSettings";
+import { Settings } from "../services/Settings";
 
 const BETTER_LISTS_BODY_CLASS = "outliner-plugin-better-lists";
 
@@ -9,8 +9,8 @@ export class BetterListsStyles implements Feature {
   private updateBodyClassInterval: number;
 
   constructor(
-    private settings: SettingsService,
-    private obsidian: ObsidianService
+    private settings: Settings,
+    private obsidianSettings: ObsidianSettings
   ) {}
 
   async load() {
@@ -27,7 +27,8 @@ export class BetterListsStyles implements Feature {
 
   private updateBodyClass = () => {
     const shouldExists =
-      this.obsidian.isDefaultThemeEnabled() && this.settings.styleLists;
+      this.obsidianSettings.isDefaultThemeEnabled() &&
+      this.settings.betterListsStyles;
     const exists = document.body.classList.contains(BETTER_LISTS_BODY_CLASS);
 
     if (shouldExists && !exists) {

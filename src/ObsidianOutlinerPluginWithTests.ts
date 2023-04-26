@@ -4,7 +4,6 @@ import { EditorView } from "@codemirror/view";
 
 import { MyEditor, MyEditorPosition } from "./MyEditor";
 import ObsidianOutlinerPlugin from "./ObsidianOutlinerPlugin";
-import { ObsidianOutlinerPluginSettings } from "./services/SettingsService";
 
 const keysMap: { [key: string]: number } = {
   Backspace: 8,
@@ -31,14 +30,10 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     (this.app as any).commands.executeCommandById(id);
   }
 
-  setSetting<T extends keyof ObsidianOutlinerPluginSettings>({
-    k,
-    v,
-  }: {
-    k: T;
-    v: ObsidianOutlinerPluginSettings[T];
-  }) {
-    this.settings.set(k, v);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setSetting({ k, v }: { k: string; v: any }) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (this.settings as any).set(k, v);
   }
 
   resetSettings() {

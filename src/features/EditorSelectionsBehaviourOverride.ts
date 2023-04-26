@@ -7,18 +7,17 @@ import { Feature } from "./Feature";
 import { MyEditor } from "../MyEditor";
 import { KeepCursorOutsideFoldedLines } from "../operations/KeepCursorOutsideFoldedLines";
 import { KeepCursorWithinListContent } from "../operations/KeepCursorWithinListContent";
-import { ObsidianService } from "../services/ObsidianService";
-import { ParserService } from "../services/ParserService";
-import { PerformOperationService } from "../services/PerformOperationService";
-import { SettingsService } from "../services/SettingsService";
+import { OperationPerformer } from "../services/OperationPerformer";
+import { Parser } from "../services/Parser";
+import { Settings } from "../services/Settings";
+import { getEditorFromState } from "../utils/getEditorFromState";
 
 export class EditorSelectionsBehaviourOverride implements Feature {
   constructor(
     private plugin: Plugin_2,
-    private settings: SettingsService,
-    private obsidian: ObsidianService,
-    private parser: ParserService,
-    private performOperation: PerformOperationService
+    private settings: Settings,
+    private parser: Parser,
+    private operationPerformer: OperationPerformer
   ) {}
 
   async load() {
@@ -30,11 +29,11 @@ export class EditorSelectionsBehaviourOverride implements Feature {
   async unload() {}
 
   private transactionExtender = (tr: Transaction): null => {
-    if (this.settings.stickCursor === "never" || !tr.selection) {
+    if (this.settings.keepCursorWithinContent === "never" || !tr.selection) {
       return null;
     }
 
-    const editor = this.obsidian.getEditorFromState(tr.startState);
+    const editor = getEditorFromState(tr.startState);
 
     setTimeout(() => {
       this.handleSelectionsChanges(editor);
@@ -51,7 +50,7 @@ export class EditorSelectionsBehaviourOverride implements Feature {
     }
 
     {
-      const { shouldStopPropagation } = this.performOperation.evalOperation(
+      const { shouldStopPropagation } = this.operationPerformer.eval(
         root,
         new KeepCursorOutsideFoldedLines(root),
         editor
@@ -62,7 +61,7 @@ export class EditorSelectionsBehaviourOverride implements Feature {
       }
     }
 
-    this.performOperation.evalOperation(
+    this.operationPerformer.eval(
       root,
       new KeepCursorWithinListContent(root),
       editor

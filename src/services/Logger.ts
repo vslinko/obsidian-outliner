@@ -1,7 +1,7 @@
-import { SettingsService } from "./SettingsService";
+import { Settings } from "./Settings";
 
-export class LoggerService {
-  constructor(private settings: SettingsService) {}
+export class Logger {
+  constructor(private settings: Settings) {}
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   log(method: string, ...args: any[]) {

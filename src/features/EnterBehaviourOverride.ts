@@ -3,26 +3,26 @@ import { Plugin_2 } from "obsidian";
 import { Prec } from "@codemirror/state";
 import { keymap } from "@codemirror/view";
 
-import { CreateNewItem } from "src/operations/CreateNewItem";
-import { ParserService } from "src/services/ParserService";
-
 import { Feature } from "./Feature";
 
 import { MyEditor } from "../MyEditor";
+import { CreateNewItem } from "../operations/CreateNewItem";
 import { OutdentListIfItsEmpty } from "../operations/OutdentListIfItsEmpty";
-import { IMEService } from "../services/IMEService";
-import { ObsidianService } from "../services/ObsidianService";
-import { PerformOperationService } from "../services/PerformOperationService";
-import { SettingsService } from "../services/SettingsService";
+import { IMEDetector } from "../services/IMEDetector";
+import { ObsidianSettings } from "../services/ObsidianSettings";
+import { OperationPerformer } from "../services/OperationPerformer";
+import { Parser } from "../services/Parser";
+import { Settings } from "../services/Settings";
+import { createKeymapRunCallback } from "../utils/createKeymapRunCallback";
 
 export class EnterBehaviourOverride implements Feature {
   constructor(
     private plugin: Plugin_2,
-    private settings: SettingsService,
-    private ime: IMEService,
-    private obsidian: ObsidianService,
-    private parser: ParserService,
-    private performOperation: PerformOperationService
+    private settings: Settings,
+    private imeDetector: IMEDetector,
+    private obsidianSettings: ObsidianSettings,
+    private parser: Parser,
+    private operationPerformer: OperationPerformer
   ) {}
 
   async load() {
@@ -31,7 +31,7 @@ export class EnterBehaviourOverride implements Feature {
         keymap.of([
           {
             key: "Enter",
-            run: this.obsidian.createKeymapRunCallback({
+            run: createKeymapRunCallback({
               check: this.check,
               run: this.run,
             }),
@@ -44,7 +44,7 @@ export class EnterBehaviourOverride implements Feature {
   async unload() {}
 
   private check = () => {
-    return this.settings.betterEnter && !this.ime.isIMEOpened();
+    return this.settings.overrideEnterBehaviour && !this.imeDetector.isOpened();
   };
 
   private run = (editor: MyEditor) => {
@@ -58,7 +58,7 @@ export class EnterBehaviourOverride implements Feature {
     }
 
     {
-      const res = this.performOperation.evalOperation(
+      const res = this.operationPerformer.eval(
         root,
         new OutdentListIfItsEmpty(root),
         editor
@@ -70,13 +70,13 @@ export class EnterBehaviourOverride implements Feature {
     }
 
     {
-      const defaultIndentChars = this.obsidian.getDefaultIndentChars();
+      const defaultIndentChars = this.obsidianSettings.getDefaultIndentChars();
       const zoomRange = editor.getZoomRange();
       const getZoomRange = {
         getZoomRange: () => zoomRange,
       };
 
-      const res = this.performOperation.evalOperation(
+      const res = this.operationPerformer.eval(
         root,
         new CreateNewItem(root, defaultIndentChars, getZoomRange),
         editor

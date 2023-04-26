@@ -1,8 +1,8 @@
 import { MyEditor } from "../MyEditor";
 import { List, Position, Root, isRangesIntersects } from "../root";
 
-export class ApplyChangesService {
-  applyChanges(editor: MyEditor, prevRoot: Root, newRoot: Root) {
+export class ChangesApplicator {
+  apply(editor: MyEditor, prevRoot: Root, newRoot: Root) {
     const changes = this.calculateChanges(editor, prevRoot, newRoot);
     if (changes) {
       const { replacement, changeFrom, changeTo } = changes;

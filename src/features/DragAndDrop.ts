@@ -1,4 +1,4 @@
-import { Notice, Platform, Plugin_2, editorInfoField } from "obsidian";
+import { Notice, Platform, Plugin_2 } from "obsidian";
 
 import { StateEffect, StateField } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
@@ -8,10 +8,13 @@ import { Feature } from "./Feature";
 import { MyEditor } from "../MyEditor";
 import { MoveListToDifferentPosition } from "../operations/MoveListToDifferentPosition";
 import { List, Root, cmpPos } from "../root";
-import { ObsidianService } from "../services/ObsidianService";
-import { ParserService } from "../services/ParserService";
-import { PerformOperationService } from "../services/PerformOperationService";
-import { SettingsService } from "../services/SettingsService";
+import { ObsidianSettings } from "../services/ObsidianSettings";
+import { OperationPerformer } from "../services/OperationPerformer";
+import { Parser } from "../services/Parser";
+import { Settings } from "../services/Settings";
+import { getEditorFromState } from "../utils/getEditorFromState";
+
+const BODY_CLASS = "outliner-plugin-dnd";
 
 export class DragAndDrop implements Feature {
   private dropZone: HTMLDivElement;
@@ -19,10 +22,10 @@ export class DragAndDrop implements Feature {
 
   constructor(
     private plugin: Plugin_2,
-    private settings: SettingsService,
-    private obisidian: ObsidianService,
-    private parser: ParserService,
-    private performOperation: PerformOperationService
+    private settings: Settings,
+    private obisidian: ObsidianSettings,
+    private parser: Parser,
+    private operationPerformer: OperationPerformer
   ) {}
 
   async load() {
@@ -39,13 +42,13 @@ export class DragAndDrop implements Feature {
   }
 
   private enableFeatureToggle() {
-    this.settings.onChange("dndExperiment", this.handleSettingsChange);
-    this.handleSettingsChange(this.settings.dndExperiment);
+    this.settings.onChange(this.handleSettingsChange);
+    this.handleSettingsChange();
   }
 
   private disableFeatureToggle() {
-    this.settings.removeCallback("dndExperiment", this.handleSettingsChange);
-    this.handleSettingsChange(false);
+    this.settings.removeCallback(this.handleSettingsChange);
+    document.body.classList.remove(BODY_CLASS);
   }
 
   private createDropZone() {
@@ -78,22 +81,22 @@ export class DragAndDrop implements Feature {
     document.removeEventListener("keydown", this.handleKeyDown);
   }
 
-  private handleSettingsChange(dndExperiment: boolean) {
+  private handleSettingsChange = () => {
     if (!isFeatureSupported()) {
       return;
     }
 
-    if (dndExperiment) {
-      document.body.classList.add("outliner-plugin-dnd");
+    if (this.settings.dragAndDrop) {
+      document.body.classList.add(BODY_CLASS);
     } else {
-      document.body.classList.remove("outliner-plugin-dnd");
+      document.body.classList.remove(BODY_CLASS);
     }
-  }
+  };
 
   private handleMouseDown = (e: MouseEvent) => {
     if (
       !isFeatureSupported() ||
-      !this.settings.dndExperiment ||
+      !this.settings.dragAndDrop ||
       !isClickOnBullet(e)
     ) {
       return;
@@ -129,7 +132,7 @@ export class DragAndDrop implements Feature {
   };
 
   private startDragging(x: number, y: number, view: EditorView) {
-    const editor = new MyEditor(view.state.field(editorInfoField).editor);
+    const editor = getEditorFromState(view.state);
     const pos = editor.offsetToPos(view.posAtCoords({ x, y }));
     const root = this.parser.parse(editor, pos);
     const list = root.getListUnderLine(pos.line);
@@ -178,7 +181,7 @@ export class DragAndDrop implements Feature {
       return;
     }
 
-    this.performOperation.evalOperation(
+    this.operationPerformer.eval(
       root,
       new MoveListToDifferentPosition(
         root,

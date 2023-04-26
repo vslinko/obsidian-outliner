@@ -2,9 +2,9 @@
 import { MyEditor } from "../../MyEditor";
 import { makeEditor, makeRoot } from "../../__mocks__";
 import { List, Root } from "../../root";
-import { ApplyChangesService } from "../ApplyChangesService";
+import { ChangesApplicator } from "../ChangesApplicator";
 
-describe("applyChanges", () => {
+describe("changesApplicator", () => {
   test("should not touch folded lists if they are not changed", () => {
     const { actions, editor, prevRoot, newRoot } = makeArgs({
       editor: makeEditor({
@@ -26,9 +26,9 @@ describe("applyChanges", () => {
         root.replaceCursor({ line: 5, ch: 8 });
       },
     });
-    const applyChanges = new ApplyChangesService();
+    const changesApplicator = new ChangesApplicator();
 
-    applyChanges.applyChanges(editor, prevRoot, newRoot);
+    changesApplicator.apply(editor, prevRoot, newRoot);
 
     expect(actions).toStrictEqual([
       ["getRange", ...newRoot.getRange()],
@@ -67,9 +67,9 @@ describe("applyChanges", () => {
         root.replaceCursor({ line: 1, ch: 3 });
       },
     });
-    const applyChanges = new ApplyChangesService();
+    const changesApplicator = new ChangesApplicator();
 
-    applyChanges.applyChanges(editor, prevRoot, newRoot);
+    changesApplicator.apply(editor, prevRoot, newRoot);
 
     expect(actions).toStrictEqual([
       ["getRange", ...newRoot.getRange()],

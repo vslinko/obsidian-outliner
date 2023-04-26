@@ -1,23 +1,23 @@
-import { ApplyChangesService } from "./ApplyChangesService";
-import { ParserService } from "./ParserService";
+import { ChangesApplicator } from "./ChangesApplicator";
+import { Parser } from "./Parser";
 
 import { MyEditor } from "../MyEditor";
 import { Operation } from "../operations/Operation";
 import { Root } from "../root";
 
-export class PerformOperationService {
+export class OperationPerformer {
   constructor(
-    private parser: ParserService,
-    private applyChanges: ApplyChangesService
+    private parser: Parser,
+    private changesApplicator: ChangesApplicator
   ) {}
 
-  evalOperation(root: Root, op: Operation, editor: MyEditor) {
+  eval(root: Root, op: Operation, editor: MyEditor) {
     const prevRoot = root.clone();
 
     op.perform();
 
     if (op.shouldUpdate()) {
-      this.applyChanges.applyChanges(editor, prevRoot, root);
+      this.changesApplicator.apply(editor, prevRoot, root);
     }
 
     return {
@@ -26,7 +26,7 @@ export class PerformOperationService {
     };
   }
 
-  performOperation(
+  perform(
     cb: (root: Root) => Operation,
     editor: MyEditor,
     cursor = editor.getCursor()
@@ -39,6 +39,6 @@ export class PerformOperationService {
 
     const op = cb(root);
 
-    return this.evalOperation(root, op, editor);
+    return this.eval(root, op, editor);
   }
 }

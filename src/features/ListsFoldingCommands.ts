@@ -3,17 +3,21 @@ import { Notice, Plugin_2 } from "obsidian";
 import { Feature } from "./Feature";
 
 import { MyEditor } from "../MyEditor";
-import { ObsidianService } from "../services/ObsidianService";
+import { ObsidianSettings } from "../services/ObsidianSettings";
+import { createEditorCallback } from "../utils/createEditorCallback";
 
 export class ListsFoldingCommands implements Feature {
-  constructor(private plugin: Plugin_2, private obsidian: ObsidianService) {}
+  constructor(
+    private plugin: Plugin_2,
+    private obsidianSettings: ObsidianSettings
+  ) {}
 
   async load() {
     this.plugin.addCommand({
       id: "fold",
       icon: "chevrons-down-up",
       name: "Fold the list",
-      editorCallback: this.obsidian.createEditorCallback(this.fold),
+      editorCallback: createEditorCallback(this.fold),
       hotkeys: [
         {
           modifiers: ["Mod"],
@@ -26,7 +30,7 @@ export class ListsFoldingCommands implements Feature {
       id: "unfold",
       icon: "chevrons-up-down",
       name: "Unfold the list",
-      editorCallback: this.obsidian.createEditorCallback(this.unfold),
+      editorCallback: createEditorCallback(this.unfold),
       hotkeys: [
         {
           modifiers: ["Mod"],
@@ -39,7 +43,7 @@ export class ListsFoldingCommands implements Feature {
   async unload() {}
 
   private setFold(editor: MyEditor, type: "fold" | "unfold") {
-    if (!this.obsidian.getObsidianFoldSettings().foldIndent) {
+    if (!this.obsidianSettings.getFoldSettings().foldIndent) {
       new Notice(
         `Unable to ${type} because folding is disabled. Please enable "Fold indent" in Obsidian settings.`,
         5000

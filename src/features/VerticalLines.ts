@@ -1,4 +1,4 @@
-import { Plugin_2, editorInfoField } from "obsidian";
+import { Plugin_2 } from "obsidian";
 
 import {
   EditorView,
@@ -11,9 +11,10 @@ import { Feature } from "./Feature";
 
 import { MyEditor } from "../MyEditor";
 import { List } from "../root";
-import { ObsidianService } from "../services/ObsidianService";
-import { ParserService } from "../services/ParserService";
-import { SettingsService } from "../services/SettingsService";
+import { ObsidianSettings } from "../services/ObsidianSettings";
+import { Parser } from "../services/Parser";
+import { Settings } from "../services/Settings";
+import { getEditorFromState } from "../utils/getEditorFromState";
 
 const VERTICAL_LINES_BODY_CLASS = "outliner-plugin-vertical-lines";
 
@@ -34,25 +35,25 @@ class VerticalLinesPluginValue implements PluginValue {
   private lineElements: HTMLElement[] = [];
 
   constructor(
-    private settings: SettingsService,
-    private obsidian: ObsidianService,
-    private parser: ParserService,
+    private settings: Settings,
+    private obsidianSettings: ObsidianSettings,
+    private parser: Parser,
     private view: EditorView
   ) {
     this.view.scrollDOM.addEventListener("scroll", this.onScroll);
-    this.settings.onChange("listLines", this.scheduleRecalculate);
+    this.settings.onChange(this.scheduleRecalculate);
 
     this.prepareDom();
     this.waitForEditor();
   }
 
   private waitForEditor = () => {
-    const oe = this.view.state.field(editorInfoField).editor;
-    if (!oe) {
+    const editor = getEditorFromState(this.view.state);
+    if (!editor) {
       setTimeout(this.waitForEditor, 0);
       return;
     }
-    this.editor = new MyEditor(oe);
+    this.editor = editor;
     this.scheduleRecalculate();
   };
 
@@ -94,8 +95,8 @@ class VerticalLinesPluginValue implements PluginValue {
     this.lines = [];
 
     if (
-      this.settings.listLines &&
-      this.obsidian.isDefaultThemeEnabled() &&
+      this.settings.verticalLines &&
+      this.obsidianSettings.isDefaultThemeEnabled() &&
       this.view.viewportLineBlocks.length > 0 &&
       this.view.visibleRanges.length > 0
     ) {
@@ -211,7 +212,7 @@ class VerticalLinesPluginValue implements PluginValue {
 
     const line = this.lines[Number((e.target as HTMLElement).dataset.index)];
 
-    switch (this.settings.listLineAction) {
+    switch (this.settings.verticalLinesAction) {
       case "zoom-in":
         this.zoomIn(line);
         break;
@@ -223,7 +224,7 @@ class VerticalLinesPluginValue implements PluginValue {
   };
 
   private zoomIn(line: LineData) {
-    const editor = new MyEditor(this.view.state.field(editorInfoField).editor);
+    const editor = getEditorFromState(this.view.state);
 
     editor.zoomIn(line.list.getFirstLineContentStart().line);
   }
@@ -247,7 +248,7 @@ class VerticalLinesPluginValue implements PluginValue {
       linesToToggle.push(c.getFirstLineContentStart().line);
     }
 
-    const editor = new MyEditor(this.view.state.field(editorInfoField).editor);
+    const editor = getEditorFromState(this.view.state);
 
     for (const l of linesToToggle) {
       if (needToUnfold) {
@@ -310,7 +311,7 @@ class VerticalLinesPluginValue implements PluginValue {
   }
 
   destroy() {
-    this.settings.removeCallback("listLines", this.scheduleRecalculate);
+    this.settings.removeCallback(this.scheduleRecalculate);
     this.view.scrollDOM.removeEventListener("scroll", this.onScroll);
     this.view.dom.removeChild(this.scroller);
     clearTimeout(this.scheduled);
@@ -322,9 +323,9 @@ export class VerticalLines implements Feature {
 
   constructor(
     private plugin: Plugin_2,
-    private settings: SettingsService,
-    private obsidian: ObsidianService,
-    private parser: ParserService
+    private settings: Settings,
+    private obsidianSettings: ObsidianSettings,
+    private parser: Parser
   ) {}
 
   async load() {
@@ -338,7 +339,7 @@ export class VerticalLines implements Feature {
         (view) =>
           new VerticalLinesPluginValue(
             this.settings,
-            this.obsidian,
+            this.obsidianSettings,
             this.parser,
             view
           )
@@ -353,7 +354,8 @@ export class VerticalLines implements Feature {
 
   private updateBodyClass = () => {
     const shouldExists =
-      this.obsidian.isDefaultThemeEnabled() && this.settings.listLines;
+      this.obsidianSettings.isDefaultThemeEnabled() &&
+      this.settings.verticalLines;
     const exists = document.body.classList.contains(VERTICAL_LINES_BODY_CLASS);
 
     if (shouldExists && !exists) {

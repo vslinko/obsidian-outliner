@@ -3,13 +3,13 @@ import { App, PluginSettingTab, Plugin_2, Setting } from "obsidian";
 import { Feature } from "./Feature";
 
 import {
-  ListLineAction,
-  SettingsService,
-  StickCursor,
-} from "../services/SettingsService";
+  KeepCursorWithinContent,
+  Settings,
+  VerticalLinesAction,
+} from "../services/Settings";
 
 class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
-  constructor(app: App, plugin: Plugin_2, private settings: SettingsService) {
+  constructor(app: App, plugin: Plugin_2, private settings: Settings) {
     super(app, plugin);
   }
 
@@ -27,10 +27,10 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
             never: "Never",
             "bullet-only": "Stick cursor out of bullets",
             "bullet-and-checkbox": "Stick cursor out of bullets and checkboxes",
-          } as { [key in StickCursor]: string })
-          .setValue(this.settings.stickCursor)
-          .onChange(async (value) => {
-            this.settings.stickCursor = value as StickCursor;
+          } as { [key in KeepCursorWithinContent]: string })
+          .setValue(this.settings.keepCursorWithinContent)
+          .onChange(async (value: KeepCursorWithinContent) => {
+            this.settings.keepCursorWithinContent = value;
             await this.settings.save();
           });
       });
@@ -39,20 +39,24 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
       .setName("Enhance the Tab key")
       .setDesc("Make Tab and Shift-Tab behave the same as other outliners.")
       .addToggle((toggle) => {
-        toggle.setValue(this.settings.betterTab).onChange(async (value) => {
-          this.settings.betterTab = value;
-          await this.settings.save();
-        });
+        toggle
+          .setValue(this.settings.overrideTabBehaviour)
+          .onChange(async (value) => {
+            this.settings.overrideTabBehaviour = value;
+            await this.settings.save();
+          });
       });
 
     new Setting(containerEl)
       .setName("Enhance the Enter key")
       .setDesc("Make the Enter key behave the same as other outliners.")
       .addToggle((toggle) => {
-        toggle.setValue(this.settings.betterEnter).onChange(async (value) => {
-          this.settings.betterEnter = value;
-          await this.settings.save();
-        });
+        toggle
+          .setValue(this.settings.overrideEnterBehaviour)
+          .onChange(async (value) => {
+            this.settings.overrideEnterBehaviour = value;
+            await this.settings.save();
+          });
       });
 
     new Setting(containerEl)
@@ -61,10 +65,12 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
         "Press the hotkey once to select the current list item. Press the hotkey twice to select the entire list."
       )
       .addToggle((toggle) => {
-        toggle.setValue(this.settings.selectAll).onChange(async (value) => {
-          this.settings.selectAll = value;
-          await this.settings.save();
-        });
+        toggle
+          .setValue(this.settings.overrideSelectAllBehaviour)
+          .onChange(async (value) => {
+            this.settings.overrideSelectAllBehaviour = value;
+            await this.settings.save();
+          });
       });
 
     new Setting(containerEl)
@@ -73,17 +79,19 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
         "Styles are only compatible with built-in Obsidian themes and may not be compatible with other themes."
       )
       .addToggle((toggle) => {
-        toggle.setValue(this.settings.styleLists).onChange(async (value) => {
-          this.settings.styleLists = value;
-          await this.settings.save();
-        });
+        toggle
+          .setValue(this.settings.betterListsStyles)
+          .onChange(async (value) => {
+            this.settings.betterListsStyles = value;
+            await this.settings.save();
+          });
       });
 
     new Setting(containerEl)
       .setName("Draw vertical indentation lines")
       .addToggle((toggle) => {
-        toggle.setValue(this.settings.listLines).onChange(async (value) => {
-          this.settings.listLines = value;
+        toggle.setValue(this.settings.verticalLines).onChange(async (value) => {
+          this.settings.verticalLines = value;
           await this.settings.save();
         });
       });
@@ -96,10 +104,10 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
             none: "None",
             "zoom-in": "Zoom In",
             "toggle-folding": "Toggle Folding",
-          } as { [key in ListLineAction]: string })
-          .setValue(this.settings.listLineAction)
-          .onChange(async (value) => {
-            this.settings.listLineAction = value as ListLineAction;
+          } as { [key in VerticalLinesAction]: string })
+          .setValue(this.settings.verticalLinesAction)
+          .onChange(async (value: VerticalLinesAction) => {
+            this.settings.verticalLinesAction = value;
             await this.settings.save();
           });
       });
@@ -107,8 +115,8 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Drag-and-Drop (Experimental)")
       .addToggle((toggle) => {
-        toggle.setValue(this.settings.dndExperiment).onChange(async (value) => {
-          this.settings.dndExperiment = value;
+        toggle.setValue(this.settings.dragAndDrop).onChange(async (value) => {
+          this.settings.dragAndDrop = value;
           await this.settings.save();
         });
       });
@@ -128,7 +136,7 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
 }
 
 export class SettingsTab implements Feature {
-  constructor(private plugin: Plugin_2, private settings: SettingsService) {}
+  constructor(private plugin: Plugin_2, private settings: Settings) {}
 
   async load() {
     this.plugin.addSettingTab(

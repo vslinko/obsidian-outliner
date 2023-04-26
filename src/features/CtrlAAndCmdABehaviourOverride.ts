@@ -6,18 +6,17 @@ import { Feature } from "./Feature";
 
 import { MyEditor } from "../MyEditor";
 import { SelectAllContent } from "../operations/SelectAllContent";
-import { IMEService } from "../services/IMEService";
-import { ObsidianService } from "../services/ObsidianService";
-import { PerformOperationService } from "../services/PerformOperationService";
-import { SettingsService } from "../services/SettingsService";
+import { IMEDetector } from "../services/IMEDetector";
+import { OperationPerformer } from "../services/OperationPerformer";
+import { Settings } from "../services/Settings";
+import { createKeymapRunCallback } from "../utils/createKeymapRunCallback";
 
 export class CtrlAAndCmdABehaviourOverride implements Feature {
   constructor(
     private plugin: Plugin_2,
-    private settings: SettingsService,
-    private ime: IMEService,
-    private obsidian: ObsidianService,
-    private performOperation: PerformOperationService
+    private settings: Settings,
+    private imeDetector: IMEDetector,
+    private operationPerformer: OperationPerformer
   ) {}
 
   async load() {
@@ -26,7 +25,7 @@ export class CtrlAAndCmdABehaviourOverride implements Feature {
         {
           key: "c-a",
           mac: "m-a",
-          run: this.obsidian.createKeymapRunCallback({
+          run: createKeymapRunCallback({
             check: this.check,
             run: this.run,
           }),
@@ -38,11 +37,13 @@ export class CtrlAAndCmdABehaviourOverride implements Feature {
   async unload() {}
 
   private check = () => {
-    return this.settings.selectAll && !this.ime.isIMEOpened();
+    return (
+      this.settings.overrideSelectAllBehaviour && !this.imeDetector.isOpened()
+    );
   };
 
   private run = (editor: MyEditor) => {
-    return this.performOperation.performOperation(
+    return this.operationPerformer.perform(
       (root) => new SelectAllContent(root),
       editor
     );

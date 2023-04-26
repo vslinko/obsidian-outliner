@@ -7,14 +7,15 @@ import { IndentList } from "../operations/IndentList";
 import { MoveListDown } from "../operations/MoveListDown";
 import { MoveListUp } from "../operations/MoveListUp";
 import { OutdentList } from "../operations/OutdentList";
-import { ObsidianService } from "../services/ObsidianService";
-import { PerformOperationService } from "../services/PerformOperationService";
+import { ObsidianSettings } from "../services/ObsidianSettings";
+import { OperationPerformer } from "../services/OperationPerformer";
+import { createEditorCallback } from "../utils/createEditorCallback";
 
 export class ListsMovementCommands implements Feature {
   constructor(
     private plugin: Plugin_2,
-    private obsidian: ObsidianService,
-    private performOperation: PerformOperationService
+    private obsidianSettings: ObsidianSettings,
+    private operationPerformer: OperationPerformer
   ) {}
 
   async load() {
@@ -22,7 +23,7 @@ export class ListsMovementCommands implements Feature {
       id: "move-list-item-up",
       icon: "arrow-up",
       name: "Move list and sublists up",
-      editorCallback: this.obsidian.createEditorCallback(this.moveListUp),
+      editorCallback: createEditorCallback(this.moveListUp),
       hotkeys: [
         {
           modifiers: ["Mod", "Shift"],
@@ -35,7 +36,7 @@ export class ListsMovementCommands implements Feature {
       id: "move-list-item-down",
       icon: "arrow-down",
       name: "Move list and sublists down",
-      editorCallback: this.obsidian.createEditorCallback(this.moveListDown),
+      editorCallback: createEditorCallback(this.moveListDown),
       hotkeys: [
         {
           modifiers: ["Mod", "Shift"],
@@ -48,7 +49,7 @@ export class ListsMovementCommands implements Feature {
       id: "indent-list",
       icon: "indent",
       name: "Indent the list and sublists",
-      editorCallback: this.obsidian.createEditorCallback(this.indentList),
+      editorCallback: createEditorCallback(this.indentList),
       hotkeys: [],
     });
 
@@ -56,7 +57,7 @@ export class ListsMovementCommands implements Feature {
       id: "outdent-list",
       icon: "outdent",
       name: "Outdent the list and sublists",
-      editorCallback: this.obsidian.createEditorCallback(this.outdentList),
+      editorCallback: createEditorCallback(this.outdentList),
       hotkeys: [],
     });
   }
@@ -64,7 +65,7 @@ export class ListsMovementCommands implements Feature {
   async unload() {}
 
   private moveListDown = (editor: MyEditor) => {
-    const { shouldStopPropagation } = this.performOperation.performOperation(
+    const { shouldStopPropagation } = this.operationPerformer.perform(
       (root) => new MoveListDown(root),
       editor
     );
@@ -73,7 +74,7 @@ export class ListsMovementCommands implements Feature {
   };
 
   private moveListUp = (editor: MyEditor) => {
-    const { shouldStopPropagation } = this.performOperation.performOperation(
+    const { shouldStopPropagation } = this.operationPerformer.perform(
       (root) => new MoveListUp(root),
       editor
     );
@@ -82,8 +83,9 @@ export class ListsMovementCommands implements Feature {
   };
 
   private indentList = (editor: MyEditor) => {
-    const { shouldStopPropagation } = this.performOperation.performOperation(
-      (root) => new IndentList(root, this.obsidian.getDefaultIndentChars()),
+    const { shouldStopPropagation } = this.operationPerformer.perform(
+      (root) =>
+        new IndentList(root, this.obsidianSettings.getDefaultIndentChars()),
       editor
     );
 
@@ -91,7 +93,7 @@ export class ListsMovementCommands implements Feature {
   };
 
   private outdentList = (editor: MyEditor) => {
-    const { shouldStopPropagation } = this.performOperation.performOperation(
+    const { shouldStopPropagation } = this.operationPerformer.perform(
       (root) => new OutdentList(root),
       editor
     );
