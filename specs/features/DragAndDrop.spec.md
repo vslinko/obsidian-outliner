@@ -1,4 +1,4 @@
-# Drag-and-Drop: list should move after dragging it with the mouse
+# list should move after dragging it with the mouse
 
 - setting: `dndExperiment=true`
 - applyState:
@@ -20,7 +20,7 @@
   - two
 ```
 
-# Drag-and-Drop: list should move with sublists after dragging it with the mouse
+# list should move with sublists after dragging it with the mouse
 
 - setting: `dndExperiment=true`
 - applyState:
@@ -44,7 +44,7 @@
   - two
 ```
 
-# Drag-and-Drop: cursor should keep position after moving the list
+# cursor should keep position after moving the list
 
 - setting: `dndExperiment=true`
 - applyState:
@@ -66,15 +66,12 @@
   - two|
 ```
 
-# Drag-and-Drop: list should move to the first position if the mouse is moved above all items
+# list should move to the first position if the mouse is moved above all items
 
 - setting: `dndExperiment=true`
 - applyState:
 
 ```md
-
-
-
 - one
 - two|
 - three
@@ -86,15 +83,12 @@
 - assertState:
 
 ```md
-
-
-
 - three
 - one
 - two|
 ```
 
-# Drag-and-Drop: list should move to the last position if the mouse is moved below all items
+# list should move to the last position if the mouse is moved below all items
 
 - setting: `dndExperiment=true`
 - applyState:
@@ -103,9 +97,6 @@
 - one
 - two|
 - three
-
-
-
 ```
 
 - drag: `{"from": {"line": 0, "ch": 0}}`
@@ -117,12 +108,9 @@
 - two|
 - three
 - one
-
-
-
 ```
 
-# Drag-and-Drop: list should move inside another list if the mouse is moved slightly to the right
+# list should move inside another list if the mouse is moved slightly to the right
 
 - setting: `dndExperiment=true`
 - applyState:
