@@ -19,6 +19,55 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
     containerEl.empty();
 
     new Setting(containerEl)
+      .setName("Stick the cursor to the content")
+      .setDesc("Don't let the cursor move to the bullet position.")
+      .addDropdown((dropdown) => {
+        dropdown
+          .addOptions({
+            never: "Never",
+            "bullet-only": "Stick cursor out of bullets",
+            "bullet-and-checkbox": "Stick cursor out of bullets and checkboxes",
+          } as { [key in StickCursor]: string })
+          .setValue(this.settings.stickCursor)
+          .onChange(async (value) => {
+            this.settings.stickCursor = value as StickCursor;
+            await this.settings.save();
+          });
+      });
+
+    new Setting(containerEl)
+      .setName("Enhance the Tab key")
+      .setDesc("Make Tab and Shift-Tab behave the same as other outliners.")
+      .addToggle((toggle) => {
+        toggle.setValue(this.settings.betterTab).onChange(async (value) => {
+          this.settings.betterTab = value;
+          await this.settings.save();
+        });
+      });
+
+    new Setting(containerEl)
+      .setName("Enhance the Enter key")
+      .setDesc("Make the Enter key behave the same as other outliners.")
+      .addToggle((toggle) => {
+        toggle.setValue(this.settings.betterEnter).onChange(async (value) => {
+          this.settings.betterEnter = value;
+          await this.settings.save();
+        });
+      });
+
+    new Setting(containerEl)
+      .setName("Enhance the Ctrl+A or Cmd+A behavior")
+      .setDesc(
+        "Press the hotkey once to select the current list item. Press the hotkey twice to select the entire list."
+      )
+      .addToggle((toggle) => {
+        toggle.setValue(this.settings.selectAll).onChange(async (value) => {
+          this.settings.selectAll = value;
+          await this.settings.save();
+        });
+      });
+
+    new Setting(containerEl)
       .setName("Improve the style of your lists")
       .setDesc(
         "Styles are only compatible with built-in Obsidian themes and may not be compatible with other themes."
@@ -56,55 +105,6 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName("Stick the cursor to the content")
-      .setDesc("Don't let the cursor move to the bullet position.")
-      .addDropdown((dropdown) => {
-        dropdown
-          .addOptions({
-            never: "Never",
-            "bullet-only": "Stick cursor out of bullets",
-            "bullet-and-checkbox": "Stick cursor out of bullets and checkboxes",
-          } as { [key in StickCursor]: string })
-          .setValue(this.settings.stickCursor)
-          .onChange(async (value) => {
-            this.settings.stickCursor = value as StickCursor;
-            await this.settings.save();
-          });
-      });
-
-    new Setting(containerEl)
-      .setName("Enhance the Enter key")
-      .setDesc("Make the Enter key behave the same as other outliners.")
-      .addToggle((toggle) => {
-        toggle.setValue(this.settings.betterEnter).onChange(async (value) => {
-          this.settings.betterEnter = value;
-          await this.settings.save();
-        });
-      });
-
-    new Setting(containerEl)
-      .setName("Enhance the Tab key")
-      .setDesc("Make Tab and Shift-Tab behave the same as other outliners.")
-      .addToggle((toggle) => {
-        toggle.setValue(this.settings.betterTab).onChange(async (value) => {
-          this.settings.betterTab = value;
-          await this.settings.save();
-        });
-      });
-
-    new Setting(containerEl)
-      .setName("Enhance the Ctrl+A or Cmd+A behavior")
-      .setDesc(
-        "Press the hotkey once to select the current list item. Press the hotkey twice to select the entire list."
-      )
-      .addToggle((toggle) => {
-        toggle.setValue(this.settings.selectAll).onChange(async (value) => {
-          this.settings.selectAll = value;
-          await this.settings.save();
-        });
-      });
-
-    new Setting(containerEl)
       .setName("Drag-and-Drop (Experimental)")
       .addToggle((toggle) => {
         toggle.setValue(this.settings.dndExperiment).onChange(async (value) => {
@@ -127,7 +127,7 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
   }
 }
 
-export class SettingsTabFeature implements Feature {
+export class SettingsTab implements Feature {
   constructor(private plugin: Plugin_2, private settings: SettingsService) {}
 
   async load() {

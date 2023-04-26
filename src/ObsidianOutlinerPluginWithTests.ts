@@ -90,7 +90,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       e.keyCode = keysMap[e.code];
     }
 
-    if (e.keyCode == 0) {
+    if (e.keyCode === 0) {
       throw new Error("Unknown key: " + e.code);
     }
 

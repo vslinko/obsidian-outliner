@@ -103,7 +103,7 @@ export class ParserService {
       }
     }
 
-    if (listLookingPos == null) {
+    if (listLookingPos === null) {
       return null;
     }
 
@@ -172,7 +172,7 @@ export class ParserService {
         let [, , , , optionalCheckbox, content] = matches;
 
         content = optionalCheckbox + content;
-        if (this.settings.stickCursor != "bullet-and-checkbox") {
+        if (this.settings.stickCursor !== "bullet-and-checkbox") {
           optionalCheckbox = "";
         }
 

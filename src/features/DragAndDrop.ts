@@ -13,7 +13,7 @@ import { ParserService } from "../services/ParserService";
 import { PerformOperationService } from "../services/PerformOperationService";
 import { SettingsService } from "../services/SettingsService";
 
-export class DragAndDropFeature implements Feature {
+export class DragAndDrop implements Feature {
   private dropZone: HTMLDivElement;
   private state: DragAndDropState | null = null;
 

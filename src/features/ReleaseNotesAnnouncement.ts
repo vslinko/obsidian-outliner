@@ -4,7 +4,7 @@ import { Feature } from "./Feature";
 
 import { SettingsService } from "../services/SettingsService";
 
-class ChangelogModal extends Modal {
+class ReleaseNotesModal extends Modal {
   constructor(
     private plugin: Plugin_2,
     private title: string,
@@ -45,16 +45,16 @@ function compareReleases(a: string, b: string) {
   return aMajor - bMajor;
 }
 
-export class ChangelogModalFeature implements Feature {
-  private modal: ChangelogModal | null = null;
+export class ReleaseNotesAnnouncement implements Feature {
+  private modal: ReleaseNotesModal | null = null;
 
   constructor(private plugin: Plugin_2, private settings: SettingsService) {}
 
   async load() {
     this.plugin.addCommand({
-      id: "show-changelog",
-      name: "Show Changelog",
-      callback: () => this.showModal(),
+      id: "show-release-notes",
+      name: "Show Release Notes",
+      callback: this.showModal,
     });
 
     const shouldShow =
@@ -70,7 +70,17 @@ export class ChangelogModalFeature implements Feature {
     this.showModal(this.settings.previousRelease);
   }
 
-  showModal(previousRelease: string | null = null) {
+  async unload() {
+    if (!this.modal) {
+      return;
+    }
+
+    const modal = this.modal;
+    this.modal = null;
+    modal.close();
+  }
+
+  private showModal = (previousRelease: string | null = null) => {
     const markdown = CHANGELOG_MD;
     const lines = markdown.split("\n");
     let lastLine = lines.length;
@@ -94,26 +104,16 @@ export class ChangelogModalFeature implements Feature {
       return;
     }
 
-    this.modal = new ChangelogModal(
+    this.modal = new ReleaseNotesModal(
       this.plugin,
       modalTitle,
       modalContent,
       this.handleClose
     );
     this.modal.open();
-  }
+  };
 
-  async unload() {
-    if (!this.modal) {
-      return;
-    }
-
-    const modal = this.modal;
-    this.modal = null;
-    modal.close();
-  }
-
-  handleClose = async () => {
+  private handleClose = async () => {
     if (!this.modal) {
       return;
     }

@@ -2,19 +2,22 @@ import { Plugin_2 } from "obsidian";
 
 import { EditorState, Transaction } from "@codemirror/state";
 
+import { Feature } from "./Feature";
+
 import { MyEditor } from "../MyEditor";
-import { Feature } from "../features/Feature";
 import { EnsureCursorInListContentOperation } from "../operations/EnsureCursorInListContentOperation";
 import { EnsureCursorIsInUnfoldedLineOperation } from "../operations/EnsureCursorIsInUnfoldedLineOperation";
 import { ObsidianService } from "../services/ObsidianService";
+import { ParserService } from "../services/ParserService";
 import { PerformOperationService } from "../services/PerformOperationService";
 import { SettingsService } from "../services/SettingsService";
 
-export class EnsureCursorInListContentFeature implements Feature {
+export class EditorSelectionsBehaviourOverride implements Feature {
   constructor(
     private plugin: Plugin_2,
     private settings: SettingsService,
     private obsidian: ObsidianService,
+    private parser: ParserService,
     private performOperation: PerformOperationService
   ) {}
 
@@ -27,27 +30,37 @@ export class EnsureCursorInListContentFeature implements Feature {
   async unload() {}
 
   private transactionExtender = (tr: Transaction): null => {
-    if (this.settings.stickCursor == "never" || !tr.selection) {
+    if (this.settings.stickCursor === "never" || !tr.selection) {
       return null;
     }
 
     const editor = this.obsidian.getEditorFromState(tr.startState);
 
     setTimeout(() => {
-      this.handleCursorActivity(editor);
+      this.handleSelectionsChanges(editor);
     }, 0);
 
     return null;
   };
 
-  private handleCursorActivity = (editor: MyEditor) => {
-    this.performOperation.performOperation(
-      (root) => new EnsureCursorIsInUnfoldedLineOperation(root),
-      editor
-    );
+  private handleSelectionsChanges = (editor: MyEditor) => {
+    const root = this.parser.parse(editor);
 
-    this.performOperation.performOperation(
-      (root) => new EnsureCursorInListContentOperation(root),
+    {
+      const res = this.performOperation.evalOperation(
+        root,
+        new EnsureCursorIsInUnfoldedLineOperation(root),
+        editor
+      );
+
+      if (res.shouldStopPropagation) {
+        return;
+      }
+    }
+
+    this.performOperation.evalOperation(
+      root,
+      new EnsureCursorInListContentOperation(root),
       editor
     );
   };

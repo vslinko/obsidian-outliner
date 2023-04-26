@@ -1,20 +1,23 @@
 import { Plugin } from "obsidian";
 
-import { ChangelogModalFeature } from "./features/ChangelogModalFeature";
-import { DeleteShouldIgnoreBulletsFeature } from "./features/DeleteShouldIgnoreBulletsFeature";
-import { DragAndDropFeature } from "./features/DragAndDropFeature";
-import { EnsureCursorInListContentFeature } from "./features/EnsureCursorInListContentFeature";
-import { EnterOutdentIfLineIsEmptyFeature } from "./features/EnterOutdentIfLineIsEmptyFeature";
-import { EnterShouldCreateNewItemFeature } from "./features/EnterShouldCreateNewItemOnChildLevelFeature";
+import { ArrowLeftAndCtrlArrowLeftBehaviourOverride } from "./features/ArrowLeftAndCtrlArrowLeftBehaviourOverride";
+import { BackspaceBehaviourOverride } from "./features/BackspaceBehaviourOverride";
+import { BetterListsStyles } from "./features/BetterListsStyles";
+import { CtrlAAndCmdABehaviourOverride } from "./features/CtrlAAndCmdABehaviourOverride";
+import { DeleteBehaviourOverride } from "./features/DeleteBehaviourOverride";
+import { DragAndDrop } from "./features/DragAndDrop";
+import { EditorSelectionsBehaviourOverride } from "./features/EditorSelectionsBehaviourOverride";
+import { EnterBehaviourOverride } from "./features/EnterBehaviourOverride";
 import { Feature } from "./features/Feature";
-import { FoldFeature } from "./features/FoldFeature";
-import { LinesFeature } from "./features/LinesFeature";
-import { ListsStylesFeature } from "./features/ListsStylesFeature";
-import { MoveCursorToPreviousUnfoldedLineFeature } from "./features/MoveCursorToPreviousUnfoldedLineFeature";
-import { MoveItemsFeature } from "./features/MoveItemsFeature";
-import { SelectAllFeature } from "./features/SelectAllFeature";
-import { SettingsTabFeature } from "./features/SettingsTabFeature";
-import { ShiftEnterShouldCreateNoteFeature } from "./features/ShiftEnterShouldCreateNoteFeature";
+import { ListsFoldingCommands } from "./features/ListsFoldingCommands";
+import { ListsMovementCommands } from "./features/ListsMovementCommands";
+import { MetaBackspaceBehaviourOverride } from "./features/MetaBackspaceBehaviourOverride";
+import { ReleaseNotesAnnouncement } from "./features/ReleaseNotesAnnouncement";
+import { SettingsTab } from "./features/SettingsTab";
+import { ShiftEnterBehaviourOverride } from "./features/ShiftEnterBehaviourOverride";
+import { ShiftTabBehaviourOverride } from "./features/ShiftTabBehaviourOverride";
+import { TabBehaviourOverride } from "./features/TabBehaviourOverride";
+import { VerticalLines } from "./features/VerticalLines";
 import { ApplyChangesService } from "./services/ApplyChangesService";
 import { IMEService } from "./services/IMEService";
 import { LoggerService } from "./services/LoggerService";
@@ -59,73 +62,107 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     await this.ime.load();
 
     this.features = [
-      new ChangelogModalFeature(this, this.settings),
-      new DragAndDropFeature(
+      // service features
+      new ReleaseNotesAnnouncement(this, this.settings),
+      new SettingsTab(this, this.settings),
+
+      // general features
+      new ListsMovementCommands(this, this.obsidian, this.performOperation),
+      new ListsFoldingCommands(this, this.obsidian),
+
+      // features based on settings.stickCursor
+      new EditorSelectionsBehaviourOverride(
         this,
         this.settings,
         this.obsidian,
         this.parser,
         this.performOperation
       ),
-      new SettingsTabFeature(this, this.settings),
-      new ListsStylesFeature(this.settings, this.obsidian),
-      new EnterOutdentIfLineIsEmptyFeature(
+      new ArrowLeftAndCtrlArrowLeftBehaviourOverride(
         this,
         this.settings,
         this.ime,
         this.obsidian,
         this.performOperation
       ),
-      new EnterShouldCreateNewItemFeature(
+      new BackspaceBehaviourOverride(
         this,
         this.settings,
         this.ime,
         this.obsidian,
         this.performOperation
       ),
-      new EnsureCursorInListContentFeature(
-        this,
-        this.settings,
-        this.obsidian,
-        this.performOperation
-      ),
-      new MoveCursorToPreviousUnfoldedLineFeature(
+      new MetaBackspaceBehaviourOverride(
         this,
         this.settings,
         this.ime,
         this.obsidian,
         this.performOperation
       ),
-      new DeleteShouldIgnoreBulletsFeature(
+      new DeleteBehaviourOverride(
         this,
         this.settings,
         this.ime,
         this.obsidian,
         this.performOperation
       ),
-      new FoldFeature(this, this.obsidian),
-      new SelectAllFeature(
-        this,
-        this.settings,
-        this.ime,
-        this.obsidian,
-        this.performOperation
-      ),
-      new MoveItemsFeature(
+
+      // features based on settings.betterTab
+      new TabBehaviourOverride(
         this,
         this.ime,
         this.obsidian,
         this.settings,
         this.performOperation
       ),
-      new ShiftEnterShouldCreateNoteFeature(
+      new ShiftTabBehaviourOverride(
+        this,
+        this.ime,
+        this.obsidian,
+        this.settings,
+        this.performOperation
+      ),
+
+      // features based on settings.betterEnter
+      new EnterBehaviourOverride(
+        this,
+        this.settings,
+        this.ime,
+        this.obsidian,
+        this.parser,
+        this.performOperation
+      ),
+      new ShiftEnterBehaviourOverride(
         this,
         this.obsidian,
         this.settings,
         this.ime,
         this.performOperation
       ),
-      new LinesFeature(this, this.settings, this.obsidian, this.parser),
+
+      // features based on settings.selectAll
+      new CtrlAAndCmdABehaviourOverride(
+        this,
+        this.settings,
+        this.ime,
+        this.obsidian,
+        this.performOperation
+      ),
+
+      // features based on settings.styleLists
+      new BetterListsStyles(this.settings, this.obsidian),
+
+      // features based on settings.listLines
+      new VerticalLines(this, this.settings, this.obsidian, this.parser),
+
+      // features based on settings.dndExperiment
+      new DragAndDrop(
+        this,
+        this.settings,
+        this.obsidian,
+        this.parser,
+        this.performOperation
+      ),
     ];
 
     for (const feature of this.features) {

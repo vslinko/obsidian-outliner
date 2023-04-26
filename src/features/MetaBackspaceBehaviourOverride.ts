@@ -2,15 +2,16 @@ import { Plugin_2 } from "obsidian";
 
 import { keymap } from "@codemirror/view";
 
+import { Feature } from "./Feature";
+
 import { MyEditor } from "../MyEditor";
-import { Feature } from "../features/Feature";
-import { MoveCursorToPreviousUnfoldedLineOperation } from "../operations/MoveCursorToPreviousUnfoldedLineOperation";
+import { DeleteTillLineStartOperation } from "../operations/DeleteTillLineStartOperation";
 import { IMEService } from "../services/IMEService";
 import { ObsidianService } from "../services/ObsidianService";
 import { PerformOperationService } from "../services/PerformOperationService";
 import { SettingsService } from "../services/SettingsService";
 
-export class MoveCursorToPreviousUnfoldedLineFeature implements Feature {
+export class MetaBackspaceBehaviourOverride implements Feature {
   constructor(
     private plugin: Plugin_2,
     private settings: SettingsService,
@@ -23,15 +24,7 @@ export class MoveCursorToPreviousUnfoldedLineFeature implements Feature {
     this.plugin.registerEditorExtension(
       keymap.of([
         {
-          key: "ArrowLeft",
-          run: this.obsidian.createKeymapRunCallback({
-            check: this.check,
-            run: this.run,
-          }),
-        },
-        {
-          win: "c-ArrowLeft",
-          linux: "c-ArrowLeft",
+          mac: "m-Backspace",
           run: this.obsidian.createKeymapRunCallback({
             check: this.check,
             run: this.run,
@@ -44,12 +37,12 @@ export class MoveCursorToPreviousUnfoldedLineFeature implements Feature {
   async unload() {}
 
   private check = () => {
-    return this.settings.stickCursor != "never" && !this.ime.isIMEOpened();
+    return this.settings.stickCursor !== "never" && !this.ime.isIMEOpened();
   };
 
   private run = (editor: MyEditor) => {
     return this.performOperation.performOperation(
-      (root) => new MoveCursorToPreviousUnfoldedLineOperation(root),
+      (root) => new DeleteTillLineStartOperation(root),
       editor
     );
   };

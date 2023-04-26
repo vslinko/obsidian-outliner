@@ -77,9 +77,9 @@ export class DeleteAndMergeWithPreviousLineOperation implements Operation {
 
     const bothAreEmpty = prev.isEmpty() && list.isEmpty();
     const prevIsEmptyAndSameLevel =
-      prev.isEmpty() && !list.isEmpty() && prev.getLevel() == list.getLevel();
+      prev.isEmpty() && !list.isEmpty() && prev.getLevel() === list.getLevel();
     const listIsEmptyAndPrevIsParent =
-      list.isEmpty() && prev.getLevel() == list.getLevel() - 1;
+      list.isEmpty() && prev.getLevel() === list.getLevel() - 1;
 
     if (bothAreEmpty || prevIsEmptyAndSameLevel || listIsEmptyAndPrevIsParent) {
       this.updated = true;

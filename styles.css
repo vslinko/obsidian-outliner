@@ -1,14 +1,13 @@
-/* lists */
+/* lists and bullets */
 .outliner-plugin-better-lists .cm-s-obsidian .HyperMD-list-line {
   padding-top: 0.4em;
 }
 
-/* bullets */
-.outliner-plugin-better-bullets .cm-formatting-list-ul {
+.outliner-plugin-better-lists .cm-formatting-list-ul {
   margin-right: 0.3em;
 }
 
-.outliner-plugin-better-bullets .list-bullet::after {
+.outliner-plugin-better-lists .list-bullet::after {
   width: 0.4em;
   height: 0.4em;
   background-color: var(--text-muted);

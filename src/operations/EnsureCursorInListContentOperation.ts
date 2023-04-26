@@ -23,8 +23,6 @@ export class EnsureCursorInListContentOperation implements Operation {
       return;
     }
 
-    this.stopPropagation = true;
-
     const cursor = root.getCursor();
     const list = root.getListUnderCursor();
     const contentStart = list.getFirstLineContentStartAfterCheckbox();
@@ -35,6 +33,7 @@ export class EnsureCursorInListContentOperation implements Operation {
 
     if (cursor.ch < linePrefix) {
       this.updated = true;
+      this.stopPropagation = true;
       root.replaceCursor({
         line: cursor.line,
         ch: linePrefix,

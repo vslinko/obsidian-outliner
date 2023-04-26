@@ -15,6 +15,8 @@ import { ObsidianService } from "../services/ObsidianService";
 import { ParserService } from "../services/ParserService";
 import { SettingsService } from "../services/SettingsService";
 
+const VERTICAL_LINES_BODY_CLASS = "outliner-plugin-vertical-lines";
+
 interface LineData {
   top: number;
   left: number;
@@ -22,7 +24,7 @@ interface LineData {
   list: List;
 }
 
-class ListLinesViewPluginValue implements PluginValue {
+class VerticalLinesPluginValue implements PluginValue {
   private scheduled: ReturnType<typeof setTimeout>;
   private scroller: HTMLElement;
   private contentContainer: HTMLElement;
@@ -315,7 +317,9 @@ class ListLinesViewPluginValue implements PluginValue {
   }
 }
 
-export class LinesFeature implements Feature {
+export class VerticalLines implements Feature {
+  private updateBodyClassInterval: number;
+
   constructor(
     private plugin: Plugin_2,
     private settings: SettingsService,
@@ -324,10 +328,15 @@ export class LinesFeature implements Feature {
   ) {}
 
   async load() {
+    this.updateBodyClass();
+    this.updateBodyClassInterval = window.setInterval(() => {
+      this.updateBodyClass();
+    }, 1000);
+
     this.plugin.registerEditorExtension(
       ViewPlugin.define(
         (view) =>
-          new ListLinesViewPluginValue(
+          new VerticalLinesPluginValue(
             this.settings,
             this.obsidian,
             this.parser,
@@ -337,5 +346,22 @@ export class LinesFeature implements Feature {
     );
   }
 
-  async unload() {}
+  async unload() {
+    clearInterval(this.updateBodyClassInterval);
+    document.body.classList.remove(VERTICAL_LINES_BODY_CLASS);
+  }
+
+  private updateBodyClass = () => {
+    const shouldExists =
+      this.obsidian.isDefaultThemeEnabled() && this.settings.listLines;
+    const exists = document.body.classList.contains(VERTICAL_LINES_BODY_CLASS);
+
+    if (shouldExists && !exists) {
+      document.body.classList.add(VERTICAL_LINES_BODY_CLASS);
+    }
+
+    if (!shouldExists && exists) {
+      document.body.classList.remove(VERTICAL_LINES_BODY_CLASS);
+    }
+  };
 }
