@@ -14,7 +14,6 @@ import { ListsMovementCommands } from "./features/ListsMovementCommands";
 import { MetaBackspaceBehaviourOverride } from "./features/MetaBackspaceBehaviourOverride";
 import { ReleaseNotesAnnouncement } from "./features/ReleaseNotesAnnouncement";
 import { SettingsTab } from "./features/SettingsTab";
-import { ShiftEnterBehaviourOverride } from "./features/ShiftEnterBehaviourOverride";
 import { ShiftTabBehaviourOverride } from "./features/ShiftTabBehaviourOverride";
 import { TabBehaviourOverride } from "./features/TabBehaviourOverride";
 import { VerticalLines } from "./features/VerticalLines";
@@ -130,13 +129,6 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this.ime,
         this.obsidian,
         this.parser,
-        this.performOperation
-      ),
-      new ShiftEnterBehaviourOverride(
-        this,
-        this.obsidian,
-        this.settings,
-        this.ime,
         this.performOperation
       ),
 
