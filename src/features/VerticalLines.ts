@@ -104,7 +104,7 @@ class VerticalLinesPluginValue implements PluginValue {
       const lists = this.parser.parseRange(this.editor, fromLine, toLine);
 
       for (const list of lists) {
-        this.lastLine = list.getRange()[1].line;
+        this.lastLine = list.getContentEnd().line;
 
         for (const c of list.getChildren()) {
           this.recursive(c);

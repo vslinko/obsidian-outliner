@@ -29,7 +29,7 @@ export class ChangesApplicator {
   }
 
   private calculateChanges(editor: MyEditor, prevRoot: Root, newRoot: Root) {
-    const rootRange = prevRoot.getRange();
+    const rootRange = prevRoot.getContentRange();
     const oldString = editor.getRange(rootRange[0], rootRange[1]);
     const newString = newRoot.print();
 

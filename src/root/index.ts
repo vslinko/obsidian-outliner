@@ -17,6 +17,22 @@ export function isRangesIntersects(
   return cmpPos(a[1], b[0]) >= 0 && cmpPos(a[0], b[1]) <= 0;
 }
 
+export function recalculateNumericBullets(root: Root) {
+  function visit(parent: Root | List) {
+    let index = 1;
+
+    for (const child of parent.getChildren()) {
+      if (/\d+\./.test(child.getBullet())) {
+        child.replateBullet(`${index++}.`);
+      }
+
+      visit(child);
+    }
+  }
+
+  visit(root);
+}
+
 export interface Position {
   ch: number;
   line: number;
@@ -137,7 +153,7 @@ export class List {
 
     return {
       line: startLine,
-      ch: this.getContentStartCh() + this.optionalCheckbox.length,
+      ch: this.getContentStartCh() + this.getCheckboxLength(),
     };
   }
 
@@ -359,8 +375,16 @@ export class Root {
     return this.rootList;
   }
 
-  getRange(): [Position, Position] {
-    return [{ ...this.start }, { ...this.end }];
+  getContentRange(): [Position, Position] {
+    return [this.getContentStart(), this.getContentEnd()];
+  }
+
+  getContentStart(): Position {
+    return { ...this.start };
+  }
+
+  getContentEnd(): Position {
+    return { ...this.end };
   }
 
   getSelections(): Range[] {

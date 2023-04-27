@@ -1,7 +1,6 @@
 import { Operation } from "./Operation";
 
-import { List, Position, Root } from "../root";
-import { recalculateNumericBullets } from "../root/recalculateNumericBullets";
+import { List, Position, Root, recalculateNumericBullets } from "../root";
 import { checkboxRe } from "../utils/checkboxRe";
 import { isEmptyLineOrEmptyCheckbox } from "../utils/isEmptyLineOrEmptyCheckbox";
 

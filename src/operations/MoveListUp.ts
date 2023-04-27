@@ -1,7 +1,6 @@
 import { Operation } from "./Operation";
 
-import { Root } from "../root";
-import { recalculateNumericBullets } from "../root/recalculateNumericBullets";
+import { Root, recalculateNumericBullets } from "../root";
 
 export class MoveListUp implements Operation {
   private stopPropagation = false;

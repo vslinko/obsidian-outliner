@@ -1,7 +1,12 @@
 import { Operation } from "./Operation";
 
-import { List, ListLine, Position, Root } from "../root";
-import { recalculateNumericBullets } from "../root/recalculateNumericBullets";
+import {
+  List,
+  ListLine,
+  Position,
+  Root,
+  recalculateNumericBullets,
+} from "../root";
 
 export class DeleteTillPreviousLineContentEnd implements Operation {
   private stopPropagation = false;

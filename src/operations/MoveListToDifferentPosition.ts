@@ -1,7 +1,6 @@
 import { Operation } from "./Operation";
 
-import { List, Root } from "../root";
-import { recalculateNumericBullets } from "../root/recalculateNumericBullets";
+import { List, Root, recalculateNumericBullets } from "../root";
 
 interface CursorAnchor {
   cursorList: List;

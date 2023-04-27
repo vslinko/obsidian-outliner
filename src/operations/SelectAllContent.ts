@@ -24,7 +24,7 @@ export class SelectAllContent implements Operation {
     }
 
     const selection = root.getSelections()[0];
-    const [rootStart, rootEnd] = root.getRange();
+    const [rootStart, rootEnd] = root.getContentRange();
 
     const selectionFrom = minPos(selection.anchor, selection.head);
     const selectionTo = maxPos(selection.anchor, selection.head);

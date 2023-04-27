@@ -55,7 +55,7 @@ export class Parser {
 
         if (list) {
           lists.push(list);
-          i = list.getRange()[1].line;
+          i = list.getContentEnd().line;
         }
       }
     }

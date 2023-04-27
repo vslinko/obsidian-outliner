@@ -31,7 +31,7 @@ describe("changesApplicator", () => {
     changesApplicator.apply(editor, prevRoot, newRoot);
 
     expect(actions).toStrictEqual([
-      ["getRange", ...newRoot.getRange()],
+      ["getRange", ...newRoot.getContentRange()],
       [
         "replaceRange",
         "  - [ ] 4\n  - [ ] ",
@@ -72,7 +72,7 @@ describe("changesApplicator", () => {
     changesApplicator.apply(editor, prevRoot, newRoot);
 
     expect(actions).toStrictEqual([
-      ["getRange", ...newRoot.getRange()],
+      ["getRange", ...newRoot.getContentRange()],
       ["unfold", 2],
       [
         "replaceRange",

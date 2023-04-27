@@ -171,7 +171,7 @@ export class DragAndDrop implements Feature {
     const { state } = this;
     const { dropVariant, editor, root, list } = state;
 
-    const newRoot = this.parser.parse(editor, root.getRange()[0]);
+    const newRoot = this.parser.parse(editor, root.getContentStart());
     if (!isSameRoots(root, newRoot)) {
       new Notice(
         `The item cannot be moved. The page content changed during the move.`,
@@ -467,13 +467,10 @@ function isClickOnBullet(e: MouseEvent) {
 }
 
 function isSameRoots(a: Root, b: Root) {
-  const aRange = a.getRange();
-  const bRange = b.getRange();
+  const [aStart, aEnd] = a.getContentRange();
+  const [bStart, bEnd] = b.getContentRange();
 
-  if (
-    cmpPos(aRange[0], bRange[0]) !== 0 ||
-    cmpPos(aRange[1], bRange[1]) !== 0
-  ) {
+  if (cmpPos(aStart, bStart) !== 0 || cmpPos(aEnd, bEnd) !== 0) {
     return false;
   }
 
