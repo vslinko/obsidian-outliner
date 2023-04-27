@@ -1,65 +1,104 @@
-import cp from "node:child_process";
-import fs from "node:fs";
+import inquirer from "inquirer";
+import { spawnSync } from "node:child_process";
+import { readFileSync, writeFileSync } from "node:fs";
 
-const manifestFile = JSON.parse(fs.readFileSync("manifest.json"));
-const version = manifestFile.version.split(".").map((p) => Number(p));
+function increaseVersion(version, releaseType) {
+  const v = version.split(".").map((p) => Number(p));
 
-if (process.argv[2] === "major") {
-  version[0]++;
-  version[1] = 0;
-  version[2] = 0;
-} else if (process.argv[2] === "minor") {
-  version[1]++;
-  version[2] = 0;
-} else if (process.argv[2] === "patch") {
-  version[2]++;
-} else {
-  console.log("Usage: node release.js (major|minor|patch)");
-  process.exit(1);
+  if (releaseType === "major") {
+    v[0]++;
+    v[1] = 0;
+    v[2] = 0;
+  } else if (releaseType === "minor") {
+    v[1]++;
+    v[2] = 0;
+  } else if (releaseType === "patch") {
+    v[2]++;
+  } else {
+    throw new Error();
+  }
+
+  return v.join(".");
 }
 
-const versionString = version.join(".");
+async function main() {
+  const manifestFile = JSON.parse(readFileSync("manifest.json"));
 
-manifestFile.version = versionString;
-fs.writeFileSync("manifest.json", JSON.stringify(manifestFile, null, 2) + "\n");
+  console.log(`Current version ${manifestFile.version}`);
+  console.log(`Current minAppVersion ${manifestFile.minAppVersion}`);
 
-const packageLockFile = JSON.parse(fs.readFileSync("package-lock.json"));
-packageLockFile.version = versionString;
-packageLockFile.packages[""].version = versionString;
-fs.writeFileSync(
-  "package-lock.json",
-  JSON.stringify(packageLockFile, null, 2) + "\n"
-);
+  const { releaseType, minAppVersion } = await inquirer.prompt([
+    {
+      type: "list",
+      name: "releaseType",
+      message: "Release type:",
+      choices: [
+        {
+          name: "major (Some major changes that have, or could lead to, breaking changes)",
+          value: "major",
+        },
+        {
+          name: "minor (Some notable changes without breaking changes)",
+          value: "minor",
+        },
+        {
+          name: "patch (Some changes, but without new features)",
+          value: "patch",
+        },
+      ],
+    },
+    {
+      type: "input",
+      name: "minAppVersion",
+      message: "Minimum supported version of Obsidian:",
+      default: manifestFile.minAppVersion,
+    },
+  ]);
 
-const packageFile = JSON.parse(fs.readFileSync("package.json"));
-packageFile.version = versionString;
-fs.writeFileSync("package.json", JSON.stringify(packageFile, null, 2) + "\n");
+  const newVersion = increaseVersion(manifestFile.version, releaseType);
 
-const versionsFile = JSON.parse(fs.readFileSync("versions.json"));
-const newVersionsFile = {
-  [versionString]: manifestFile.minAppVersion,
-  ...versionsFile,
-};
-fs.writeFileSync(
-  "versions.json",
-  JSON.stringify(newVersionsFile, null, 2) + "\n"
-);
+  manifestFile.version = newVersion;
+  manifestFile.minAppVersion = minAppVersion;
+  writeFileSync("manifest.json", JSON.stringify(manifestFile, null, 2) + "\n");
 
-const gitAdd = cp.spawn(
-  "git",
-  [
-    "add",
-    "manifest.json",
+  const packageLockFile = JSON.parse(readFileSync("package-lock.json"));
+  packageLockFile.version = newVersion;
+  packageLockFile.packages[""].version = newVersion;
+  writeFileSync(
     "package-lock.json",
-    "package.json",
+    JSON.stringify(packageLockFile, null, 2) + "\n"
+  );
+
+  const packageFile = JSON.parse(readFileSync("package.json"));
+  packageFile.version = newVersion;
+  writeFileSync("package.json", JSON.stringify(packageFile, null, 2) + "\n");
+
+  const versionsFile = JSON.parse(readFileSync("versions.json"));
+  const newVersionsFile = {
+    [newVersion]: minAppVersion,
+    ...versionsFile,
+  };
+  writeFileSync(
     "versions.json",
-  ],
-  {
-    stdio: "inherit",
-  }
-);
-gitAdd.on("close", () => {
-  cp.spawn("git", ["commit", "-m", versionString], {
+    JSON.stringify(newVersionsFile, null, 2) + "\n"
+  );
+
+  spawnSync(
+    "git",
+    [
+      "add",
+      "manifest.json",
+      "package-lock.json",
+      "package.json",
+      "versions.json",
+    ],
+    {
+      stdio: "inherit",
+    }
+  );
+  spawnSync("git", ["commit", "-m", newVersion], {
     stdio: "inherit",
   });
-});
+}
+
+main();
