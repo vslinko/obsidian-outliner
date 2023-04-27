@@ -17,6 +17,7 @@ const BODY_CLASS = "outliner-plugin-dnd";
 
 export class DragAndDrop implements Feature {
   private dropZone: HTMLDivElement;
+  private preStart: DragAndDropPreStartState | null = null;
   private state: DragAndDropState | null = null;
 
   constructor(
@@ -106,19 +107,26 @@ export class DragAndDrop implements Feature {
       return;
     }
 
-    e.preventDefault();
-    e.stopPropagation();
-
-    this.startDragging(e.x, e.y, view);
+    this.preStart = {
+      x: e.x,
+      y: e.y,
+      view,
+    };
   };
 
   private handleMouseMove = (e: MouseEvent) => {
+    if (this.preStart) {
+      this.startDragging();
+    }
     if (this.state) {
       this.detectAndDrawDropZone(e.x, e.y);
     }
   };
 
   private handleMouseUp = () => {
+    if (this.preStart) {
+      this.preStart = null;
+    }
     if (this.state) {
       this.stopDragging();
     }
@@ -130,7 +138,10 @@ export class DragAndDrop implements Feature {
     }
   };
 
-  private startDragging(x: number, y: number, view: EditorView) {
+  private startDragging() {
+    const { x, y, view } = this.preStart;
+    this.preStart = null;
+
     const editor = getEditorFromState(view.state);
     const pos = editor.offsetToPos(view.posAtCoords({ x, y }));
     const root = this.parser.parse(editor, pos);
@@ -143,7 +154,6 @@ export class DragAndDrop implements Feature {
 
     this.state = state;
     this.highlightDraggingLines();
-    this.detectAndDrawDropZone(x, y);
   }
 
   private detectAndDrawDropZone(x: number, y: number) {
@@ -266,6 +276,12 @@ interface DropVariant {
   top: number;
   placeToMove: List;
   whereToMove: "after" | "before" | "inside";
+}
+
+interface DragAndDropPreStartState {
+  x: number;
+  y: number;
+  view: EditorView;
 }
 
 class DragAndDropState {
@@ -455,7 +471,8 @@ function isClickOnBullet(e: MouseEvent) {
   while (el) {
     if (
       el.classList.contains("cm-formatting-list") ||
-      el.classList.contains("cm-fold-indicator")
+      el.classList.contains("cm-fold-indicator") ||
+      el.classList.contains("task-list-item-checkbox")
     ) {
       return true;
     }
