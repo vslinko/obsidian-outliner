@@ -16,5 +16,7 @@ module.exports = {
   plugins: ["@typescript-eslint"],
   rules: {
     "@typescript-eslint/no-empty-function": 0,
+    "@typescript-eslint/no-this-alias": 0,
+    "no-constant-condition": 0,
   },
 };

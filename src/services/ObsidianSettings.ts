@@ -9,14 +9,18 @@ export interface ObsidianFoldSettings {
   foldIndent: boolean;
 }
 
+function getHiddenObsidianConfig(app: App) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (app.vault as any).config;
+}
+
 export class ObsidianSettings {
   constructor(private app: App) {}
 
   isLegacyEditorEnabled() {
     const config: { legacyEditor: boolean } = {
       legacyEditor: false,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...(this.app.vault as any).config,
+      ...getHiddenObsidianConfig(this.app),
     };
 
     return config.legacyEditor;
@@ -25,8 +29,7 @@ export class ObsidianSettings {
   isDefaultThemeEnabled() {
     const config: { cssTheme: string } = {
       cssTheme: "",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...(this.app.vault as any).config,
+      ...getHiddenObsidianConfig(this.app),
     };
 
     return config.cssTheme === "";
@@ -36,16 +39,14 @@ export class ObsidianSettings {
     return {
       useTab: true,
       tabSize: 4,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...(this.app.vault as any).config,
+      ...getHiddenObsidianConfig(this.app),
     };
   }
 
   getFoldSettings(): ObsidianFoldSettings {
     return {
       foldIndent: true,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...(this.app.vault as any).config,
+      ...getHiddenObsidianConfig(this.app),
     };
   }
 

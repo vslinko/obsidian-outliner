@@ -159,7 +159,6 @@ export class List {
   }
 
   private getLastChild() {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
     let lastChild: List = this;
 
     while (!lastChild.isEmpty()) {
@@ -190,7 +189,6 @@ export class List {
   }
 
   getTopFoldRoot() {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
     let tmp: List = this;
     let foldRoot: List | null = null;
     while (tmp) {

@@ -34,6 +34,16 @@ export function getEditorFromState(state: EditorState) {
   return new MyEditor(editor);
 }
 
+declare global {
+  interface Window {
+    ObsidianZoomPlugin?: {
+      getZoomRange(e: Editor): MyEditorRange;
+      zoomOut(e: Editor): void;
+      zoomIn(e: Editor, line: number): void;
+    };
+  }
+}
+
 function foldInside(view: EditorView, from: number, to: number) {
   let found: { from: number; to: number } | null = null;
   foldedRanges(view.state).between(from, to, (from, to) => {
@@ -137,35 +147,26 @@ export class MyEditor {
   }
 
   getZoomRange(): MyEditorRange | null {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const api = (window as any).ObsidianZoomPlugin;
-
-    if (!api || !api.getZoomRange) {
+    if (!window.ObsidianZoomPlugin) {
       return null;
     }
 
-    return api.getZoomRange(this.e);
+    return window.ObsidianZoomPlugin.getZoomRange(this.e);
   }
 
   zoomOut() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const api = (window as any).ObsidianZoomPlugin;
-
-    if (!api || !api.zoomOut) {
+    if (!window.ObsidianZoomPlugin) {
       return;
     }
 
-    api.zoomOut(this.e);
+    window.ObsidianZoomPlugin.zoomOut(this.e);
   }
 
   zoomIn(line: number) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const api = (window as any).ObsidianZoomPlugin;
-
-    if (!api || !api.zoomIn) {
+    if (!window.ObsidianZoomPlugin) {
       return;
     }
 
-    api.zoomIn(this.e, line);
+    window.ObsidianZoomPlugin.zoomIn(this.e, line);
   }
 }

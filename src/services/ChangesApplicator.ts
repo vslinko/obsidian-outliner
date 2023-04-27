@@ -38,7 +38,6 @@ export class ChangesApplicator {
     let oldTmp = oldString;
     let newTmp = newString;
 
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const nlIndex = oldTmp.lastIndexOf("\n");
 
@@ -61,7 +60,6 @@ export class ChangesApplicator {
       changeTo.line--;
     }
 
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const nlIndex = oldTmp.indexOf("\n");
 

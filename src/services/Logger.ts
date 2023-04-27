@@ -1,9 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Settings } from "./Settings";
 
 export class Logger {
   constructor(private settings: Settings) {}
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   log(method: string, ...args: any[]) {
     if (!this.settings.debug) {
       return;
@@ -13,7 +13,6 @@ export class Logger {
   }
 
   bind(method: string) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (...args: any[]) => this.log(method, ...args);
   }
 }
