@@ -45,6 +45,34 @@ function compareReleases(a: string, b: string) {
   return aMajor - bMajor;
 }
 
+function parseChangelog() {
+  const markdown = CHANGELOG_MD;
+  const releaseNotes: [string, string][] = [];
+  let version;
+  let content = "";
+
+  for (const line of markdown.split("\n")) {
+    const versionHeaderMatches = /^#+\s+(\d+\.\d+\.\d+)$/.exec(line);
+    if (versionHeaderMatches) {
+      if (version && content.trim().length > 0) {
+        releaseNotes.push([version, content]);
+      }
+      version = versionHeaderMatches[1];
+      content = line;
+      content += "\n";
+    } else {
+      content += line;
+      content += "\n";
+    }
+  }
+
+  if (version && content.trim().length > 0) {
+    releaseNotes.push([version, content]);
+  }
+
+  return releaseNotes;
+}
+
 export class ReleaseNotesAnnouncement implements Feature {
   private modal: ReleaseNotesModal | null = null;
 
@@ -56,16 +84,6 @@ export class ReleaseNotesAnnouncement implements Feature {
       name: "Show Release Notes",
       callback: this.showModal,
     });
-
-    const shouldShow =
-      compareReleases(
-        PLUGIN_VERSION,
-        this.settings.previousRelease || "0.0.0"
-      ) > 0;
-
-    if (!shouldShow) {
-      return;
-    }
 
     this.showModal(this.settings.previousRelease);
   }
@@ -81,33 +99,23 @@ export class ReleaseNotesAnnouncement implements Feature {
   }
 
   private showModal = (previousRelease: string | null = null) => {
-    const markdown = CHANGELOG_MD;
-    const lines = markdown.split("\n");
-    let lastLine = lines.length;
-    if (previousRelease) {
-      const lastLineFound = lines.findIndex(
-        (line) => line.startsWith("#") && line.includes(previousRelease)
-      );
-      if (lastLineFound >= 0) {
-        lastLine = lastLineFound;
+    let releaseNotes = "";
+    for (const [version, content] of parseChangelog()) {
+      if (compareReleases(version, previousRelease || "0.0.0") > 0) {
+        releaseNotes += content;
       }
     }
 
-    const modalTitle = `Welcome to Obsidian Outliner ${PLUGIN_VERSION}`;
-    const modalContent = lines
-      .slice(0, lastLine)
-      .filter((l) => !/^#+\s+\d+\.\d+\.\d+$/.test(l))
-      .join("\n")
-      .trim();
-
-    if (modalContent.length === 0) {
+    if (releaseNotes.trim().length === 0) {
       return;
     }
+
+    const modalTitle = `Welcome to Obsidian Outliner ${PLUGIN_VERSION}`;
 
     this.modal = new ReleaseNotesModal(
       this.plugin,
       modalTitle,
-      modalContent,
+      releaseNotes,
       this.handleClose
     );
     this.modal.open();
