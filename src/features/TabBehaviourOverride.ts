@@ -5,7 +5,7 @@ import { keymap } from "@codemirror/view";
 
 import { Feature } from "./Feature";
 
-import { MyEditor } from "../MyEditor";
+import { MyEditor } from "../editor";
 import { IndentList } from "../operations/IndentList";
 import { IMEDetector } from "../services/IMEDetector";
 import { ObsidianSettings } from "../services/ObsidianSettings";

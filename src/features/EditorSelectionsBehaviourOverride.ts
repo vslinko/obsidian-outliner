@@ -4,13 +4,12 @@ import { EditorState, Transaction } from "@codemirror/state";
 
 import { Feature } from "./Feature";
 
-import { MyEditor } from "../MyEditor";
+import { MyEditor, getEditorFromState } from "../editor";
 import { KeepCursorOutsideFoldedLines } from "../operations/KeepCursorOutsideFoldedLines";
 import { KeepCursorWithinListContent } from "../operations/KeepCursorWithinListContent";
 import { OperationPerformer } from "../services/OperationPerformer";
 import { Parser } from "../services/Parser";
 import { Settings } from "../services/Settings";
-import { getEditorFromState } from "../utils/getEditorFromState";
 
 export class EditorSelectionsBehaviourOverride implements Feature {
   constructor(

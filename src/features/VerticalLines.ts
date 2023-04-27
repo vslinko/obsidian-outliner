@@ -9,12 +9,11 @@ import {
 
 import { Feature } from "./Feature";
 
-import { MyEditor } from "../MyEditor";
+import { MyEditor, getEditorFromState } from "../editor";
 import { List } from "../root";
 import { ObsidianSettings } from "../services/ObsidianSettings";
 import { Parser } from "../services/Parser";
 import { Settings } from "../services/Settings";
-import { getEditorFromState } from "../utils/getEditorFromState";
 
 const VERTICAL_LINES_BODY_CLASS = "outliner-plugin-vertical-lines";
 

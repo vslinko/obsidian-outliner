@@ -4,7 +4,7 @@ import { keymap } from "@codemirror/view";
 
 import { Feature } from "./Feature";
 
-import { MyEditor } from "../MyEditor";
+import { MyEditor } from "../editor";
 import { SelectAllContent } from "../operations/SelectAllContent";
 import { IMEDetector } from "../services/IMEDetector";
 import { OperationPerformer } from "../services/OperationPerformer";

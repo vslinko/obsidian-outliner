@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { MarkdownView } from "obsidian";
 
 import { EditorView } from "@codemirror/view";
 
-import { MyEditor, MyEditorPosition } from "./MyEditor";
 import ObsidianOutlinerPlugin from "./ObsidianOutlinerPlugin";
+import { MyEditor, MyEditorPosition } from "./editor";
 
 const keysMap: { [key: string]: number } = {
   Backspace: 8,
@@ -26,13 +27,10 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
   }
 
   executeCommandById(id: string) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (this.app as any).commands.executeCommandById(id);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setSetting({ k, v }: { k: string; v: any }) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (this.settings as any).set(k, v);
   }
 
@@ -100,7 +98,6 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
   async load() {
     await super.load();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).ObsidianOutlinerPlugin = this;
 
     if (process.env.TEST_PLATFORM) {
@@ -113,7 +110,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
 
   async onunload() {
     await super.onunload();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     delete (window as any).ObsidianOutlinerPlugin;
   }
 
@@ -196,7 +193,6 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
   }
 
   private drag(opts: { from: { line: number; ch: number } }) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const view: EditorView = (this.editor as any).view;
     const coords = view.coordsAtPos(this.editor.posToOffset(opts.from));
     const x = coords.left;
@@ -223,7 +219,6 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     offsetX: number;
     offsetY: number;
   }) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const view: EditorView = (this.editor as any).view;
     const coords = view.coordsAtPos(this.editor.posToOffset(opts.to));
     const x = coords.left + opts.offsetX;

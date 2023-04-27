@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { MyEditor } from "./MyEditor";
+import { MyEditor } from "./editor";
 import { Logger } from "./services/Logger";
 import { Parser } from "./services/Parser";
 import { Settings } from "./services/Settings";

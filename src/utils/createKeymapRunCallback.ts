@@ -1,8 +1,6 @@
 import { EditorView } from "@codemirror/view";
 
-import { getEditorFromState } from "./getEditorFromState";
-
-import { MyEditor } from "../MyEditor";
+import { MyEditor, getEditorFromState } from "../editor";
 
 export function createKeymapRunCallback(config: {
   check?: (editor: MyEditor) => boolean;

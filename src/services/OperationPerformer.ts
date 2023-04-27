@@ -1,7 +1,7 @@
 import { ChangesApplicator } from "./ChangesApplicator";
 import { Parser } from "./Parser";
 
-import { MyEditor } from "../MyEditor";
+import { MyEditor } from "../editor";
 import { Operation } from "../operations/Operation";
 import { Root } from "../root";
 

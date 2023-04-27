@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { MyEditor } from "../../MyEditor";
 import { makeEditor, makeRoot } from "../../__mocks__";
+import { MyEditor } from "../../editor";
 import { List, Root } from "../../root";
 import { ChangesApplicator } from "../ChangesApplicator";
 

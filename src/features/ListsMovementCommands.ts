@@ -2,7 +2,7 @@ import { Plugin_2 } from "obsidian";
 
 import { Feature } from "./Feature";
 
-import { MyEditor } from "../MyEditor";
+import { MyEditor } from "../editor";
 import { IndentList } from "../operations/IndentList";
 import { MoveListDown } from "../operations/MoveListDown";
 import { MoveListUp } from "../operations/MoveListUp";

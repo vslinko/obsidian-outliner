@@ -5,7 +5,7 @@ import { keymap } from "@codemirror/view";
 
 import { Feature } from "./Feature";
 
-import { MyEditor } from "../MyEditor";
+import { MyEditor } from "../editor";
 import { OutdentList } from "../operations/OutdentList";
 import { IMEDetector } from "../services/IMEDetector";
 import { OperationPerformer } from "../services/OperationPerformer";

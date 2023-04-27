@@ -5,14 +5,13 @@ import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
 
 import { Feature } from "./Feature";
 
-import { MyEditor } from "../MyEditor";
+import { MyEditor, getEditorFromState } from "../editor";
 import { MoveListToDifferentPosition } from "../operations/MoveListToDifferentPosition";
 import { List, Root, cmpPos } from "../root";
 import { ObsidianSettings } from "../services/ObsidianSettings";
 import { OperationPerformer } from "../services/OperationPerformer";
 import { Parser } from "../services/Parser";
 import { Settings } from "../services/Settings";
-import { getEditorFromState } from "../utils/getEditorFromState";
 
 const BODY_CLASS = "outliner-plugin-dnd";
 

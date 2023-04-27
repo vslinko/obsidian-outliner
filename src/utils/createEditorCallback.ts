@@ -1,6 +1,6 @@
 import { Editor } from "obsidian";
 
-import { MyEditor } from "../MyEditor";
+import { MyEditor } from "../editor";
 
 export function createEditorCallback(cb: (editor: MyEditor) => boolean) {
   return (editor: Editor) => {

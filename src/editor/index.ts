@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { Editor } from "obsidian";
+import { Editor, editorInfoField } from "obsidian";
 
 import {
   foldEffect,
@@ -7,6 +6,7 @@ import {
   foldedRanges,
   unfoldEffect,
 } from "@codemirror/language";
+import { EditorState } from "@codemirror/state";
 import { EditorView, runScopeHandlers } from "@codemirror/view";
 
 export class MyEditorPosition {
@@ -22,6 +22,16 @@ export class MyEditorRange {
 export class MyEditorSelection {
   anchor: MyEditorPosition;
   head: MyEditorPosition;
+}
+
+export function getEditorFromState(state: EditorState) {
+  const { editor } = state.field(editorInfoField);
+
+  if (!editor) {
+    return null;
+  }
+
+  return new MyEditor(editor);
 }
 
 function foldInside(view: EditorView, from: number, to: number) {

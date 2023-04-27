@@ -2,7 +2,7 @@ import { Notice, Plugin_2 } from "obsidian";
 
 import { Feature } from "./Feature";
 
-import { MyEditor } from "../MyEditor";
+import { MyEditor } from "../editor";
 import { ObsidianSettings } from "../services/ObsidianSettings";
 import { createEditorCallback } from "../utils/createEditorCallback";
 

@@ -1,4 +1,4 @@
-import { MyEditor } from "../MyEditor";
+import { MyEditor } from "../editor";
 import { List, Position, Root, isRangesIntersects } from "../root";
 
 export class ChangesApplicator {
