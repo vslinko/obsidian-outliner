@@ -1,9 +1,15 @@
 {
   "clearMocks": true,
+  "transform": {
+    "\\.ts$": "babel-jest",
+    "\\.spec\\.md$": "./jest/md-spec-transformer.js"
+  },
+  "testRegex": ["/__tests__/.*\\.ts$", "\\.spec\\.md$"],
+  "moduleFileExtensions": ["js", "ts", "md"],
   "globalSetup": "./jest/global-setup.js",
   "globalTeardown": "./jest/global-teardown.js",
   "setupFilesAfterEnv": ["./jest/obsidian-expect.js"],
-  "testEnvironment": "node",
+  "testEnvironment": "./jest/obsidian-environment.js",
   "maxConcurrency": 1,
   "maxWorkers": 1
 }

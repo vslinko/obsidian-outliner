@@ -1,4 +1,3 @@
-
 # cursor should be moved to previous line after arrowleft
 
 - applyState:
