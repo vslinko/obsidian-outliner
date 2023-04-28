@@ -145,6 +145,19 @@ export class Parser {
       return null;
     }
 
+    // if the last line contains only spaces and that's incorrect indent, then ignore the last line
+    // https://github.com/vslinko/obsidian-outliner/issues/368
+    if (listEndLine > listStartLine) {
+      const lastLine = editor.getLine(listEndLine);
+      if (lastLine.trim().length === 0) {
+        const prevLine = editor.getLine(listEndLine - 1);
+        const [, prevLineIndent] = /^(\s*)/.exec(prevLine);
+        if (!lastLine.startsWith(prevLineIndent)) {
+          listEndLine--;
+        }
+      }
+    }
+
     const root = new Root(
       { line: listStartLine, ch: 0 },
       { line: listEndLine, ch: editor.getLine(listEndLine).length },
