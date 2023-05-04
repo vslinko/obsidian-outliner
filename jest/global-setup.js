@@ -66,14 +66,19 @@ async function prepareObsidian() {
   debug(`Preparing Obsidian`);
 
   if (!fs.existsSync(OBSIDIAN_CONFIG_PATH)) {
+    debug(`  Creating ${OBSIDIAN_CONFIG_PATH}`);
+    mkdirp.sync(OBSIDIAN_CONFIG_DIR);
+    fs.writeFileSync(
+      OBSIDIAN_CONFIG_PATH,
+      '{"vaults":{},"updateDisabled":true}'
+    );
+
     debug("  Running Obsidian for 90 seconds to setup");
     await runForAWhile({
       timeout: 90000,
-      fileToCheck: OBSIDIAN_CONFIG_DIR,
+      fileToCheck: OBSIDIAN_LOCAL_STORAGE_PATH,
     });
     await wait(2000);
-    debug(`  Creating ${OBSIDIAN_CONFIG_PATH}`);
-    fs.writeFileSync(OBSIDIAN_CONFIG_PATH, '{"vaults":{}}');
   }
 
   originalObsidianConfig = fs.readFileSync(OBSIDIAN_CONFIG_PATH, "utf-8");
