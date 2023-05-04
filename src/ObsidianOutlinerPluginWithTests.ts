@@ -114,6 +114,11 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     delete (window as any).ObsidianOutlinerPlugin;
   }
 
+  protected async prepareSettings() {
+    await super.prepareSettings();
+    this.resetSettings();
+  }
+
   async prepareForTests() {
     const filePath = `test.md`;
     let file = this.app.vault

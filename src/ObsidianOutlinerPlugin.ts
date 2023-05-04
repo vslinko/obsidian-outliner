@@ -43,13 +43,10 @@ export default class ObsidianOutlinerPlugin extends Plugin {
   async onload() {
     console.log(`Loading obsidian-outliner`);
 
+    await this.prepareSettings();
+
     this.obsidianSettings = new ObsidianSettings(this.app);
-
-    this.settings = new Settings(this);
-    await this.settings.load();
-
     this.logger = new Logger(this.settings);
-
     this.parser = new Parser(this.logger, this.settings);
     this.changesApplicator = new ChangesApplicator();
     this.operationPerformer = new OperationPerformer(
@@ -172,5 +169,10 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     for (const feature of this.features) {
       await feature.unload();
     }
+  }
+
+  protected async prepareSettings() {
+    this.settings = new Settings(this);
+    await this.settings.load();
   }
 }
