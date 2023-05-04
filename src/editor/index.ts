@@ -40,6 +40,7 @@ declare global {
       getZoomRange(e: Editor): MyEditorRange;
       zoomOut(e: Editor): void;
       zoomIn(e: Editor, line: number): void;
+      refreshZoom?(e: Editor): void;
     };
   }
 }
@@ -168,5 +169,17 @@ export class MyEditor {
     }
 
     window.ObsidianZoomPlugin.zoomIn(this.e, line);
+  }
+
+  tryRefreshZoom(line: number) {
+    if (!window.ObsidianZoomPlugin) {
+      return;
+    }
+
+    if (window.ObsidianZoomPlugin.refreshZoom) {
+      window.ObsidianZoomPlugin.refreshZoom(this.e);
+    } else {
+      window.ObsidianZoomPlugin.zoomIn(this.e, line);
+    }
   }
 }
