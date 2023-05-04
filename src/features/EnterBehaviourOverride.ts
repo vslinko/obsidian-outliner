@@ -83,7 +83,7 @@ export class EnterBehaviourOverride implements Feature {
       );
 
       if (res.shouldUpdate && zoomRange) {
-        editor.zoomIn(zoomRange.from.line);
+        editor.tryRefreshZoom(zoomRange.from.line);
       }
 
       return res;
