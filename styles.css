@@ -70,8 +70,13 @@
 }
 
 /* drag-n-drop */
-.outliner-plugin-dragging-line {
+.outliner-plugin-dropping-line {
   background-color: hsla(var(--interactive-accent-hsl), 0.4);
+}
+
+.outliner-plugin-dragging-line {
+  opacity: 0.5;
+  background-color: hsla(var(--interactive-accent-hsl), 0.2);
 }
 
 .outliner-plugin-drop-zone {

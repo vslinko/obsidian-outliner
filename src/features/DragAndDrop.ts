@@ -29,7 +29,10 @@ export class DragAndDrop implements Feature {
   ) {}
 
   async load() {
-    this.plugin.registerEditorExtension(dndStateField);
+    this.plugin.registerEditorExtension([
+      draggingLinesStateField,
+      droppingLinesStateField,
+    ]);
     this.enableFeatureToggle();
     this.createDropZone();
     this.addEventListeners();
@@ -106,6 +109,9 @@ export class DragAndDrop implements Feature {
     if (!view) {
       return;
     }
+
+    e.preventDefault();
+    e.stopPropagation();
 
     this.preStart = {
       x: e.x,
@@ -262,6 +268,25 @@ export class DragAndDrop implements Feature {
       this.dropZone.classList.remove("outliner-plugin-drop-zone-before");
       this.dropZone.classList.add("outliner-plugin-drop-zone-after");
     }
+
+    const newParent =
+      dropVariant.whereToMove === "inside"
+        ? dropVariant.placeToMove
+        : dropVariant.placeToMove.getParent();
+    const newParentIsRootList = !newParent.getParent();
+
+    this.state.view.dispatch({
+      effects: [
+        dndMoved.of(
+          newParentIsRootList
+            ? null
+            : editor.posToOffset({
+                line: newParent.getFirstLineContentStart().line,
+                ch: 0,
+              })
+        ),
+      ],
+    });
   }
 
   private hideDropZone() {
@@ -274,6 +299,7 @@ interface DropVariant {
   level: number;
   left: number;
   top: number;
+  dist: number;
   placeToMove: List;
   whereToMove: "after" | "before" | "inside";
 }
@@ -357,14 +383,12 @@ class DragAndDropState {
             break;
         }
 
+        v.dist = Math.abs(Math.hypot(y - v.top, x - v.left));
+
         return v;
       })
       .sort((a, b) => {
-        if (a.top === b.top) {
-          return Math.abs(x - a.left) - Math.abs(x - b.left);
-        }
-
-        return Math.abs(y - a.top) - Math.abs(y - b.top);
+        return a.dist - b.dist;
       })
       .first();
   }
@@ -386,6 +410,7 @@ class DragAndDropState {
           level,
           left: 0,
           top: 0,
+          dist: 0,
           placeToMove,
           whereToMove: "before",
         });
@@ -394,9 +419,14 @@ class DragAndDropState {
           level,
           left: 0,
           top: 0,
+          dist: 0,
           placeToMove,
           whereToMove: "after",
         });
+
+        if (placeToMove === this.list) {
+          continue;
+        }
 
         if (placeToMove.isEmpty()) {
           this.addDropVariant({
@@ -404,12 +434,11 @@ class DragAndDropState {
             level: level + 1,
             left: 0,
             top: 0,
+            dist: 0,
             placeToMove,
             whereToMove: "inside",
           });
-        }
-
-        if (placeToMove !== this.list) {
+        } else {
           visit(placeToMove.getChildren());
         }
       }
@@ -423,13 +452,21 @@ const dndStarted = StateEffect.define<number[]>({
   map: (lines, change) => lines.map((l) => change.mapPos(l)),
 });
 
+const dndMoved = StateEffect.define<number | null>({
+  map: (line, change) => (line !== null ? change.mapPos(line) : line),
+});
+
 const dndEnded = StateEffect.define<void>();
 
 const draggingLineDecoration = Decoration.line({
   class: "outliner-plugin-dragging-line",
 });
 
-const dndStateField = StateField.define<DecorationSet>({
+const droppingLineDecoration = Decoration.line({
+  class: "outliner-plugin-dropping-line",
+});
+
+const draggingLinesStateField = StateField.define<DecorationSet>({
   create: () => Decoration.none,
 
   update: (dndState, tr) => {
@@ -448,6 +485,31 @@ const dndStateField = StateField.define<DecorationSet>({
     }
 
     return dndState;
+  },
+
+  provide: (f) => EditorView.decorations.from(f),
+});
+
+const droppingLinesStateField = StateField.define<DecorationSet>({
+  create: () => Decoration.none,
+
+  update: (dndDroppingState, tr) => {
+    dndDroppingState = dndDroppingState.map(tr.changes);
+
+    for (const e of tr.effects) {
+      if (e.is(dndMoved)) {
+        dndDroppingState =
+          e.value === null
+            ? Decoration.none
+            : Decoration.set(droppingLineDecoration.range(e.value, e.value));
+      }
+
+      if (e.is(dndEnded)) {
+        dndDroppingState = Decoration.none;
+      }
+    }
+
+    return dndDroppingState;
   },
 
   provide: (f) => EditorView.decorations.from(f),
