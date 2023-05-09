@@ -13,7 +13,7 @@ interface SettingsObject {
   selectAll: boolean;
   listLines: boolean;
   listLineAction: VerticalLinesAction;
-  dndExperiment: boolean;
+  dnd: boolean;
   previousRelease: string | null;
 }
 
@@ -26,7 +26,7 @@ const DEFAULT_SETTINGS: SettingsObject = {
   selectAll: true,
   listLines: false,
   listLineAction: "toggle-folding",
-  dndExperiment: false,
+  dnd: true,
   previousRelease: null,
 };
 
@@ -111,11 +111,11 @@ export class Settings {
   }
 
   get dragAndDrop() {
-    return this.values.dndExperiment;
+    return this.values.dnd;
   }
 
   set dragAndDrop(value: boolean) {
-    this.set("dndExperiment", value);
+    this.set("dnd", value);
   }
 
   get debug() {

@@ -112,14 +112,12 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(containerEl)
-      .setName("Drag-and-Drop (Experimental)")
-      .addToggle((toggle) => {
-        toggle.setValue(this.settings.dragAndDrop).onChange(async (value) => {
-          this.settings.dragAndDrop = value;
-          await this.settings.save();
-        });
+    new Setting(containerEl).setName("Drag-and-Drop").addToggle((toggle) => {
+      toggle.setValue(this.settings.dragAndDrop).onChange(async (value) => {
+        this.settings.dragAndDrop = value;
+        await this.settings.save();
       });
+    });
 
     new Setting(containerEl)
       .setName("Debug mode")
