@@ -116,7 +116,10 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
 
   protected async prepareSettings() {
     await super.prepareSettings();
-    this.resetSettings();
+
+    if (process.env.TEST_PLATFORM) {
+      this.resetSettings();
+    }
   }
 
   async prepareForTests() {
