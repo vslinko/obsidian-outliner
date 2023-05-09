@@ -1,5 +1,6 @@
 import { Notice, Platform, Plugin_2 } from "obsidian";
 
+import { getIndentUnit, indentString } from "@codemirror/language";
 import { StateEffect, StateField } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
 
@@ -17,6 +18,7 @@ const BODY_CLASS = "outliner-plugin-dnd";
 
 export class DragAndDrop implements Feature {
   private dropZone: HTMLDivElement;
+  private dropZonePadding: HTMLDivElement;
   private preStart: DragAndDropPreStartState | null = null;
   private state: DragAndDropState | null = null;
 
@@ -55,14 +57,18 @@ export class DragAndDrop implements Feature {
   }
 
   private createDropZone() {
+    this.dropZonePadding = document.createElement("div");
+    this.dropZonePadding.classList.add("outliner-plugin-drop-zone-padding");
     this.dropZone = document.createElement("div");
     this.dropZone.classList.add("outliner-plugin-drop-zone");
     this.dropZone.style.display = "none";
+    this.dropZone.appendChild(this.dropZonePadding);
     document.body.appendChild(this.dropZone);
   }
 
   private removeDropZone() {
     document.body.removeChild(this.dropZone);
+    this.dropZonePadding = null;
     this.dropZone = null;
   }
 
@@ -236,44 +242,40 @@ export class DragAndDrop implements Feature {
 
   private drawDropZone() {
     const { state } = this;
-    const { view, editor, list, dropVariant } = state;
-
-    const width = Math.round(
-      view.contentDOM.offsetWidth -
-        (dropVariant.left -
-          view.coordsAtPos(
-            editor.posToOffset({
-              line: list.getFirstLineContentStart().line,
-              ch: 0,
-            })
-          ).left)
-    );
-
-    this.dropZone.style.display = "block";
-    this.dropZone.style.top = dropVariant.top + "px";
-    this.dropZone.style.left = dropVariant.left + "px";
-    this.dropZone.style.width = width + "px";
-
-    if (
-      dropVariant.whereToMove === "before" &&
-      !this.dropZone.classList.contains("outliner-plugin-drop-zone-before")
-    ) {
-      this.dropZone.classList.remove("outliner-plugin-drop-zone-after");
-      this.dropZone.classList.add("outliner-plugin-drop-zone-before");
-    } else if (
-      (dropVariant.whereToMove === "after" ||
-        dropVariant.whereToMove === "inside") &&
-      !this.dropZone.classList.contains("outliner-plugin-drop-zone-after")
-    ) {
-      this.dropZone.classList.remove("outliner-plugin-drop-zone-before");
-      this.dropZone.classList.add("outliner-plugin-drop-zone-after");
-    }
+    const { view, editor, dropVariant } = state;
 
     const newParent =
       dropVariant.whereToMove === "inside"
         ? dropVariant.placeToMove
         : dropVariant.placeToMove.getParent();
     const newParentIsRootList = !newParent.getParent();
+
+    {
+      const width = Math.round(
+        view.contentDOM.offsetWidth -
+          (dropVariant.left - this.state.leftPadding)
+      );
+
+      this.dropZone.style.display = "block";
+      this.dropZone.style.top = dropVariant.top + "px";
+      this.dropZone.style.left = dropVariant.left + "px";
+      this.dropZone.style.width = width + "px";
+    }
+
+    {
+      const level = newParent.getLevel();
+      const indentWidth = this.state.tabWidth;
+      const width = indentWidth * level;
+      const dashPadding = 3;
+      const dashWidth = indentWidth - dashPadding;
+      const color = getComputedStyle(document.body).getPropertyValue(
+        "--color-accent"
+      );
+
+      this.dropZonePadding.style.width = `${width}px`;
+      this.dropZonePadding.style.marginLeft = `-${width}px`;
+      this.dropZonePadding.style.backgroundImage = `url('data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%20${width}%204%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cline%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%22${width}%22%20y2%3D%220%22%20stroke%3D%22${color}%22%20stroke-width%3D%228%22%20stroke-dasharray%3D%22${dashWidth}%20${dashPadding}%22%2F%3E%3C%2Fsvg%3E')`;
+    }
 
     this.state.view.dispatch({
       effects: [
@@ -299,7 +301,6 @@ interface DropVariant {
   level: number;
   left: number;
   top: number;
-  dist: number;
   placeToMove: List;
   whereToMove: "after" | "before" | "inside";
 }
@@ -313,6 +314,8 @@ interface DragAndDropPreStartState {
 class DragAndDropState {
   private dropVariants: Map<string, DropVariant> = new Map();
   public dropVariant: DropVariant = null;
+  public leftPadding = 0;
+  public tabWidth = 0;
 
   constructor(
     public readonly view: EditorView,
@@ -321,6 +324,8 @@ class DragAndDropState {
     public readonly list: List
   ) {
     this.collectDropVariants();
+    this.calculateLeftPadding();
+    this.calculateTabWidth();
   }
 
   getDropVariants() {
@@ -334,62 +339,43 @@ class DragAndDropState {
   calculateNearestDropVariant(x: number, y: number) {
     const { view, editor } = this;
 
-    this.dropVariant = this.getDropVariants()
-      .map((v) => {
-        const { placeToMove } = v;
+    const dropVariants = this.getDropVariants();
 
-        switch (v.whereToMove) {
-          case "before":
-          case "after":
-            v.left = Math.round(
-              view.coordsAtPos(
-                editor.posToOffset({
-                  line: placeToMove.getFirstLineContentStart().line,
-                  ch: placeToMove.getFirstLineIndent().length,
-                })
-              ).left
-            );
-            break;
+    for (const v of dropVariants) {
+      const { placeToMove } = v;
 
-          case "inside":
-            v.left = Math.round(
-              view.coordsAtPos(
-                editor.posToOffset({
-                  line: placeToMove.getFirstLineContentStart().line,
-                  ch: placeToMove.getFirstLineIndent().length,
-                })
-              ).left +
-                view.defaultCharacterWidth * 2
-            );
-            break;
-        }
+      v.left = this.leftPadding + (v.level - 1) * this.tabWidth;
 
-        switch (v.whereToMove) {
-          case "before":
-            v.top = Math.round(
-              view.coordsAtPos(
-                editor.posToOffset(placeToMove.getFirstLineContentStart())
-              ).top
-            );
-            break;
+      const positionAfterList =
+        v.whereToMove === "after" || v.whereToMove === "inside";
+      const line = positionAfterList
+        ? placeToMove.getContentEndIncludingChildren().line
+        : placeToMove.getFirstLineContentStart().line;
+      const linePos = editor.posToOffset({
+        line,
+        ch: 0,
+      });
 
-          case "after":
-          case "inside":
-            v.top = Math.round(
-              view.coordsAtPos(
-                editor.posToOffset(placeToMove.getContentEndIncludingChildren())
-              ).top + view.defaultLineHeight
-            );
-            break;
-        }
+      v.top = view.coordsAtPos(linePos, -1).top;
 
-        v.dist = Math.abs(Math.hypot(y - v.top, x - v.left));
+      if (positionAfterList) {
+        v.top += view.lineBlockAt(linePos).height;
+      }
 
-        return v;
-      })
-      .sort((a, b) => {
-        return a.dist - b.dist;
-      })
+      // Better vertical alignment
+      v.top -= 8;
+    }
+
+    const nearestLineTop = dropVariants
+      .sort((a, b) => Math.abs(y - a.top) - Math.abs(y - b.top))
+      .first().top;
+
+    const variansOnNearestLine = dropVariants.filter(
+      (v) => Math.abs(v.top - nearestLineTop) <= 4
+    );
+
+    this.dropVariant = variansOnNearestLine
+      .sort((a, b) => Math.abs(x - a.left) - Math.abs(x - b.left))
       .first();
   }
 
@@ -410,7 +396,6 @@ class DragAndDropState {
           level,
           left: 0,
           top: 0,
-          dist: 0,
           placeToMove,
           whereToMove: "before",
         });
@@ -419,7 +404,6 @@ class DragAndDropState {
           level,
           left: 0,
           top: 0,
-          dist: 0,
           placeToMove,
           whereToMove: "after",
         });
@@ -434,7 +418,6 @@ class DragAndDropState {
             level: level + 1,
             left: 0,
             top: 0,
-            dist: 0,
             placeToMove,
             whereToMove: "inside",
           });
@@ -445,6 +428,29 @@ class DragAndDropState {
     };
 
     visit(this.root.getChildren());
+  }
+
+  private calculateLeftPadding() {
+    this.leftPadding = this.view.coordsAtPos(0, -1).left;
+  }
+
+  private calculateTabWidth() {
+    const { view } = this;
+
+    const singleIndent = indentString(view.state, getIndentUnit(view.state));
+
+    for (let i = 1; i <= view.state.doc.lines; i++) {
+      const line = view.state.doc.line(i);
+
+      if (line.text.startsWith(singleIndent)) {
+        const a = view.coordsAtPos(line.from, -1);
+        const b = view.coordsAtPos(line.from + singleIndent.length, -1);
+        this.tabWidth = b.left - a.left;
+        return;
+      }
+    }
+
+    this.tabWidth = view.defaultCharacterWidth * getIndentUnit(view.state);
   }
 }
 
