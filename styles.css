@@ -88,12 +88,9 @@
   pointer-events: none;
 }
 
-.outliner-plugin-drop-zone-before {
-  margin-top: -8px;
-}
-
-.outliner-plugin-drop-zone-after {
-  margin-top: -1px;
+.outliner-plugin-drop-zone-padding {
+  position: absolute;
+  height: 4px;
 }
 
 body.outliner-plugin-dnd:not(.outliner-plugin-dragging) .cm-formatting-list,
