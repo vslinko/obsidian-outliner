@@ -13,7 +13,7 @@ Compatible with [Obsidian Zoom plugin](https://github.com/vslinko/obsidian-zoom)
 
 ## Demo
 
-![Demo](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/demo.gif)
+![Demo](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/demos/demo1.gif)
 
 ## How to install
 
@@ -67,7 +67,7 @@ Move lists with children wherever you want without breaking the structure.
 
 > **Disclaimer:** vertical indentation lines are only compatible with built-in Obsidian theme.
 
-![Demo of vertical indentation lines](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/demo2.gif)
+![Demo of vertical indentation lines](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/demos/demo2.gif)
 
 | Setting                                |  Default value   |
 |----------------------------------------|:----------------:|
@@ -111,13 +111,13 @@ Press the hotkey once to select the current list item. Press the hotkey twice to
 |--------------------------------------|:-------------:|
 | Enhance the Ctrl+A or Cmd+A behavior |    `true`     |
 
-### Drag-and-Drop (Experimental)
+### Drag-and-Drop
 
-![Demo of Drag-and-Drop](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/demo3.gif)
+![Demo of Drag-and-Drop](https://raw.githubusercontent.com/vslinko/obsidian-outliner/main/demos/demo4.gif)
 
-| Setting                      | Default value |
-|------------------------------|:-------------:|
-| Drag-and-Drop (Experimental) |    `false`    |
+| Setting       | Default value |
+|---------------|:-------------:|
+| Drag-and-Drop |    `true`     |
 
 ### Debug mode
 
