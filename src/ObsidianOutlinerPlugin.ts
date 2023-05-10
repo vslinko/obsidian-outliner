@@ -15,6 +15,7 @@ import { MetaBackspaceBehaviourOverride } from "./features/MetaBackspaceBehaviou
 import { ReleaseNotesAnnouncement } from "./features/ReleaseNotesAnnouncement";
 import { SettingsTab } from "./features/SettingsTab";
 import { ShiftTabBehaviourOverride } from "./features/ShiftTabBehaviourOverride";
+import { SystemInfo } from "./features/SystemInfo";
 import { TabBehaviourOverride } from "./features/TabBehaviourOverride";
 import { VerticalLines } from "./features/VerticalLines";
 import { ChangesApplicator } from "./services/ChangesApplicator";
@@ -61,6 +62,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       // service features
       new ReleaseNotesAnnouncement(this, this.settings),
       new SettingsTab(this, this.settings),
+      new SystemInfo(this, this.settings),
 
       // general features
       new ListsMovementCommands(

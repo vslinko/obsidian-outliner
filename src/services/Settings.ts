@@ -160,6 +160,10 @@ export class Settings {
     await this.storage.saveData(this.values);
   }
 
+  getValues(): SettingsObject {
+    return { ...this.values };
+  }
+
   private set<T extends keyof SettingsObject>(
     key: T,
     value: SettingsObject[T]
