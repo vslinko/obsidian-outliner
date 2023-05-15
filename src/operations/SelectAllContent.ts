@@ -46,6 +46,7 @@ export class SelectAllContent implements Operation {
     }
 
     const list = root.getListUnderCursor();
+    const listEnd = list.getContentEndIncludingChildren();
     const contentStart = list.getFirstLineContentStartAfterCheckbox();
     const contentEnd = list.getLastLineContentEnd();
 
@@ -62,11 +63,19 @@ export class SelectAllContent implements Operation {
     if (
       selectionFrom.line === contentStart.line &&
       selectionFrom.ch === contentStart.ch &&
-      selectionTo.line === contentEnd.line &&
-      selectionTo.ch === contentEnd.ch
+      selectionTo.line === listEnd.line &&
+      selectionTo.ch === listEnd.ch
     ) {
       // select whole list
       root.replaceSelections([{ anchor: rootStart, head: rootEnd }]);
+    } else if (
+      selectionFrom.line === contentStart.line &&
+      selectionFrom.ch === contentStart.ch &&
+      selectionTo.line === contentEnd.line &&
+      selectionTo.ch === contentEnd.ch
+    ) {
+      // select sublists
+      root.replaceSelections([{ anchor: contentStart, head: listEnd }]);
     } else {
       // select whole line
       root.replaceSelections([{ anchor: contentStart, head: contentEnd }]);
