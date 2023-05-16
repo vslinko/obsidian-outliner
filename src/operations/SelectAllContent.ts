@@ -46,7 +46,6 @@ export class SelectAllContent implements Operation {
     }
 
     const list = root.getListUnderCursor();
-    const listEnd = list.getContentEndIncludingChildren();
     const contentStart = list.getFirstLineContentStartAfterCheckbox();
     const contentEnd = list.getLastLineContentEnd();
     const listUnderSelectionFrom = root.getListUnderLine(selectionFrom.line);
