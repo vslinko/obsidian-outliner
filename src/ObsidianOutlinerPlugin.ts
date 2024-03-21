@@ -12,7 +12,7 @@ import { Feature } from "./features/Feature";
 import { ListsFoldingCommands } from "./features/ListsFoldingCommands";
 import { ListsMovementCommands } from "./features/ListsMovementCommands";
 import { MetaBackspaceBehaviourOverride } from "./features/MetaBackspaceBehaviourOverride";
-import { ReleaseNotesAnnouncement } from "./features/ReleaseNotesAnnouncement";
+// import { ReleaseNotesAnnouncement } from "./features/ReleaseNotesAnnouncement";
 import { SettingsTab } from "./features/SettingsTab";
 import { ShiftTabBehaviourOverride } from "./features/ShiftTabBehaviourOverride";
 import { SystemInfo } from "./features/SystemInfo";
@@ -60,7 +60,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
 
     this.features = [
       // service features
-      new ReleaseNotesAnnouncement(this, this.settings),
+      // new ReleaseNotesAnnouncement(this, this.settings),
       new SettingsTab(this, this.settings),
       new SystemInfo(this, this.settings),
 
