@@ -34,7 +34,7 @@ export class DeleteTillPreviousLineContentEnd implements Operation {
     const lines = list.getLinesInfo();
 
     const lineNo = lines.findIndex(
-      (l) => cursor.ch === l.from.ch && cursor.line === l.from.line
+      (l) => cursor.ch === l.from.ch && cursor.line === l.from.line,
     );
 
     if (lineNo === 0) {
@@ -49,7 +49,7 @@ export class DeleteTillPreviousLineContentEnd implements Operation {
     cursor: Position,
     list: List,
     lines: ListLine[],
-    lineNo: number
+    lineNo: number,
   ) {
     this.stopPropagation = true;
     this.updated = true;
@@ -95,7 +95,7 @@ export class DeleteTillPreviousLineContentEnd implements Operation {
       if (!prev.getNotesIndent() && list.getNotesIndent()) {
         prev.setNotesIndent(
           prev.getFirstLineIndent() +
-            list.getNotesIndent().slice(list.getFirstLineIndent().length)
+            list.getNotesIndent().slice(list.getFirstLineIndent().length),
         );
       }
 

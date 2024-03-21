@@ -11,7 +11,7 @@ const listItemWithoutSpacesRe = new RegExp(`^${bulletSignRe}( |\t)`);
 const listItemRe = new RegExp(`^[ \t]*${bulletSignRe}( |\t)`);
 const stringWithSpacesRe = new RegExp(`^[ \t]+`);
 const parseListItemRe = new RegExp(
-  `^([ \t]*)(${bulletSignRe})( |\t)(${optionalCheckboxRe})(.*)$`
+  `^([ \t]*)(${bulletSignRe})( |\t)(${optionalCheckboxRe})(.*)$`,
 );
 
 export interface ReaderPosition {
@@ -42,7 +42,10 @@ interface ParseListList {
 }
 
 export class Parser {
-  constructor(private logger: Logger, private settings: Settings) {}
+  constructor(
+    private logger: Logger,
+    private settings: Settings,
+  ) {}
 
   parseRange(editor: Reader, fromLine = 0, toLine = editor.lastLine()): Root[] {
     const lists: Root[] = [];
@@ -71,7 +74,7 @@ export class Parser {
     editor: Reader,
     parsingStartLine: number,
     limitFrom: number,
-    limitTo: number
+    limitTo: number,
   ): Root | null {
     const d = this.logger.bind("parseList");
     const error = (msg: string): null => {
@@ -164,7 +167,7 @@ export class Parser {
       editor.listSelections().map((r) => ({
         anchor: { line: r.anchor.line, ch: r.anchor.ch },
         head: { line: r.head.line, ch: r.head.ch },
-      }))
+      })),
     );
 
     let currentParent: ParseListList = root.getRootList();
@@ -197,7 +200,7 @@ export class Parser {
           const got = indentSlice.replace(/ /g, "S").replace(/\t/g, "T");
 
           return error(
-            `Unable to parse list: expected indent "${expected}", got "${got}"`
+            `Unable to parse list: expected indent "${expected}", got "${got}"`,
           );
         }
 
@@ -223,13 +226,13 @@ export class Parser {
           optionalCheckbox,
           spaceAfterBullet,
           content,
-          foldRoot
+          foldRoot,
         );
         currentParent.addAfterAll(currentList);
       } else if (this.isLineWithIndent(line)) {
         if (!currentList) {
           return error(
-            `Unable to parse list: expected list item, got empty line`
+            `Unable to parse list: expected list item, got empty line`,
           );
         }
 
@@ -243,7 +246,7 @@ export class Parser {
             .replace(/\t/g, "T");
 
           return error(
-            `Unable to parse list: expected indent "${expected}", got "${got}"`
+            `Unable to parse list: expected indent "${expected}", got "${got}"`,
           );
         }
 
@@ -256,7 +259,7 @@ export class Parser {
             }
 
             return error(
-              `Unable to parse list: expected some indent, got no indent`
+              `Unable to parse list: expected some indent, got no indent`,
             );
           }
 
@@ -266,7 +269,7 @@ export class Parser {
         currentList.addLine(line.slice(currentList.getNotesIndent().length));
       } else {
         return error(
-          `Unable to parse list: expected list item or note, got "${line}"`
+          `Unable to parse list: expected list item or note, got "${line}"`,
         );
       }
     }

@@ -25,7 +25,7 @@ export default (commandLineArgs) => ({
     replace({
       preventAssignment: true,
       PLUGIN_VERSION: JSON.stringify(
-        JSON.parse(fs.readFileSync("./package.json", "utf-8")).version
+        JSON.parse(fs.readFileSync("./package.json", "utf-8")).version,
       ),
       CHANGELOG_MD: JSON.stringify(fs.readFileSync("./CHANGELOG.md", "utf-8")),
     }),

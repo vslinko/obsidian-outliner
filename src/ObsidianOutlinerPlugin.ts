@@ -52,7 +52,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
     this.changesApplicator = new ChangesApplicator();
     this.operationPerformer = new OperationPerformer(
       this.parser,
-      this.changesApplicator
+      this.changesApplicator,
     );
 
     this.imeDetector = new IMEDetector();
@@ -68,7 +68,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       new ListsMovementCommands(
         this,
         this.obsidianSettings,
-        this.operationPerformer
+        this.operationPerformer,
       ),
       new ListsFoldingCommands(this, this.obsidianSettings),
 
@@ -77,31 +77,31 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this,
         this.settings,
         this.parser,
-        this.operationPerformer
+        this.operationPerformer,
       ),
       new ArrowLeftAndCtrlArrowLeftBehaviourOverride(
         this,
         this.settings,
         this.imeDetector,
-        this.operationPerformer
+        this.operationPerformer,
       ),
       new BackspaceBehaviourOverride(
         this,
         this.settings,
         this.imeDetector,
-        this.operationPerformer
+        this.operationPerformer,
       ),
       new MetaBackspaceBehaviourOverride(
         this,
         this.settings,
         this.imeDetector,
-        this.operationPerformer
+        this.operationPerformer,
       ),
       new DeleteBehaviourOverride(
         this,
         this.settings,
         this.imeDetector,
-        this.operationPerformer
+        this.operationPerformer,
       ),
 
       // features based on settings.overrideTabBehaviour
@@ -110,13 +110,13 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this.imeDetector,
         this.obsidianSettings,
         this.settings,
-        this.operationPerformer
+        this.operationPerformer,
       ),
       new ShiftTabBehaviourOverride(
         this,
         this.imeDetector,
         this.settings,
-        this.operationPerformer
+        this.operationPerformer,
       ),
 
       // features based on settings.overrideEnterBehaviour
@@ -126,7 +126,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this.imeDetector,
         this.obsidianSettings,
         this.parser,
-        this.operationPerformer
+        this.operationPerformer,
       ),
 
       // features based on settings.overrideSelectAllBehaviour
@@ -134,7 +134,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this,
         this.settings,
         this.imeDetector,
-        this.operationPerformer
+        this.operationPerformer,
       ),
 
       // features based on settings.betterListsStyles
@@ -145,7 +145,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this,
         this.settings,
         this.obsidianSettings,
-        this.parser
+        this.parser,
       ),
 
       // features based on settings.dragAndDrop
@@ -154,7 +154,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this.settings,
         this.obsidianSettings,
         this.parser,
-        this.operationPerformer
+        this.operationPerformer,
       ),
     ];
 

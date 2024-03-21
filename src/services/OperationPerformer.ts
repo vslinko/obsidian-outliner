@@ -8,7 +8,7 @@ import { Root } from "../root";
 export class OperationPerformer {
   constructor(
     private parser: Parser,
-    private changesApplicator: ChangesApplicator
+    private changesApplicator: ChangesApplicator,
   ) {}
 
   eval(root: Root, op: Operation, editor: MyEditor) {
@@ -29,7 +29,7 @@ export class OperationPerformer {
   perform(
     cb: (root: Root) => Operation,
     editor: MyEditor,
-    cursor = editor.getCursor()
+    cursor = editor.getCursor(),
   ) {
     const root = this.parser.parse(editor, cursor);
 

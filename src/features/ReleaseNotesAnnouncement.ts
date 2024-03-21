@@ -1,4 +1,4 @@
-import { MarkdownRenderer, Modal, Plugin_2 } from "obsidian";
+import { MarkdownRenderer, Modal, Plugin } from "obsidian";
 
 import { Feature } from "./Feature";
 
@@ -6,10 +6,10 @@ import { Settings } from "../services/Settings";
 
 class ReleaseNotesModal extends Modal {
   constructor(
-    private plugin: Plugin_2,
+    private plugin: Plugin,
     private title: string,
     private content: string,
-    private cb: () => void
+    private cb: () => void,
   ) {
     super(plugin.app);
   }
@@ -21,7 +21,7 @@ class ReleaseNotesModal extends Modal {
       this.content,
       this.contentEl,
       "",
-      this.plugin
+      this.plugin,
     );
   }
 
@@ -76,7 +76,10 @@ function parseChangelog() {
 export class ReleaseNotesAnnouncement implements Feature {
   private modal: ReleaseNotesModal | null = null;
 
-  constructor(private plugin: Plugin_2, private settings: Settings) {}
+  constructor(
+    private plugin: Plugin,
+    private settings: Settings,
+  ) {}
 
   async load() {
     this.plugin.addCommand({
@@ -116,7 +119,7 @@ export class ReleaseNotesAnnouncement implements Feature {
       this.plugin,
       modalTitle,
       releaseNotes,
-      this.handleClose
+      this.handleClose,
     );
     this.modal.open();
   };

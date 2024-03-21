@@ -1,4 +1,4 @@
-import { Plugin_2 } from "obsidian";
+import { Plugin } from "obsidian";
 
 import { EditorState, Transaction } from "@codemirror/state";
 
@@ -13,15 +13,15 @@ import { Settings } from "../services/Settings";
 
 export class EditorSelectionsBehaviourOverride implements Feature {
   constructor(
-    private plugin: Plugin_2,
+    private plugin: Plugin,
     private settings: Settings,
     private parser: Parser,
-    private operationPerformer: OperationPerformer
+    private operationPerformer: OperationPerformer,
   ) {}
 
   async load() {
     this.plugin.registerEditorExtension(
-      EditorState.transactionExtender.of(this.transactionExtender)
+      EditorState.transactionExtender.of(this.transactionExtender),
     );
   }
 
@@ -52,7 +52,7 @@ export class EditorSelectionsBehaviourOverride implements Feature {
       const { shouldStopPropagation } = this.operationPerformer.eval(
         root,
         new KeepCursorOutsideFoldedLines(root),
-        editor
+        editor,
       );
 
       if (shouldStopPropagation) {
@@ -63,7 +63,7 @@ export class EditorSelectionsBehaviourOverride implements Feature {
     this.operationPerformer.eval(
       root,
       new KeepCursorWithinListContent(root),
-      editor
+      editor,
     );
   };
 }

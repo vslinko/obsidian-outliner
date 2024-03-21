@@ -12,7 +12,7 @@ export function minPos(a: Position, b: Position) {
 
 export function isRangesIntersects(
   a: [Position, Position],
-  b: [Position, Position]
+  b: [Position, Position],
 ) {
   return cmpPos(a[1], b[0]) >= 0 && cmpPos(a[0], b[1]) <= 0;
 }
@@ -65,7 +65,7 @@ export class List {
     private optionalCheckbox: string,
     private spaceAfterBullet: string,
     firstLine: string,
-    private foldRoot: boolean
+    private foldRoot: boolean,
   ) {
     this.id = idSeq++;
     this.lines.push(firstLine);
@@ -89,7 +89,7 @@ export class List {
   addLine(text: string) {
     if (this.notesIndent === null) {
       throw new Error(
-        `Unable to add line, notes indent should be provided first`
+        `Unable to add line, notes indent should be provided first`,
       );
     }
 
@@ -99,7 +99,7 @@ export class List {
   replaceLines(lines: string[]) {
     if (lines.length > 1 && this.notesIndent === null) {
       throw new Error(
-        `Unable to add line, notes indent should be provided first`
+        `Unable to add line, notes indent should be provided first`,
       );
     }
 
@@ -346,7 +346,7 @@ export class List {
       this.optionalCheckbox,
       this.spaceAfterBullet,
       "",
-      this.foldRoot
+      this.foldRoot,
     );
     clone.id = this.id;
     clone.lines = this.lines.concat();
@@ -366,7 +366,7 @@ export class Root {
   constructor(
     private start: Position,
     private end: Position,
-    selections: Range[]
+    selections: Range[],
   ) {
     this.replaceSelections(selections);
   }
@@ -524,7 +524,7 @@ export class Root {
     const clone = new Root(
       { ...this.start },
       { ...this.end },
-      this.getSelections()
+      this.getSelections(),
     );
     clone.rootList = this.rootList.clone(clone);
     return clone;

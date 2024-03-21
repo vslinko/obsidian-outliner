@@ -1,4 +1,4 @@
-import { Notice, Platform, Plugin_2 } from "obsidian";
+import { Notice, Platform, Plugin } from "obsidian";
 
 import { getIndentUnit, indentString } from "@codemirror/language";
 import { StateEffect, StateField } from "@codemirror/state";
@@ -23,11 +23,11 @@ export class DragAndDrop implements Feature {
   private state: DragAndDropState | null = null;
 
   constructor(
-    private plugin: Plugin_2,
+    private plugin: Plugin,
     private settings: Settings,
     private obisidian: ObsidianSettings,
     private parser: Parser,
-    private operationPerformer: OperationPerformer
+    private operationPerformer: OperationPerformer,
   ) {}
 
   async load() {
@@ -197,7 +197,7 @@ export class DragAndDrop implements Feature {
     if (!isSameRoots(root, newRoot)) {
       new Notice(
         `The item cannot be moved. The page content changed during the move.`,
-        5000
+        5000,
       );
       return;
     }
@@ -209,9 +209,9 @@ export class DragAndDrop implements Feature {
         list,
         dropVariant.placeToMove,
         dropVariant.whereToMove,
-        this.obisidian.getDefaultIndentChars()
+        this.obisidian.getDefaultIndentChars(),
       ),
-      editor
+      editor,
     );
   }
 
@@ -253,7 +253,7 @@ export class DragAndDrop implements Feature {
     {
       const width = Math.round(
         view.contentDOM.offsetWidth -
-          (dropVariant.left - this.state.leftPadding)
+          (dropVariant.left - this.state.leftPadding),
       );
 
       this.dropZone.style.display = "block";
@@ -269,7 +269,7 @@ export class DragAndDrop implements Feature {
       const dashPadding = 3;
       const dashWidth = indentWidth - dashPadding;
       const color = getComputedStyle(document.body).getPropertyValue(
-        "--color-accent"
+        "--color-accent",
       );
 
       this.dropZonePadding.style.width = `${width}px`;
@@ -285,7 +285,7 @@ export class DragAndDrop implements Feature {
             : editor.posToOffset({
                 line: newParent.getFirstLineContentStart().line,
                 ch: 0,
-              })
+              }),
         ),
       ],
     });
@@ -321,7 +321,7 @@ class DragAndDropState {
     public readonly view: EditorView,
     public readonly editor: MyEditor,
     public readonly root: Root,
-    public readonly list: List
+    public readonly list: List,
   ) {
     this.collectDropVariants();
     this.calculateLeftPadding();
@@ -371,7 +371,7 @@ class DragAndDropState {
       .first().top;
 
     const variansOnNearestLine = dropVariants.filter(
-      (v) => Math.abs(v.top - nearestLineTop) <= 4
+      (v) => Math.abs(v.top - nearestLineTop) <= 4,
     );
 
     this.dropVariant = variansOnNearestLine

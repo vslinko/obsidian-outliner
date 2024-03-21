@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Plugin_2, Setting } from "obsidian";
+import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
 
 import { Feature } from "./Feature";
 
@@ -9,7 +9,11 @@ import {
 } from "../services/Settings";
 
 class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
-  constructor(app: App, plugin: Plugin_2, private settings: Settings) {
+  constructor(
+    app: App,
+    plugin: Plugin,
+    private settings: Settings,
+  ) {
     super(app, plugin);
   }
 
@@ -62,7 +66,7 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Enhance the Ctrl+A or Cmd+A behavior")
       .setDesc(
-        "Press the hotkey once to select the current list item. Press the hotkey twice to select the entire list."
+        "Press the hotkey once to select the current list item. Press the hotkey twice to select the entire list.",
       )
       .addToggle((toggle) => {
         toggle
@@ -76,7 +80,7 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Improve the style of your lists")
       .setDesc(
-        "Styles are only compatible with built-in Obsidian themes and may not be compatible with other themes."
+        "Styles are only compatible with built-in Obsidian themes and may not be compatible with other themes.",
       )
       .addToggle((toggle) => {
         toggle
@@ -122,7 +126,7 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Debug mode")
       .setDesc(
-        "Open DevTools (Command+Option+I or Control+Shift+I) to copy the debug logs."
+        "Open DevTools (Command+Option+I or Control+Shift+I) to copy the debug logs.",
       )
       .addToggle((toggle) => {
         toggle.setValue(this.settings.debug).onChange(async (value) => {
@@ -134,15 +138,18 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
 }
 
 export class SettingsTab implements Feature {
-  constructor(private plugin: Plugin_2, private settings: Settings) {}
+  constructor(
+    private plugin: Plugin,
+    private settings: Settings,
+  ) {}
 
   async load() {
     this.plugin.addSettingTab(
       new ObsidianOutlinerPluginSettingTab(
         this.plugin.app,
         this.plugin,
-        this.settings
-      )
+        this.settings,
+      ),
     );
   }
 

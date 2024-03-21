@@ -8,7 +8,7 @@ function makeParser(
   options: {
     logger?: Logger;
     settings?: Settings;
-  } = {}
+  } = {},
 ) {
   const { logger, settings } = {
     logger: makeLogger(),
@@ -71,10 +71,10 @@ describe("parseList", () => {
             }),
           ],
         }),
-      })
+      }),
     );
     expect(list.print()).toBe(
-      "- one\n  side\n\t- two\n\t\t- three\n\t\t\tnote\n\t- four"
+      "- one\n  side\n\t- two\n\t\t- three\n\t\t\tnote\n\t- four",
     );
   });
 
@@ -110,7 +110,7 @@ describe("parseList", () => {
     expect(list).toBeNull();
     expect(logger.log).toBeCalledWith(
       "parseList",
-      `Unable to parse list: expected indent "S", got "T"`
+      `Unable to parse list: expected indent "S", got "T"`,
     );
   });
 
@@ -127,7 +127,7 @@ describe("parseList", () => {
     expect(list).toBeNull();
     expect(logger.log).toBeCalledWith(
       "parseList",
-      `Unable to parse list: expected indent "T", got "S"`
+      `Unable to parse list: expected indent "T", got "S"`,
     );
   });
 
@@ -144,7 +144,7 @@ describe("parseList", () => {
     expect(list).toBeNull();
     expect(logger.log).toBeCalledWith(
       "parseList",
-      `Unable to parse list: expected indent "T", got "SS"`
+      `Unable to parse list: expected indent "T", got "SS"`,
     );
   });
 

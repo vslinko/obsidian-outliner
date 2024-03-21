@@ -43,7 +43,7 @@ export class MoveCursorToPreviousUnfoldedLine implements Operation {
   private moveCursorToPreviousNoteLine(
     root: Root,
     lines: ListLine[],
-    lineNo: number
+    lineNo: number,
   ) {
     this.stopPropagation = true;
     this.updated = true;

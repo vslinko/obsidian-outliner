@@ -84,7 +84,7 @@ export class MyEditor {
   replaceRange(
     replacement: string,
     from: MyEditorPosition,
-    to: MyEditorPosition
+    to: MyEditorPosition,
   ): void {
     return this.e.replaceRange(replacement, from, to);
   }

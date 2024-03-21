@@ -15,7 +15,7 @@ export class CreateNewItem implements Operation {
   constructor(
     private root: Root,
     private defaultIndentChars: string,
-    private getZoomRange: GetZoomRange
+    private getZoomRange: GetZoomRange,
   ) {}
 
   shouldStopPropagation() {
@@ -70,7 +70,7 @@ export class CreateNewItem implements Operation {
       {
         oldLines: [],
         newLines: [],
-      }
+      },
     );
 
     const codeBlockBacticks = oldLines.join("\n").split("```").length - 1;
@@ -88,7 +88,7 @@ export class CreateNewItem implements Operation {
     const listIsZoomingRoot = Boolean(
       zoomRange &&
         list.getFirstLineContentStart().line >= zoomRange.from.line &&
-        list.getLastLineContentEnd().line <= zoomRange.from.line
+        list.getLastLineContentEnd().line <= zoomRange.from.line,
     );
 
     const hasChildren = !list.isEmpty();
@@ -124,7 +124,7 @@ export class CreateNewItem implements Operation {
       prefix,
       spaceAfterBullet,
       prefix + newLines.shift(),
-      false
+      false,
     );
 
     if (newLines.length > 0) {

@@ -11,7 +11,7 @@ export class ChangesApplicator {
         prevRoot,
         newRoot,
         changeFrom,
-        changeTo
+        changeTo,
       );
 
       for (const line of unfold) {
@@ -94,7 +94,7 @@ export class ChangesApplicator {
     prevRoot: Root,
     newRoot: Root,
     changeFrom: Position,
-    changeTo: Position
+    changeTo: Position,
   ) {
     const changedRange: [Position, Position] = [changeFrom, changeTo];
 

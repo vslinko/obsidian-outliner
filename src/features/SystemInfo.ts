@@ -1,4 +1,4 @@
-import { App, Modal, Plugin_2 } from "obsidian";
+import { App, Modal, Plugin } from "obsidian";
 
 import { Feature } from "./Feature";
 
@@ -19,7 +19,10 @@ interface AppHiddenProps {
 }
 
 class SystemInfoModal extends Modal {
-  constructor(app: App, private settings: Settings) {
+  constructor(
+    app: App,
+    private settings: Settings,
+  ) {
     super(app);
   }
 
@@ -41,12 +44,15 @@ class SystemInfoModal extends Modal {
         isMobile: app.isMobile,
         plugins: {
           enabledPlugins: Array.from(app.plugins.enabledPlugins),
-          manifests: Object.keys(app.plugins.manifests).reduce((acc, key) => {
-            acc[key] = {
-              version: app.plugins.manifests[key].version,
-            };
-            return acc;
-          }, {} as { [key: string]: { version: string } }),
+          manifests: Object.keys(app.plugins.manifests).reduce(
+            (acc, key) => {
+              acc[key] = {
+                version: app.plugins.manifests[key].version,
+              };
+              return acc;
+            },
+            {} as { [key: string]: { version: string } },
+          ),
         },
         vault: {
           config: app.vault.config,
@@ -76,7 +82,10 @@ class SystemInfoModal extends Modal {
 }
 
 export class SystemInfo implements Feature {
-  constructor(private plugin: Plugin_2, private settings: Settings) {}
+  constructor(
+    private plugin: Plugin,
+    private settings: Settings,
+  ) {}
 
   async load() {
     this.plugin.addCommand({

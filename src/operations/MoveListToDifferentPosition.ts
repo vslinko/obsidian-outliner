@@ -17,7 +17,7 @@ export class MoveListToDifferentPosition implements Operation {
     private listToMove: List,
     private placeToMove: List,
     private whereToMove: "before" | "after" | "inside",
-    private defaultIndentChars: string
+    private defaultIndentChars: string,
   ) {}
 
   shouldStopPropagation() {

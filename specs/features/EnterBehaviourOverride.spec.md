@@ -427,7 +427,7 @@
 ```md
 -	one
 	-	two
- |five
+  |five
 ```
 
 # enter should fallback behavior while multiline selection with nested bullets

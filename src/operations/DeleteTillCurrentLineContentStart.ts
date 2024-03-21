@@ -32,7 +32,7 @@ export class DeleteTillCurrentLineContentStart implements Operation {
     const lineNo = lines.findIndex((l) => l.from.line === cursor.line);
 
     lines[lineNo].text = lines[lineNo].text.slice(
-      cursor.ch - lines[lineNo].from.ch
+      cursor.ch - lines[lineNo].from.ch,
     );
 
     list.replaceLines(lines.map((l) => l.text));

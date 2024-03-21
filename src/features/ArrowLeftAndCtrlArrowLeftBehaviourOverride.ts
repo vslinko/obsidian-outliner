@@ -1,4 +1,4 @@
-import { Plugin_2 } from "obsidian";
+import { Plugin } from "obsidian";
 
 import { keymap } from "@codemirror/view";
 
@@ -13,10 +13,10 @@ import { createKeymapRunCallback } from "../utils/createKeymapRunCallback";
 
 export class ArrowLeftAndCtrlArrowLeftBehaviourOverride implements Feature {
   constructor(
-    private plugin: Plugin_2,
+    private plugin: Plugin,
     private settings: Settings,
     private imeDetector: IMEDetector,
-    private operationPerformer: OperationPerformer
+    private operationPerformer: OperationPerformer,
   ) {}
 
   async load() {
@@ -37,7 +37,7 @@ export class ArrowLeftAndCtrlArrowLeftBehaviourOverride implements Feature {
             run: this.run,
           }),
         },
-      ])
+      ]),
     );
   }
 
@@ -53,7 +53,7 @@ export class ArrowLeftAndCtrlArrowLeftBehaviourOverride implements Feature {
   private run = (editor: MyEditor) => {
     return this.operationPerformer.perform(
       (root) => new MoveCursorToPreviousUnfoldedLine(root),
-      editor
+      editor,
     );
   };
 }

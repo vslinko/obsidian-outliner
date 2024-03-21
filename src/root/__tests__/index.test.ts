@@ -34,7 +34,7 @@ describe("isRangesIntersects", () => {
       const { a, b } = parseRanges(ranges);
 
       expect(isRangesIntersects(a, b)).toBe(result);
-    }
+    },
   );
 });
 
@@ -94,7 +94,7 @@ describe("Root", () => {
       });
 
       const range = root.getContentLinesRangeOf(
-        root.getChildren()[0].getChildren()[0]
+        root.getChildren()[0].getChildren()[0],
       );
 
       expect(range).toStrictEqual([1, 1]);
@@ -109,7 +109,7 @@ describe("Root", () => {
       });
 
       const range = root.getContentLinesRangeOf(
-        root.getChildren()[0].getChildren()[0]
+        root.getChildren()[0].getChildren()[0],
       );
 
       expect(range).toStrictEqual([2, 3]);

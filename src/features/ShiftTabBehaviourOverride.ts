@@ -1,4 +1,4 @@
-import { Plugin_2 } from "obsidian";
+import { Plugin } from "obsidian";
 
 import { Prec } from "@codemirror/state";
 import { keymap } from "@codemirror/view";
@@ -14,10 +14,10 @@ import { createKeymapRunCallback } from "../utils/createKeymapRunCallback";
 
 export class ShiftTabBehaviourOverride implements Feature {
   constructor(
-    private plugin: Plugin_2,
+    private plugin: Plugin,
     private imeDetector: IMEDetector,
     private settings: Settings,
-    private operationPerformer: OperationPerformer
+    private operationPerformer: OperationPerformer,
   ) {}
 
   async load() {
@@ -31,8 +31,8 @@ export class ShiftTabBehaviourOverride implements Feature {
               run: this.run,
             }),
           },
-        ])
-      )
+        ]),
+      ),
     );
   }
 
@@ -45,7 +45,7 @@ export class ShiftTabBehaviourOverride implements Feature {
   private run = (editor: MyEditor) => {
     return this.operationPerformer.perform(
       (root) => new OutdentList(root),
-      editor
+      editor,
     );
   };
 }

@@ -1,4 +1,4 @@
-import { Plugin_2 } from "obsidian";
+import { Plugin } from "obsidian";
 
 import { Feature } from "./Feature";
 
@@ -13,9 +13,9 @@ import { createEditorCallback } from "../utils/createEditorCallback";
 
 export class ListsMovementCommands implements Feature {
   constructor(
-    private plugin: Plugin_2,
+    private plugin: Plugin,
     private obsidianSettings: ObsidianSettings,
-    private operationPerformer: OperationPerformer
+    private operationPerformer: OperationPerformer,
   ) {}
 
   async load() {
@@ -67,7 +67,7 @@ export class ListsMovementCommands implements Feature {
   private moveListDown = (editor: MyEditor) => {
     const { shouldStopPropagation } = this.operationPerformer.perform(
       (root) => new MoveListDown(root),
-      editor
+      editor,
     );
 
     return shouldStopPropagation;
@@ -76,7 +76,7 @@ export class ListsMovementCommands implements Feature {
   private moveListUp = (editor: MyEditor) => {
     const { shouldStopPropagation } = this.operationPerformer.perform(
       (root) => new MoveListUp(root),
-      editor
+      editor,
     );
 
     return shouldStopPropagation;
@@ -86,7 +86,7 @@ export class ListsMovementCommands implements Feature {
     const { shouldStopPropagation } = this.operationPerformer.perform(
       (root) =>
         new IndentList(root, this.obsidianSettings.getDefaultIndentChars()),
-      editor
+      editor,
     );
 
     return shouldStopPropagation;
@@ -95,7 +95,7 @@ export class ListsMovementCommands implements Feature {
   private outdentList = (editor: MyEditor) => {
     const { shouldStopPropagation } = this.operationPerformer.perform(
       (root) => new OutdentList(root),
-      editor
+      editor,
     );
 
     return shouldStopPropagation;

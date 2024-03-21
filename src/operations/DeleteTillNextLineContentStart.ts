@@ -31,7 +31,7 @@ export class DeleteTillNextLineContentStart implements Operation {
     const lines = list.getLinesInfo();
 
     const lineNo = lines.findIndex(
-      (l) => cursor.ch === l.to.ch && cursor.line === l.to.line
+      (l) => cursor.ch === l.to.ch && cursor.line === l.to.line,
     );
 
     if (lineNo === lines.length - 1) {

@@ -6,7 +6,10 @@ export class IndentList implements Operation {
   private stopPropagation = false;
   private updated = false;
 
-  constructor(private root: Root, private defaultIndentChars: string) {}
+  constructor(
+    private root: Root,
+    private defaultIndentChars: string,
+  ) {}
 
   shouldStopPropagation() {
     return this.stopPropagation;

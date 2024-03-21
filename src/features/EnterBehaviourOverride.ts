@@ -1,4 +1,4 @@
-import { Plugin_2 } from "obsidian";
+import { Plugin } from "obsidian";
 
 import { Prec } from "@codemirror/state";
 import { keymap } from "@codemirror/view";
@@ -17,12 +17,12 @@ import { createKeymapRunCallback } from "../utils/createKeymapRunCallback";
 
 export class EnterBehaviourOverride implements Feature {
   constructor(
-    private plugin: Plugin_2,
+    private plugin: Plugin,
     private settings: Settings,
     private imeDetector: IMEDetector,
     private obsidianSettings: ObsidianSettings,
     private parser: Parser,
-    private operationPerformer: OperationPerformer
+    private operationPerformer: OperationPerformer,
   ) {}
 
   async load() {
@@ -36,8 +36,8 @@ export class EnterBehaviourOverride implements Feature {
               run: this.run,
             }),
           },
-        ])
-      )
+        ]),
+      ),
     );
   }
 
@@ -61,7 +61,7 @@ export class EnterBehaviourOverride implements Feature {
       const res = this.operationPerformer.eval(
         root,
         new OutdentListIfItsEmpty(root),
-        editor
+        editor,
       );
 
       if (res.shouldStopPropagation) {
@@ -79,7 +79,7 @@ export class EnterBehaviourOverride implements Feature {
       const res = this.operationPerformer.eval(
         root,
         new CreateNewItem(root, defaultIndentChars, getZoomRange),
-        editor
+        editor,
       );
 
       if (res.shouldUpdate && zoomRange) {

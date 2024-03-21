@@ -1,4 +1,4 @@
-import { Plugin_2 } from "obsidian";
+import { Plugin } from "obsidian";
 
 import {
   EditorView,
@@ -37,7 +37,7 @@ class VerticalLinesPluginValue implements PluginValue {
     private settings: Settings,
     private obsidianSettings: ObsidianSettings,
     private parser: Parser,
-    private view: EditorView
+    private view: EditorView,
   ) {
     this.view.scrollDOM.addEventListener("scroll", this.onScroll);
     this.settings.onChange(this.scheduleRecalculate);
@@ -59,7 +59,7 @@ class VerticalLinesPluginValue implements PluginValue {
   private prepareDom() {
     this.contentContainer = document.createElement("div");
     this.contentContainer.classList.add(
-      "outliner-plugin-list-lines-content-container"
+      "outliner-plugin-list-lines-content-container",
     );
 
     this.scroller = document.createElement("div");
@@ -112,7 +112,7 @@ class VerticalLinesPluginValue implements PluginValue {
       }
 
       this.lines.sort((a, b) =>
-        a.top === b.top ? a.left - b.left : a.top - b.top
+        a.top === b.top ? a.left - b.left : a.top - b.top,
       );
     }
 
@@ -159,7 +159,7 @@ class VerticalLinesPluginValue implements PluginValue {
     if (zoomRange) {
       visibleFrom = Math.max(
         visibleFrom,
-        this.editor.posToOffset(zoomRange.from)
+        this.editor.posToOffset(zoomRange.from),
       );
       visibleTo = Math.min(visibleTo, this.editor.posToOffset(zoomRange.to));
     }
@@ -321,10 +321,10 @@ export class VerticalLines implements Feature {
   private updateBodyClassInterval: number;
 
   constructor(
-    private plugin: Plugin_2,
+    private plugin: Plugin,
     private settings: Settings,
     private obsidianSettings: ObsidianSettings,
-    private parser: Parser
+    private parser: Parser,
   ) {}
 
   async load() {
@@ -340,9 +340,9 @@ export class VerticalLines implements Feature {
             this.settings,
             this.obsidianSettings,
             this.parser,
-            view
-          )
-      )
+            view,
+          ),
+      ),
     );
   }
 

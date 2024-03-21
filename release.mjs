@@ -66,7 +66,7 @@ async function main() {
   packageLockFile.packages[""].version = newVersion;
   writeFileSync(
     "package-lock.json",
-    JSON.stringify(packageLockFile, null, 2) + "\n"
+    JSON.stringify(packageLockFile, null, 2) + "\n",
   );
 
   const packageFile = JSON.parse(readFileSync("package.json"));
@@ -80,7 +80,7 @@ async function main() {
   };
   writeFileSync(
     "versions.json",
-    JSON.stringify(newVersionsFile, null, 2) + "\n"
+    JSON.stringify(newVersionsFile, null, 2) + "\n",
   );
 
   spawnSync(
@@ -94,7 +94,7 @@ async function main() {
     ],
     {
       stdio: "inherit",
-    }
+    },
   );
   spawnSync("git", ["commit", "-m", newVersion], {
     stdio: "inherit",

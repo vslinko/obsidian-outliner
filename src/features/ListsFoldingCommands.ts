@@ -1,4 +1,4 @@
-import { Notice, Plugin_2 } from "obsidian";
+import { Notice, Plugin } from "obsidian";
 
 import { Feature } from "./Feature";
 
@@ -8,8 +8,8 @@ import { createEditorCallback } from "../utils/createEditorCallback";
 
 export class ListsFoldingCommands implements Feature {
   constructor(
-    private plugin: Plugin_2,
-    private obsidianSettings: ObsidianSettings
+    private plugin: Plugin,
+    private obsidianSettings: ObsidianSettings,
   ) {}
 
   async load() {
@@ -46,7 +46,7 @@ export class ListsFoldingCommands implements Feature {
     if (!this.obsidianSettings.getFoldSettings().foldIndent) {
       new Notice(
         `Unable to ${type} because folding is disabled. Please enable "Fold indent" in Obsidian settings.`,
-        5000
+        5000,
       );
       return true;
     }

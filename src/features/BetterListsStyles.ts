@@ -10,7 +10,7 @@ export class BetterListsStyles implements Feature {
 
   constructor(
     private settings: Settings,
-    private obsidianSettings: ObsidianSettings
+    private obsidianSettings: ObsidianSettings,
   ) {}
 
   async load() {

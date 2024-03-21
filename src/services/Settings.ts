@@ -152,7 +152,7 @@ export class Settings {
     this.values = Object.assign(
       {},
       DEFAULT_SETTINGS,
-      await this.storage.loadData()
+      await this.storage.loadData(),
     );
   }
 
@@ -166,7 +166,7 @@ export class Settings {
 
   private set<T extends keyof SettingsObject>(
     key: T,
-    value: SettingsObject[T]
+    value: SettingsObject[T],
   ): void {
     this.values[key] = value;
 

@@ -141,7 +141,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     await this.wait(1000);
 
     this.editor = new MyEditor(
-      this.app.workspace.getActiveViewOfType(MarkdownView).editor
+      this.app.workspace.getActiveViewOfType(MarkdownView).editor,
     );
   }
 
@@ -330,7 +330,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
         head: null as MyEditorPosition | null,
         lines: [] as string[],
         folds: [] as number[],
-      }
+      },
     );
     if (!acc.anchor) {
       acc.anchor = { line: 0, ch: 0 };

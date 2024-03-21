@@ -1,4 +1,4 @@
-import { Plugin_2 } from "obsidian";
+import { Plugin } from "obsidian";
 
 import { Prec } from "@codemirror/state";
 import { keymap } from "@codemirror/view";
@@ -15,11 +15,11 @@ import { createKeymapRunCallback } from "../utils/createKeymapRunCallback";
 
 export class TabBehaviourOverride implements Feature {
   constructor(
-    private plugin: Plugin_2,
+    private plugin: Plugin,
     private imeDetector: IMEDetector,
     private obsidianSettings: ObsidianSettings,
     private settings: Settings,
-    private operationPerformer: OperationPerformer
+    private operationPerformer: OperationPerformer,
   ) {}
 
   async load() {
@@ -33,8 +33,8 @@ export class TabBehaviourOverride implements Feature {
               run: this.run,
             }),
           },
-        ])
-      )
+        ]),
+      ),
     );
   }
 
@@ -48,7 +48,7 @@ export class TabBehaviourOverride implements Feature {
     return this.operationPerformer.perform(
       (root) =>
         new IndentList(root, this.obsidianSettings.getDefaultIndentChars()),
-      editor
+      editor,
     );
   };
 }
