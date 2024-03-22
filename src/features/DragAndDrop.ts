@@ -356,7 +356,9 @@ class DragAndDropState {
         ch: 0,
       });
 
-      v.top = view.coordsAtPos(linePos, -1).top;
+      const coords = view.coordsAtPos(linePos, -1);
+      const vTop = coords ? coords.top : 0;
+      v.top = vTop;
 
       if (positionAfterList) {
         v.top += view.lineBlockAt(linePos).height;
