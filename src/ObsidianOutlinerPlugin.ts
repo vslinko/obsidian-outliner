@@ -18,6 +18,7 @@ import { ShiftTabBehaviourOverride } from "./features/ShiftTabBehaviourOverride"
 import { SystemInfo } from "./features/SystemInfo";
 import { TabBehaviourOverride } from "./features/TabBehaviourOverride";
 import { VerticalLines } from "./features/VerticalLines";
+import { VimOBehaviourOverride } from "./features/VimOBehaviourOverride";
 import { ChangesApplicator } from "./services/ChangesApplicator";
 import { IMEDetector } from "./services/IMEDetector";
 import { Logger } from "./services/Logger";
@@ -124,6 +125,14 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this,
         this.settings,
         this.imeDetector,
+        this.obsidianSettings,
+        this.parser,
+        this.operationPerformer,
+      ),
+
+      new VimOBehaviourOverride(
+        this,
+        this.settings,
         this.obsidianSettings,
         this.parser,
         this.operationPerformer,

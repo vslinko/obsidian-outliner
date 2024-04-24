@@ -1,6 +1,7 @@
 import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
 
 import { Feature } from "./Feature";
+import { VimOBehaviourOverride } from "./VimOBehaviourOverride";
 
 import {
   KeepCursorWithinContent,
@@ -59,6 +60,19 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
           .setValue(this.settings.overrideEnterBehaviour)
           .onChange(async (value) => {
             this.settings.overrideEnterBehaviour = value;
+            await this.settings.save();
+          });
+      });
+
+    new Setting(containerEl)
+      .setName("Vim-mode o/O inserts bullets")
+      .setDesc("Create a bullet when pressing o or O in Vim mode.")
+      .addToggle((toggle) => {
+        toggle
+          .setValue(this.settings.overrideVimOBehaviour)
+          .onChange(async (value) => {
+            VimOBehaviourOverride.toggle(value);
+            this.settings.overrideVimOBehaviour = value;
             await this.settings.save();
           });
       });
