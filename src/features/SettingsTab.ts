@@ -1,7 +1,6 @@
 import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
 
 import { Feature } from "./Feature";
-import { VimOBehaviourOverride } from "./VimOBehaviourOverride";
 
 import {
   KeepCursorWithinContent,
@@ -71,7 +70,6 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
         toggle
           .setValue(this.settings.overrideVimOBehaviour)
           .onChange(async (value) => {
-            VimOBehaviourOverride.toggle(value);
             this.settings.overrideVimOBehaviour = value;
             await this.settings.save();
           });
