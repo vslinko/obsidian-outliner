@@ -1,6 +1,5 @@
 import { Notice, Platform, Plugin } from "obsidian";
 
-import { getIndentUnit, indentString } from "@codemirror/language";
 import { StateEffect, StateField } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
 
@@ -356,7 +355,9 @@ class DragAndDropState {
         ch: 0,
       });
 
-      v.top = view.coordsAtPos(linePos, -1).top;
+      v.top =
+        view.coordsAtPos(linePos, -1)?.top ??
+        view.dom.getBoundingClientRect().top + view.contentHeight;
 
       if (positionAfterList) {
         v.top += view.lineBlockAt(linePos).height;
@@ -431,26 +432,22 @@ class DragAndDropState {
   }
 
   private calculateLeftPadding() {
-    this.leftPadding = this.view.coordsAtPos(0, -1).left;
+    const dom = this.view.dom.querySelector("div.cm-scroller");
+    this.leftPadding =
+      dom.getBoundingClientRect().left +
+      Number.parseFloat(
+        document.defaultView
+          .getComputedStyle(dom, "")
+          .getPropertyValue("padding-left"),
+      );
   }
 
   private calculateTabWidth() {
     const { view } = this;
 
-    const singleIndent = indentString(view.state, getIndentUnit(view.state));
-
-    for (let i = 1; i <= view.state.doc.lines; i++) {
-      const line = view.state.doc.line(i);
-
-      if (line.text.startsWith(singleIndent)) {
-        const a = view.coordsAtPos(line.from, -1);
-        const b = view.coordsAtPos(line.from + singleIndent.length, -1);
-        this.tabWidth = b.left - a.left;
-        return;
-      }
-    }
-
-    this.tabWidth = view.defaultCharacterWidth * getIndentUnit(view.state);
+    this.tabWidth = (<HTMLElement>(
+      view.dom.querySelector(".cm-indent")
+    )).offsetWidth;
   }
 }
 
