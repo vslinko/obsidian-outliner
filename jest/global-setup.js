@@ -70,7 +70,7 @@ async function prepareObsidian() {
     mkdirp.sync(OBSIDIAN_CONFIG_DIR);
     fs.writeFileSync(
       OBSIDIAN_CONFIG_PATH,
-      '{"vaults":{},"updateDisabled":true}'
+      '{"vaults":{},"updateDisabled":true}',
     );
 
     debug("  Running Obsidian for 90 seconds to setup");
@@ -132,7 +132,7 @@ async function prepareVault() {
   debug(`  Saving ${vaultCommunityPluginsConfigFilePath}`);
   fs.writeFileSync(
     vaultCommunityPluginsConfigFilePath,
-    JSON.stringify(["obsidian-outliner"])
+    JSON.stringify(["obsidian-outliner"]),
   );
 
   debug(`  Disabling Safe Mode`);
@@ -140,7 +140,7 @@ async function prepareVault() {
   const localStorage = levelup(leveldown(OBSIDIAN_LOCAL_STORAGE_PATH));
   const key = Buffer.from(
     "5f6170703a2f2f6f6273696469616e2e6d640001656e61626c652d706c7567696e2d35613135343733313236303931313131",
-    "hex"
+    "hex",
   );
   const value = Buffer.from("0174727565", "hex");
   await promisify(localStorage.put.bind(localStorage))(key, value);
