@@ -25,13 +25,13 @@ export class MyEditorSelection {
 }
 
 export function getEditorFromState(state: EditorState) {
-  const { editor } = state.field(editorInfoField);
+  const field = state.field(editorInfoField);
 
-  if (!editor) {
+  if (!field?.editor) {
     return null;
   }
 
-  return new MyEditor(editor);
+  return new MyEditor(field.editor);
 }
 
 declare global {
