@@ -12,18 +12,17 @@ on:
       - created
 
 env:
-  OBSIDIAN_VERSION: "1.5.11"
-  OBSIDIAN_FLATPAK_COMMIT: 45aca5bfa83d1283e2b75ff7e9c394ea46697eb5eb48703b774f48fca4242c9a
-  NODE_VERSION: 20
+  OBSIDIAN_VERSION: "1.8.7"
+  NODE_VERSION: 22
 
 jobs:
   lint:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install dependencies
@@ -32,7 +31,7 @@ jobs:
         run: |
           npm run lint
   test-on-linux:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Install Obsidian
         run: |
@@ -40,11 +39,10 @@ jobs:
           sudo apt install flatpak dbus-x11 xvfb
           flatpak remote-add --user flathub https://flathub.org/repo/flathub.flatpakrepo
           flatpak install --user -y flathub md.obsidian.Obsidian
-          #flatpak update --user -y --commit=$OBSIDIAN_FLATPAK_COMMIT md.obsidian.Obsidian
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install dependencies
@@ -57,18 +55,18 @@ jobs:
           export $(dbus-launch)
           npm test
   test-on-osx:
-    runs-on: macos-12
+    runs-on: macos-15
     steps:
       - name: Install Obsidian
         run: |
-          wget -q https://github.com/obsidianmd/obsidian-releases/releases/download/v$OBSIDIAN_VERSION/Obsidian-$OBSIDIAN_VERSION-universal.dmg
-          sudo hdiutil attach Obsidian-$OBSIDIAN_VERSION-universal.dmg
+          wget -q https://github.com/obsidianmd/obsidian-releases/releases/download/v$OBSIDIAN_VERSION/Obsidian-$OBSIDIAN_VERSION.dmg
+          sudo hdiutil attach Obsidian-$OBSIDIAN_VERSION.dmg
           sudo cp -rf "/Volumes/Obsidian $OBSIDIAN_VERSION-universal/Obsidian.app" /Applications
           sudo hdiutil detach "/Volumes/Obsidian $OBSIDIAN_VERSION-universal"
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install dependencies
@@ -79,13 +77,13 @@ jobs:
           npm test
   release:
     if: ${{ github.event_name == 'release' }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: [lint, test-on-linux, test-on-osx]
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install dependencies

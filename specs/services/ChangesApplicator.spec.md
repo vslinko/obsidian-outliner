@@ -54,6 +54,16 @@
 
 - execute: `obsidian-outliner:fold`
 - keydown: `ArrowUp`
+- assertState:
+
+```md
+- one
+  - two|
+    - three #folded
+      - four
+  - five
+```
+
 - execute: `obsidian-outliner:fold`
 - keydown: `ArrowDown`
 - keydown: `Cmd-ArrowRight`
