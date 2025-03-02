@@ -9,6 +9,7 @@
     "build": "rollup --config rollup.config.mjs",
     "lint": "prettier --check src && eslint src",
     "test": "jest --forceExit",
+    "test:unit": "SKIP_OBSIDIAN=1 jest --forceExit src",
     "prepare": "husky"
   },
   "author": "Viacheslav Slinko",
