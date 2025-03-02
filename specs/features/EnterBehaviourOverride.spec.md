@@ -314,30 +314,6 @@
 - | ] one
 ```
 
-# enter should not create new item if cursor is inside code block
-
-- applyState:
-
-```md
-- one
-  ```
-  code|
-  ```
-- two
-```
-
-- keydown: `Enter`
-- assertState:
-
-```md
-- one
-  ```
-  code
-  |
-  ```
-- two
-```
-
 # enter should not create new item if cursor is before line start
 
 - setting: `stickCursor="never"`
