@@ -18,7 +18,13 @@ test("should move cursor to the end of the first line if cursor is inside folded
   listUnderCursor.isFolded = () => true;
 
   const foldRoot = listUnderCursor;
-  foldRoot.getLinesInfo = () => [{ to: { line: 0, ch: 7 } }];
+  foldRoot.getLinesInfo = () => [
+    {
+      text: "- item 1",
+      from: { line: 0, ch: 0 },
+      to: { line: 0, ch: 7 },
+    },
+  ];
 
   listUnderCursor.getTopFoldRoot = () => foldRoot;
 
@@ -48,7 +54,13 @@ test("should not move cursor if it's not inside folded content", () => {
   listUnderCursor.isFolded = () => true;
 
   const foldRoot = listUnderCursor;
-  foldRoot.getLinesInfo = () => [{ to: { line: 0, ch: 7 } }];
+  foldRoot.getLinesInfo = () => [
+    {
+      text: "- item 1",
+      from: { line: 0, ch: 0 },
+      to: { line: 0, ch: 7 },
+    },
+  ];
 
   listUnderCursor.getTopFoldRoot = () => foldRoot;
 

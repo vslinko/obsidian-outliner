@@ -57,7 +57,13 @@ test("should move cursor to end of first line in previous folded list", () => {
   prevList.isFolded = () => true;
 
   const foldRoot = prevList;
-  foldRoot.getLinesInfo = () => [{ to: { line: 0, ch: 8 } }];
+  foldRoot.getLinesInfo = () => [
+    {
+      text: "- item 1",
+      from: { line: 0, ch: 0 },
+      to: { line: 0, ch: 8 },
+    },
+  ];
 
   prevList.getTopFoldRoot = () => foldRoot;
 
