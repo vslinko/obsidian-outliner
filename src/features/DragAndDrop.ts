@@ -1,5 +1,6 @@
 import { Notice, Platform, Plugin } from "obsidian";
 
+import { getIndentUnit, indentString } from "@codemirror/language";
 import { StateEffect, StateField } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
 
@@ -339,11 +340,10 @@ class DragAndDropState {
     const { view, editor } = this;
 
     const dropVariants = this.getDropVariants();
+    const possibleDropVariants = [];
 
     for (const v of dropVariants) {
       const { placeToMove } = v;
-
-      v.left = this.leftPadding + (v.level - 1) * this.tabWidth;
 
       const positionAfterList =
         v.whereToMove === "after" || v.whereToMove === "inside";
@@ -355,9 +355,14 @@ class DragAndDropState {
         ch: 0,
       });
 
-      v.top =
-        view.coordsAtPos(linePos, -1)?.top ??
-        view.dom.getBoundingClientRect().top + view.contentHeight;
+      const coords = view.coordsAtPos(linePos, -1);
+
+      if (!coords) {
+        continue;
+      }
+
+      v.left = this.leftPadding + (v.level - 1) * this.tabWidth;
+      v.top = coords.top;
 
       if (positionAfterList) {
         v.top += view.lineBlockAt(linePos).height;
@@ -365,13 +370,15 @@ class DragAndDropState {
 
       // Better vertical alignment
       v.top -= 8;
+
+      possibleDropVariants.push(v);
     }
 
-    const nearestLineTop = dropVariants
+    const nearestLineTop = possibleDropVariants
       .sort((a, b) => Math.abs(y - a.top) - Math.abs(y - b.top))
       .first().top;
 
-    const variansOnNearestLine = dropVariants.filter(
+    const variansOnNearestLine = possibleDropVariants.filter(
       (v) => Math.abs(v.top - nearestLineTop) <= 4,
     );
 
@@ -445,9 +452,26 @@ class DragAndDropState {
   private calculateTabWidth() {
     const { view } = this;
 
-    this.tabWidth = (<HTMLElement>(
-      view.dom.querySelector(".cm-indent")
-    )).offsetWidth;
+    const indentDom = view.dom.querySelector(".cm-indent");
+    if (indentDom) {
+      this.tabWidth = (indentDom as HTMLElement).offsetWidth;
+      return;
+    }
+
+    const singleIndent = indentString(view.state, getIndentUnit(view.state));
+
+    for (let i = 1; i <= view.state.doc.lines; i++) {
+      const line = view.state.doc.line(i);
+
+      if (line.text.startsWith(singleIndent)) {
+        const a = view.coordsAtPos(line.from, -1);
+        const b = view.coordsAtPos(line.from + singleIndent.length, -1);
+        this.tabWidth = b.left - a.left;
+        return;
+      }
+    }
+
+    this.tabWidth = view.defaultCharacterWidth * getIndentUnit(view.state);
   }
 }
 
