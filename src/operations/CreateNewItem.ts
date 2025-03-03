@@ -16,6 +16,7 @@ export class CreateNewItem implements Operation {
     private root: Root,
     private defaultIndentChars: string,
     private getZoomRange: GetZoomRange,
+    private after: boolean = true,
   ) {}
 
   shouldStopPropagation() {
@@ -145,7 +146,11 @@ export class CreateNewItem implements Operation {
         }
       }
 
-      list.getParent().addAfter(list, newList);
+      if (this.after) {
+        list.getParent().addAfter(list, newList);
+      } else {
+        list.getParent().addBefore(list, newList);
+      }
     }
 
     list.replaceLines(oldLines);

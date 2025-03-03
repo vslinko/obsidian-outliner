@@ -64,6 +64,18 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
+      .setName("Vim-mode o/O inserts bullets")
+      .setDesc("Create a bullet when pressing o or O in Vim mode.")
+      .addToggle((toggle) => {
+        toggle
+          .setValue(this.settings.overrideVimOBehaviour)
+          .onChange(async (value) => {
+            this.settings.overrideVimOBehaviour = value;
+            await this.settings.save();
+          });
+      });
+
+    new Setting(containerEl)
       .setName("Enhance the Ctrl+A or Cmd+A behavior")
       .setDesc(
         "Press the hotkey once to select the current list item. Press the hotkey twice to select the entire list.",
