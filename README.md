@@ -133,10 +133,7 @@ Open DevTools (Command+Option+I or Control+Shift+I) to copy the debug logs.
 
 ## Pricing
 
-This plugin is free for everyone, however, if you would like to thank me
-or help with further development, you can donate in one of the following ways:
-
-- [Crypto](https://vslinko.cb.id)
+This plugin is free for everyone.
 
 ### Patrons & Supporters
 
