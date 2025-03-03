@@ -439,14 +439,8 @@ class DragAndDropState {
   }
 
   private calculateLeftPadding() {
-    const dom = this.view.dom.querySelector("div.cm-scroller");
-    this.leftPadding =
-      dom.getBoundingClientRect().left +
-      Number.parseFloat(
-        document.defaultView
-          .getComputedStyle(dom, "")
-          .getPropertyValue("padding-left"),
-      );
+    const cmLine = this.view.dom.querySelector("div.cm-line");
+    this.leftPadding = cmLine.getBoundingClientRect().left;
   }
 
   private calculateTabWidth() {
@@ -465,7 +459,15 @@ class DragAndDropState {
 
       if (line.text.startsWith(singleIndent)) {
         const a = view.coordsAtPos(line.from, -1);
+        if (!a) {
+          continue;
+        }
+
         const b = view.coordsAtPos(line.from + singleIndent.length, -1);
+        if (!b) {
+          continue;
+        }
+
         this.tabWidth = b.left - a.left;
         return;
       }
