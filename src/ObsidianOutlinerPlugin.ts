@@ -130,6 +130,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this.operationPerformer,
       ),
 
+      // features based on settings.overrideVimOBehaviour
       new VimOBehaviourOverride(
         this,
         this.settings,

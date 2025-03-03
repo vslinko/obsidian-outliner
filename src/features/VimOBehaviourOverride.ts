@@ -1,4 +1,4 @@
-import { MarkdownView, Plugin } from "obsidian";
+import { MarkdownView, Notice, Plugin } from "obsidian";
 
 import { MyEditor } from "src/editor";
 import { CreateNewItem } from "src/operations/CreateNewItem";
@@ -9,7 +9,35 @@ import { Settings } from "src/services/Settings";
 
 import { Feature } from "./Feature";
 
+declare global {
+  type CM = object;
+
+  interface Vim {
+    defineAction<T>(name: string, fn: (cm: CM, args: T) => void): void;
+
+    handleEx(cm: CM, command: string): void;
+
+    enterInsertMode(cm: CM): void;
+
+    mapCommand(
+      keys: string,
+      type: string,
+      name: string,
+      args: Record<string, unknown>,
+      extra: Record<string, unknown>,
+    ): void;
+  }
+
+  interface Window {
+    CodeMirrorAdapter?: {
+      Vim?: Vim;
+    };
+  }
+}
+
 export class VimOBehaviourOverride implements Feature {
+  private inited = false;
+
   constructor(
     private plugin: Plugin,
     private settings: Settings,
@@ -19,8 +47,21 @@ export class VimOBehaviourOverride implements Feature {
   ) {}
 
   async load() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const vim = (window as any).CodeMirrorAdapter?.Vim;
+    this.settings.onChange(this.handleSettingsChange);
+    this.handleSettingsChange();
+  }
+
+  private handleSettingsChange = () => {
+    if (!this.settings.overrideVimOBehaviour) {
+      return;
+    }
+
+    if (!window.CodeMirrorAdapter || !window.CodeMirrorAdapter.Vim) {
+      console.error("Vim adapter not found");
+      return;
+    }
+
+    const vim = window.CodeMirrorAdapter.Vim;
     const plugin = this.plugin;
     const parser = this.parser;
     const obsidianSettings = this.obsidianSettings;
@@ -29,14 +70,9 @@ export class VimOBehaviourOverride implements Feature {
 
     vim.defineAction(
       "insertLineAfterBullet",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      function (cm: any, operatorArgs: { after: boolean }) {
+      (cm, operatorArgs: { after: boolean }) => {
         // Move the cursor to the end of the line
         vim.handleEx(cm, "normal! A");
-
-        const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
-        const editor = new MyEditor(view.editor);
-        const root = parser.parse(editor);
 
         if (!settings.overrideVimOBehaviour) {
           if (operatorArgs.after) {
@@ -48,6 +84,10 @@ export class VimOBehaviourOverride implements Feature {
           return;
         }
 
+        const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+        const editor = new MyEditor(view.editor);
+        const root = parser.parse(editor);
+
         if (!root) {
           if (operatorArgs.after) {
             vim.handleEx(cm, "normal! o");
@@ -55,10 +95,7 @@ export class VimOBehaviourOverride implements Feature {
             vim.handleEx(cm, "normal! O");
           }
           vim.enterInsertMode(cm);
-          return {
-            shouldUpdate: false,
-            shouldStopPropagation: false,
-          };
+          return;
         }
 
         const defaultIndentChars = obsidianSettings.getDefaultIndentChars();
@@ -84,7 +121,6 @@ export class VimOBehaviourOverride implements Feature {
 
         // Ensure the editor is always left in insert mode
         vim.enterInsertMode(cm);
-        return res;
       },
     );
 
@@ -100,6 +136,7 @@ export class VimOBehaviourOverride implements Feature {
         actionArgs: { after: true },
       },
     );
+
     vim.mapCommand(
       "O",
       "action",
@@ -112,7 +149,18 @@ export class VimOBehaviourOverride implements Feature {
         actionArgs: { after: false },
       },
     );
-  }
 
-  async unload() {}
+    this.inited = true;
+  };
+
+  async unload() {
+    if (!this.inited) {
+      return;
+    }
+
+    new Notice(
+      `To fully unload obsidian-outliner plugin, please restart the app`,
+      5000,
+    );
+  }
 }
