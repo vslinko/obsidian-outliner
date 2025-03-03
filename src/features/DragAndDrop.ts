@@ -340,11 +340,10 @@ class DragAndDropState {
     const { view, editor } = this;
 
     const dropVariants = this.getDropVariants();
+    const possibleDropVariants = [];
 
     for (const v of dropVariants) {
       const { placeToMove } = v;
-
-      v.left = this.leftPadding + (v.level - 1) * this.tabWidth;
 
       const positionAfterList =
         v.whereToMove === "after" || v.whereToMove === "inside";
@@ -356,7 +355,14 @@ class DragAndDropState {
         ch: 0,
       });
 
-      v.top = view.coordsAtPos(linePos, -1).top;
+      const coords = view.coordsAtPos(linePos, -1);
+
+      if (!coords) {
+        continue;
+      }
+
+      v.left = this.leftPadding + (v.level - 1) * this.tabWidth;
+      v.top = coords.top;
 
       if (positionAfterList) {
         v.top += view.lineBlockAt(linePos).height;
@@ -364,13 +370,15 @@ class DragAndDropState {
 
       // Better vertical alignment
       v.top -= 8;
+
+      possibleDropVariants.push(v);
     }
 
-    const nearestLineTop = dropVariants
+    const nearestLineTop = possibleDropVariants
       .sort((a, b) => Math.abs(y - a.top) - Math.abs(y - b.top))
       .first().top;
 
-    const variansOnNearestLine = dropVariants.filter(
+    const variansOnNearestLine = possibleDropVariants.filter(
       (v) => Math.abs(v.top - nearestLineTop) <= 4,
     );
 
@@ -431,11 +439,24 @@ class DragAndDropState {
   }
 
   private calculateLeftPadding() {
-    this.leftPadding = this.view.coordsAtPos(0, -1).left;
+    const dom = this.view.dom.querySelector("div.cm-scroller");
+    this.leftPadding =
+      dom.getBoundingClientRect().left +
+      Number.parseFloat(
+        document.defaultView
+          .getComputedStyle(dom, "")
+          .getPropertyValue("padding-left"),
+      );
   }
 
   private calculateTabWidth() {
     const { view } = this;
+
+    const indentDom = view.dom.querySelector(".cm-indent");
+    if (indentDom) {
+      this.tabWidth = (indentDom as HTMLElement).offsetWidth;
+      return;
+    }
 
     const singleIndent = indentString(view.state, getIndentUnit(view.state));
 
