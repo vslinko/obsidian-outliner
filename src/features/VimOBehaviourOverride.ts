@@ -1,4 +1,4 @@
-import { MarkdownView, Notice, Plugin } from "obsidian";
+import { Editor, MarkdownView, Notice, Plugin } from "obsidian";
 
 import { MyEditor } from "src/editor";
 import { CreateNewItem } from "src/operations/CreateNewItem";
@@ -74,27 +74,17 @@ export class VimOBehaviourOverride implements Feature {
         // Move the cursor to the end of the line
         vim.handleEx(cm, "normal! A");
 
+        const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+        const obEditor = view.editor;
+        const editor = new MyEditor(view.editor);
         if (!settings.overrideVimOBehaviour) {
-          if (operatorArgs.after) {
-            vim.handleEx(cm, "normal! o");
-          } else {
-            vim.handleEx(cm, "normal! O");
-          }
-          vim.enterInsertMode(cm);
+          moveCursorAndInsertMode(obEditor);
           return;
         }
-
-        const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
-        const editor = new MyEditor(view.editor);
         const root = parser.parse(editor);
 
         if (!root) {
-          if (operatorArgs.after) {
-            vim.handleEx(cm, "normal! o");
-          } else {
-            vim.handleEx(cm, "normal! O");
-          }
-          vim.enterInsertMode(cm);
+          moveCursorAndInsertMode(obEditor);
           return;
         }
 
@@ -121,6 +111,16 @@ export class VimOBehaviourOverride implements Feature {
 
         // Ensure the editor is always left in insert mode
         vim.enterInsertMode(cm);
+
+        function moveCursorAndInsertMode(editor: Editor) {
+          const cursor = editor.getCursor();
+          editor.replaceRange("\n", cursor);
+          editor.setCursor({
+            line: cursor.line + (operatorArgs.after ? 1 : -1),
+            ch: 0,
+          });
+          vim.enterInsertMode(cm);
+        }
       },
     );
 
