@@ -75,12 +75,7 @@ export class VimOBehaviourOverride implements Feature {
         vim.handleEx(cm, "normal! A");
 
         if (!settings.overrideVimOBehaviour) {
-          if (operatorArgs.after) {
-            vim.handleEx(cm, "normal! o");
-          } else {
-            vim.handleEx(cm, "normal! O");
-          }
-          vim.enterInsertMode(cm);
+          moveCursorAndInsertMode();
           return;
         }
 
@@ -89,12 +84,7 @@ export class VimOBehaviourOverride implements Feature {
         const root = parser.parse(editor);
 
         if (!root) {
-          if (operatorArgs.after) {
-            vim.handleEx(cm, "normal! o");
-          } else {
-            vim.handleEx(cm, "normal! O");
-          }
-          vim.enterInsertMode(cm);
+          moveCursorAndInsertMode();
           return;
         }
 
@@ -121,6 +111,15 @@ export class VimOBehaviourOverride implements Feature {
 
         // Ensure the editor is always left in insert mode
         vim.enterInsertMode(cm);
+
+        function moveCursorAndInsertMode() {
+          if (operatorArgs.after) {
+            vim.handleEx(cm, "normal! j");
+          } else {
+            vim.handleEx(cm, "normal! k");
+          }
+          vim.enterInsertMode(cm);
+        }
       },
     );
 
