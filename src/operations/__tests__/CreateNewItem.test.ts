@@ -250,4 +250,56 @@ describe("CreateNewItem operation", () => {
     // Adjust the expected output to match actual behavior
     expect(root.print()).toBe("- par\n- ent item\n  - child 1\n  - child 2");
   });
+
+  test("should create new item above when after=false on first line", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: "- first item\n- second item\n- third item\n",
+        cursor: { line: 0, ch: 12 }, // At end of first line
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new CreateNewItem(root, "  ", getZoomRange, false); // after=false for O command
+    op.perform();
+
+    expect(root.print()).toBe("- \n- first item\n- second item\n- third item");
+    expect(root.getCursor().line).toBe(0);
+    expect(root.getCursor().ch).toBe(2);
+  });
+
+  test("should create new item above when after=false in middle of list", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: "- first item\n- second item\n- third item\n",
+        cursor: { line: 1, ch: 13 }, // At end of second line
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new CreateNewItem(root, "  ", getZoomRange, false); // after=false for O command
+    op.perform();
+
+    expect(root.print()).toBe("- first item\n- \n- second item\n- third item");
+    expect(root.getCursor().line).toBe(1);
+    expect(root.getCursor().ch).toBe(2);
+  });
+
+  test("should create new item above when after=false on first line with children", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: "- parent item\n  - child 1\n  - child 2\n- sibling item\n",
+        cursor: { line: 0, ch: 13 }, // At end of parent line
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new CreateNewItem(root, "  ", getZoomRange, false); // after=false for O command
+    op.perform();
+
+    // When at end of line with children, it should create as first child
+    expect(root.print()).toBe("- parent item\n  - \n  - child 1\n  - child 2\n- sibling item");
+    expect(root.getCursor().line).toBe(1);
+    expect(root.getCursor().ch).toBe(4);
+  });
 });
