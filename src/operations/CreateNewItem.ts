@@ -98,7 +98,8 @@ export class CreateNewItem implements Operation {
     const endOfLine = cursor.line === endPos.line && cursor.ch === endPos.ch;
 
     const onChildLevel =
-      listIsZoomingRoot || (hasChildren && !childIsFolded && endOfLine);
+      this.after &&
+      (listIsZoomingRoot || (hasChildren && !childIsFolded && endOfLine));
 
     const indent = onChildLevel
       ? hasChildren
