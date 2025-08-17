@@ -60,6 +60,30 @@ export class ListsMovementCommands implements Feature {
       editorCallback: createEditorCallback(this.outdentList),
       hotkeys: [],
     });
+    this.plugin.addCommand({
+      id: "zoom-in",
+      icon: "zoom-in",
+      name: "Zoom into the list",
+      editorCallback: createEditorCallback(this.zoomListIn),
+      hotkeys: [
+        {
+          modifiers: ["Alt"],
+          key: "ArrowDown",
+        },
+      ],
+    });
+    this.plugin.addCommand({
+      id: "zoom-out",
+      icon: "zoom-out",
+      name: "Zoom out of the list",
+      editorCallback: createEditorCallback(this.zoomListOut),
+      hotkeys: [
+        {
+          modifiers: ["Alt"],
+          key: "ArrowUp",
+        },
+      ],
+    });
   }
 
   async unload() {}
@@ -97,7 +121,20 @@ export class ListsMovementCommands implements Feature {
       (root) => new OutdentList(root),
       editor,
     );
-
     return shouldStopPropagation;
+  };
+
+  private zoomListIn = (editor: MyEditor) => {
+    const root = this.operationPerformer.parser.parse(editor, editor.getCursor());
+    if (!root) return false;
+    const list = root.getListUnderCursor();
+    if (!list || list.isEmpty()) return false;
+    editor.zoomIn(list.getFirstLineContentStart().line);
+    return true;
+  };
+
+  private zoomListOut = (editor: MyEditor) => {
+    editor.zoomOut();
+    return true;
   };
 }
