@@ -179,7 +179,7 @@ export class DragAndDrop implements Feature {
   }
 
   private stopDragging() {
-    this.unhightlightDraggingLines();
+    this.unhighlightDraggingLines();
     this.hideDropZone();
     this.applyChanges();
     this.state = null;
@@ -232,7 +232,7 @@ export class DragAndDrop implements Feature {
     document.body.classList.add("outliner-plugin-dragging");
   }
 
-  private unhightlightDraggingLines() {
+  private unhighlightDraggingLines() {
     document.body.classList.remove("outliner-plugin-dragging");
 
     this.state.view.dispatch({

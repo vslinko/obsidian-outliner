@@ -1,6 +1,30 @@
 import { Operation } from "./Operation";
 
-import { Root, maxPos, minPos } from "../root";
+import { List, Position, Range, Root, maxPos, minPos } from "../root";
+
+// Helper functions
+
+function isSamePosition(a: Position, b: Position): boolean {
+  return a.line === b.line && a.ch === b.ch;
+}
+
+function getChainUpwards(list: List): Set<List> {
+  const chain: Set<List> = new Set<List>();
+  while (list) {
+    chain.add(list); // Must include original
+    list = list.getParent();
+  }
+  return chain;
+}
+
+function getCommonLink(a: List, b: List): List | null {
+  const aChain = getChainUpwards(a);
+  const bChain = getChainUpwards(b);
+  for (const link of aChain) {
+    if (bChain.has(link)) return link;
+  }
+  return null;
+}
 
 export class SelectAllContent implements Operation {
   private stopPropagation = false;
@@ -8,92 +32,107 @@ export class SelectAllContent implements Operation {
 
   constructor(private root: Root) {}
 
-  shouldStopPropagation() {
+  shouldStopPropagation(): boolean {
     return this.stopPropagation;
   }
 
-  shouldUpdate() {
+  shouldUpdate(): boolean {
     return this.updated;
   }
 
-  perform() {
+  perform(): boolean {
     const { root } = this;
+    if (!root.hasSingleSelection()) return false;
 
-    if (!root.hasSingleSelection()) {
-      return;
-    }
+    const [rootStart, rootEnd]: [Position, Position] = root.getContentRange();
+    const selection: Range = root.getSelection();
+    const selectionFrom: Position = minPos(selection.anchor, selection.head);
+    const selectionTo: Position = maxPos(selection.anchor, selection.head);
 
-    const selection = root.getSelections()[0];
-    const [rootStart, rootEnd] = root.getContentRange();
+    const isSelectionOutOfRoot: boolean =
+      selectionFrom.line < rootStart.line || selectionTo.line > rootEnd.line;
+    const isRootSelected: boolean =
+      isSamePosition(selectionFrom, rootStart) &&
+      isSamePosition(selectionTo, rootEnd);
+    if (isSelectionOutOfRoot || isRootSelected) return false;
 
-    const selectionFrom = minPos(selection.anchor, selection.head);
-    const selectionTo = maxPos(selection.anchor, selection.head);
-
-    if (
-      selectionFrom.line < rootStart.line ||
-      selectionTo.line > rootEnd.line
-    ) {
-      return false;
-    }
-
-    if (
-      selectionFrom.line === rootStart.line &&
-      selectionFrom.ch === rootStart.ch &&
-      selectionTo.line === rootEnd.line &&
-      selectionTo.ch === rootEnd.ch
-    ) {
-      return false;
-    }
-
-    const list = root.getListUnderCursor();
-    const contentStart = list.getFirstLineContentStartAfterCheckbox();
-    const contentEnd = list.getLastLineContentEnd();
-    const listUnderSelectionFrom = root.getListUnderLine(selectionFrom.line);
-    const listStart =
+    const listUnderSelectionFrom: List = root.getListUnderLine(
+      selectionFrom.line,
+    );
+    const listUnderSelectionTo: List = root.getListUnderLine(selectionTo.line);
+    const contentStart: Position =
       listUnderSelectionFrom.getFirstLineContentStartAfterCheckbox();
-    const listEnd = listUnderSelectionFrom.getContentEndIncludingChildren();
+      console.log("start after checkbox", contentStart)
+    const lineStart: Position =
+      listUnderSelectionFrom.getFirstLineContentStart();
+      console.log("start", lineStart)
+      
+      
+    const contentEnd: Position = listUnderSelectionFrom.getLastLineContentEnd();
+    const listStart: Position = contentStart;
+    const listEnd: Position =
+      listUnderSelectionFrom.getContentEndIncludingChildren();
 
     this.stopPropagation = true;
     this.updated = true;
 
-    if (
-      selectionFrom.line === contentStart.line &&
-      selectionFrom.ch === contentStart.ch &&
-      selectionTo.line === contentEnd.line &&
-      selectionTo.ch === contentEnd.ch
-    ) {
-      if (list.getChildren().length) {
-        // select sub lists
-        root.replaceSelections([
-          { anchor: contentStart, head: list.getContentEndIncludingChildren() },
-        ]);
-      } else {
-        // select whole list
-        root.replaceSelections([{ anchor: rootStart, head: rootEnd }]);
-      }
-    } else if (
-      listStart.ch == selectionFrom.ch &&
-      listEnd.line == selectionTo.line &&
-      listEnd.ch == selectionTo.ch
-    ) {
-      // select whole list
-      root.replaceSelections([{ anchor: rootStart, head: rootEnd }]);
-    } else if (
-      (selectionFrom.line > contentStart.line ||
-        (selectionFrom.line == contentStart.line &&
-          selectionFrom.ch >= contentStart.ch)) &&
-      (selectionTo.line < contentEnd.line ||
-        (selectionTo.line == contentEnd.line &&
-          selectionTo.ch <= contentEnd.ch))
-    ) {
-      // select whole line
+    const isMultilineSelection: boolean =
+      selectionFrom.line !== selectionTo.line;
+    const isOnlyContentSelected: boolean =
+      isSamePosition(selectionFrom, contentStart) &&
+      isSamePosition(selectionTo, contentEnd);
+    const isOnlyListSelected: boolean =
+      isSamePosition(selectionFrom, listStart) &&
+      isSamePosition(selectionTo, listEnd);
+
+    // Expand multiline selection to common link in upward chain + descendants
+    if (isMultilineSelection && !isOnlyListSelected) {
+      const commonLink: List = getCommonLink(
+        listUnderSelectionFrom,
+        listUnderSelectionTo,
+      );
+      if (!commonLink) return false;
+      const commonLinkListStart: Position =
+        commonLink.getFirstLineContentStartAfterCheckbox();
+      const commonLinkListEnd: Position =
+        commonLink.getContentEndIncludingChildren();
+      root.replaceSelections([
+        {
+          anchor: commonLinkListStart,
+          head: commonLinkListEnd,
+        },
+      ]);
+      return true;
+    }
+
+    // Select line content
+    if (!isMultilineSelection && !isOnlyContentSelected) {
       root.replaceSelections([{ anchor: contentStart, head: contentEnd }]);
-    } else {
+      return true;
+    }
+
+    // Select line content + descendants
+    if (isOnlyContentSelected && !isOnlyListSelected) {
+      // Adding `!isOnlyListSelected` enables walking from a line without descendants
+      root.replaceSelections([{ anchor: listStart, head: listEnd }]);
+      return true;
+    }
+
+    // Select parent content + descendants
+    const parent: List = listUnderSelectionFrom.getParent();
+    if (!parent) return false;
+
+    const grandParent = parent.getParent();
+    if (!grandParent) {
       this.stopPropagation = false;
       this.updated = false;
       return false;
     }
 
+    const parentListStart: Position =
+      parent.getFirstLineContentStartAfterCheckbox();
+    const parentListEnd: Position = parent.getContentEndIncludingChildren();
+    root.replaceSelections([{ anchor: parentListStart, head: parentListEnd }]);
     return true;
   }
 }

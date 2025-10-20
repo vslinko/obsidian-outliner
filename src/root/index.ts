@@ -23,7 +23,7 @@ export function recalculateNumericBullets(root: Root) {
 
     for (const child of parent.getChildren()) {
       if (/\d+\./.test(child.getBullet())) {
-        child.replateBullet(`${index++}.`);
+        child.replaceBullet(`${index++}.`);
       }
 
       visit(child);
@@ -269,7 +269,7 @@ export class List {
     return this.optionalCheckbox.length;
   }
 
-  replateBullet(bullet: string) {
+  replaceBullet(bullet: string) {
     this.bullet = bullet;
   }
 
