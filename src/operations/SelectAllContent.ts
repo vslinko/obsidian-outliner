@@ -117,7 +117,7 @@ export class SelectAllContent implements Operation {
     if (!parent) return false;
     const parentListStart: Position =
       parent.getFirstLineContentStartAfterCheckbox();
-    const parentListEnd: Position = listEnd;
+    const parentListEnd: Position = parent.getContentEndIncludingChildren();
     root.replaceSelections([{ anchor: parentListStart, head: parentListEnd }]);
     return true;
   }
