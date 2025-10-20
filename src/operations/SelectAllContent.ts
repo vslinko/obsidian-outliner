@@ -62,6 +62,12 @@ export class SelectAllContent implements Operation {
     const listUnderSelectionTo: List = root.getListUnderLine(selectionTo.line);
     const contentStart: Position =
       listUnderSelectionFrom.getFirstLineContentStartAfterCheckbox();
+      console.log("start after checkbox", contentStart)
+    const lineStart: Position =
+      listUnderSelectionFrom.getFirstLineContentStart();
+      console.log("start", lineStart)
+      
+      
     const contentEnd: Position = listUnderSelectionFrom.getLastLineContentEnd();
     const listStart: Position = contentStart;
     const listEnd: Position =
@@ -79,7 +85,7 @@ export class SelectAllContent implements Operation {
       isSamePosition(selectionFrom, listStart) &&
       isSamePosition(selectionTo, listEnd);
 
-    // Expand multiline selection to common link in upwards chain + descendants
+    // Expand multiline selection to common link in upward chain + descendants
     if (isMultilineSelection && !isOnlyListSelected) {
       const commonLink: List = getCommonLink(
         listUnderSelectionFrom,
@@ -115,6 +121,14 @@ export class SelectAllContent implements Operation {
     // Select parent content + descendants
     const parent: List = listUnderSelectionFrom.getParent();
     if (!parent) return false;
+
+    const grandParent = parent.getParent();
+    if (!grandParent) {
+      this.stopPropagation = false;
+      this.updated = false;
+      return false;
+    }
+
     const parentListStart: Position =
       parent.getFirstLineContentStartAfterCheckbox();
     const parentListEnd: Position = parent.getContentEndIncludingChildren();
