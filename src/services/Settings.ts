@@ -12,6 +12,7 @@ interface SettingsObject {
   betterVimO: boolean;
   betterTab: boolean;
   selectAll: boolean;
+  expandSelection: boolean;
   listLines: boolean;
   listLineAction: VerticalLinesAction;
   dnd: boolean;
@@ -26,6 +27,7 @@ const DEFAULT_SETTINGS: SettingsObject = {
   betterVimO: true,
   betterTab: true,
   selectAll: true,
+  expandSelection: true,
   listLines: false,
   listLineAction: "toggle-folding",
   dnd: true,
@@ -94,6 +96,14 @@ export class Settings {
 
   set overrideSelectAllBehaviour(value: boolean) {
     this.set("selectAll", value);
+  }
+
+  get expandSelection() {
+    return this.values.expandSelection;
+  }
+
+  set expandSelection(value: boolean) {
+    this.set("expandSelection", value);
   }
 
   get betterListsStyles() {
