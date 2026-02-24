@@ -108,7 +108,7 @@ describe("parseList", () => {
     const list = parser.parse(editor as any);
 
     expect(list).toBeNull();
-    expect(logger.log).toBeCalledWith(
+    expect(logger.log).toHaveBeenCalledWith(
       "parseList",
       `Unable to parse list: expected indent "S", got "T"`,
     );
@@ -125,7 +125,7 @@ describe("parseList", () => {
     const list = parser.parse(editor as any);
 
     expect(list).toBeNull();
-    expect(logger.log).toBeCalledWith(
+    expect(logger.log).toHaveBeenCalledWith(
       "parseList",
       `Unable to parse list: expected indent "T", got "S"`,
     );
@@ -142,7 +142,7 @@ describe("parseList", () => {
     const list = parser.parse(editor as any);
 
     expect(list).toBeNull();
-    expect(logger.log).toBeCalledWith(
+    expect(logger.log).toHaveBeenCalledWith(
       "parseList",
       `Unable to parse list: expected indent "T", got "SS"`,
     );
@@ -158,7 +158,7 @@ describe("parseList", () => {
 
     const list = parser.parse(editor as any);
 
-    expect(logger.log).not.toBeCalled();
+    expect(logger.log).not.toHaveBeenCalled();
     expect(list).toBeTruthy();
   });
 });

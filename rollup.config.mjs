@@ -9,7 +9,7 @@ export default (commandLineArgs) => ({
     ? "src/ObsidianOutlinerPluginWithTests.ts"
     : "src/ObsidianOutlinerPlugin.ts",
   output: {
-    file: "main.js",
+    file: "dist/main.js",
     sourcemap: "inline",
     format: "cjs",
     exports: "default",

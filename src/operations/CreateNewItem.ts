@@ -88,8 +88,8 @@ export class CreateNewItem implements Operation {
     const zoomRange = this.getZoomRange.getZoomRange();
     const listIsZoomingRoot = Boolean(
       zoomRange &&
-        list.getFirstLineContentStart().line >= zoomRange.from.line &&
-        list.getLastLineContentEnd().line <= zoomRange.from.line,
+      list.getFirstLineContentStart().line >= zoomRange.from.line &&
+      list.getLastLineContentEnd().line <= zoomRange.from.line,
     );
 
     const hasChildren = !list.isEmpty();

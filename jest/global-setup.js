@@ -149,7 +149,7 @@ async function prepareVault() {
   mkdirp.sync(vaultPluginDir);
 
   debug(`  Copying ${vaultPluginDir}/main.js`);
-  fs.copyFileSync("main.js", `${vaultPluginDir}/main.js`);
+  fs.copyFileSync("dist/main.js", `${vaultPluginDir}/main.js`);
   debug(`  Copying ${vaultPluginDir}/manifest.json`);
   fs.copyFileSync("manifest.json", `${vaultPluginDir}/manifest.json`);
   debug(`  Copying ${vaultPluginDir}/styles.css`);
