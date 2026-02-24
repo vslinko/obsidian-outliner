@@ -1,6 +1,6 @@
 {
   "name": "obsidian-outliner",
-  "version": "4.9.0",
+  "version": "4.10.0",
   "description": "Work with your lists like in Workflowy or RoamResearch.",
   "main": "dist/main.js",
   "scripts": {
