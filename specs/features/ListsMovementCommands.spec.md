@@ -148,9 +148,9 @@
 
 ```md
 1. one
-  1. two
-  2. three|
-  3. four
+    1. two
+    2. three|
+    3. four
 ```
 
 - execute: `obsidian-outliner:indent-list`
@@ -158,9 +158,9 @@
 
 ```md
 1. one
-  1. two
-    1. three|
-  2. four
+    1. two
+        1. three|
+    2. four
 ```
 
 # obsidian-outliner:outdent-list should outdent line

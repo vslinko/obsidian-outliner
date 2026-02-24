@@ -76,9 +76,9 @@
 
 ```md
 1. one
-  1. two
-  2. three|
-  3. four
+    1. two
+    2. three|
+    3. four
 ```
 
 - keydown: `Tab`
@@ -86,7 +86,7 @@
 
 ```md
 1. one
-  1. two
-    1. three|
-  2. four
+    1. two
+        1. three|
+    2. four
 ```
