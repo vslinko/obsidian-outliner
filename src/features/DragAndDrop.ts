@@ -106,7 +106,8 @@ export class DragAndDrop implements Feature {
     if (
       !isFeatureSupported() ||
       !this.settings.dragAndDrop ||
-      !isClickOnBullet(e)
+      !isClickOnBullet(e) ||
+      e.button !== 0
     ) {
       return;
     }
@@ -557,8 +558,12 @@ function getEditorViewFromHTMLElement(e: HTMLElement) {
 }
 
 function isClickOnBullet(e: MouseEvent) {
-  let el = e.target as HTMLElement;
+  const target = e.target as HTMLElement;
+  if (!target.closest('.cm-content')) {
+    return false;
+  }
 
+  let el = target;
   while (el) {
     if (
       el.classList.contains("cm-formatting-list") ||
@@ -567,10 +572,8 @@ function isClickOnBullet(e: MouseEvent) {
     ) {
       return true;
     }
-
     el = el.parentElement;
   }
-
   return false;
 }
 
