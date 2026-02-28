@@ -111,6 +111,7 @@ export class VimOBehaviourOverride implements Feature {
             defaultIndentChars,
             getZoomRange,
             operatorArgs.after,
+            true, // For Vim mode, always use the default behavior (outdent enabled)
           ),
           editor,
         );
