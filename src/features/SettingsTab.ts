@@ -90,6 +90,20 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
+      .setName("Auto-expand selection to full list items")
+      .setDesc(
+        "When selecting across multiple bullets, automatically expand the selection to include full list items with their children.",
+      )
+      .addToggle((toggle) => {
+        toggle
+          .setValue(this.settings.expandSelection)
+          .onChange(async (value) => {
+            this.settings.expandSelection = value;
+            await this.settings.save();
+          });
+      });
+
+    new Setting(containerEl)
       .setName("Improve the style of your lists")
       .setDesc(
         "Styles are only compatible with built-in Obsidian themes and may not be compatible with other themes.",
