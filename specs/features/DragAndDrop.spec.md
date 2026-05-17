@@ -137,3 +137,33 @@
   - one
 - three
 ```
+
+# list should still move after dragging when the note starts with frontmatter
+
+- setting: `dnd=true`
+- applyState:
+
+```md
+---
+tags:
+  - demo
+---
+
+- one
+- |two
+```
+
+- drag: `{"from": {"line": 6, "ch": 0}}`
+- move: `{"to": {"line": 5, "ch": 0}, "offsetX": 10, "offsetY": -10}`
+- drop
+- assertState:
+
+```md
+---
+tags:
+  - demo
+---
+
+- |two
+- one
+```
