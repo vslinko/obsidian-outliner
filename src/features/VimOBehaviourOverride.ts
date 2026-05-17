@@ -6,6 +6,7 @@ import { ObsidianSettings } from "src/services/ObsidianSettings";
 import { OperationPerformer } from "src/services/OperationPerformer";
 import { Parser } from "src/services/Parser";
 import { Settings } from "src/services/Settings";
+import { insertPlainLine } from "src/utils/insertPlainLine";
 
 import { Feature } from "./Feature";
 
@@ -89,11 +90,7 @@ export class VimOBehaviourOverride implements Feature {
         const root = parser.parse(editor);
 
         if (!root) {
-          if (operatorArgs.after) {
-            vim.handleEx(cm, "normal! o");
-          } else {
-            vim.handleEx(cm, "normal! O");
-          }
+          insertPlainLine(editor, operatorArgs.after);
           vim.enterInsertMode(cm);
           return;
         }
@@ -117,6 +114,10 @@ export class VimOBehaviourOverride implements Feature {
 
         if (res.shouldUpdate && zoomRange) {
           editor.tryRefreshZoom(zoomRange.from.line);
+        }
+
+        if (!res.shouldStopPropagation) {
+          insertPlainLine(editor, operatorArgs.after);
         }
 
         // Ensure the editor is always left in insert mode
