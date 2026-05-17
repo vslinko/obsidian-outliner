@@ -15,7 +15,7 @@ describe("CreateNewItem operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new CreateNewItem(root, "  ", getZoomRange);
+    const op = new CreateNewItem(root, "  ", getZoomRange, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- \n- item 2");
@@ -33,7 +33,7 @@ describe("CreateNewItem operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new CreateNewItem(root, "  ", getZoomRange);
+    const op = new CreateNewItem(root, "  ", getZoomRange, true);
     op.perform();
 
     expect(root.print()).toBe("- one\n  - two\n- ");
@@ -48,7 +48,7 @@ describe("CreateNewItem operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new CreateNewItem(root, "  ", getZoomRange);
+    const op = new CreateNewItem(root, "  ", getZoomRange, true);
     op.perform();
 
     expect(root.print()).toBe(
@@ -67,7 +67,7 @@ describe("CreateNewItem operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new CreateNewItem(root, "  ", getZoomRange);
+    const op = new CreateNewItem(root, "  ", getZoomRange, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- long \n- item 2");
@@ -84,7 +84,7 @@ describe("CreateNewItem operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new CreateNewItem(root, "  ", getZoomRange);
+    const op = new CreateNewItem(root, "  ", getZoomRange, true);
     op.perform();
 
     expect(root.print()).toBe("- [ ] task 1\n- [ ] \n- [ ] task 2");
@@ -101,7 +101,7 @@ describe("CreateNewItem operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new CreateNewItem(root, "  ", getZoomRange);
+    const op = new CreateNewItem(root, "  ", getZoomRange, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- \n- item 3");
@@ -116,7 +116,7 @@ describe("CreateNewItem operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new CreateNewItem(root, "  ", getZoomRange);
+    const op = new CreateNewItem(root, "  ", getZoomRange, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- [ ] \n- item 3");
@@ -131,7 +131,7 @@ describe("CreateNewItem operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new CreateNewItem(root, "  ", getZoomRange);
+    const op = new CreateNewItem(root, "  ", getZoomRange, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- item 2");
@@ -154,7 +154,7 @@ describe("CreateNewItem operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new CreateNewItem(root, "  ", getZoomRange);
+    const op = new CreateNewItem(root, "  ", getZoomRange, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- item 2");
@@ -176,7 +176,7 @@ describe("CreateNewItem operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new CreateNewItem(root, "  ", getZoomRange);
+    const op = new CreateNewItem(root, "  ", getZoomRange, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- item 2");
@@ -191,7 +191,7 @@ describe("CreateNewItem operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new CreateNewItem(root, "  ", getZoomRange);
+    const op = new CreateNewItem(root, "  ", getZoomRange, true);
     op.perform();
 
     expect(op.shouldStopPropagation()).toBe(true);
@@ -207,7 +207,7 @@ describe("CreateNewItem operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new CreateNewItem(root, "  ", getZoomRange);
+    const op = new CreateNewItem(root, "  ", getZoomRange, true);
     op.perform();
 
     // Adjust the expected output to match actual behavior
@@ -229,7 +229,7 @@ describe("CreateNewItem operation", () => {
       }),
     };
 
-    const op = new CreateNewItem(root, "  ", mockZoomRange);
+    const op = new CreateNewItem(root, "  ", mockZoomRange, true);
     op.perform();
 
     expect(root.print()).toBe("- zoomed\n  - \n  - child");
@@ -244,7 +244,7 @@ describe("CreateNewItem operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new CreateNewItem(root, "  ", getZoomRange);
+    const op = new CreateNewItem(root, "  ", getZoomRange, true);
     op.perform();
 
     // Adjust the expected output to match actual behavior

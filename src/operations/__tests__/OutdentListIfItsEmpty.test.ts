@@ -10,7 +10,7 @@ test("should outdent empty list item", () => {
     settings: makeSettings(),
   });
 
-  const op = new OutdentListIfItsEmpty(root);
+  const op = new OutdentListIfItsEmpty(root, true);
   op.perform();
 
   expect(root.print()).toBe("- one\n- \n  - three");
@@ -27,7 +27,7 @@ test("should outdent empty checkbox", () => {
     settings: makeSettings(),
   });
 
-  const op = new OutdentListIfItsEmpty(root);
+  const op = new OutdentListIfItsEmpty(root, true);
   op.perform();
 
   expect(root.print()).toBe("- one\n- [ ] \n  - three");
@@ -44,7 +44,7 @@ test("should not outdent non-empty list item", () => {
     settings: makeSettings(),
   });
 
-  const op = new OutdentListIfItsEmpty(root);
+  const op = new OutdentListIfItsEmpty(root, true);
   op.perform();
 
   expect(root.print()).toBe("- one\n  - two\n    - three");
@@ -61,7 +61,7 @@ test("should not outdent item with multiple lines", () => {
     settings: makeSettings(),
   });
 
-  const op = new OutdentListIfItsEmpty(root);
+  const op = new OutdentListIfItsEmpty(root, true);
   op.perform();
 
   expect(root.print()).toBe("- one\n  - \n    note\n    - three");
@@ -78,7 +78,7 @@ test("should not outdent if list level is 1", () => {
     settings: makeSettings(),
   });
 
-  const op = new OutdentListIfItsEmpty(root);
+  const op = new OutdentListIfItsEmpty(root, true);
   op.perform();
 
   expect(root.print()).toBe("- \n- two");
@@ -103,7 +103,7 @@ test("should not outdent if there are multiple selections", () => {
     settings: makeSettings(),
   });
 
-  const op = new OutdentListIfItsEmpty(root);
+  const op = new OutdentListIfItsEmpty(root, true);
   op.perform();
 
   expect(root.print()).toBe("- one\n  - \n    - three");

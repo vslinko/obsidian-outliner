@@ -12,7 +12,10 @@ export class DeleteTillPreviousLineContentEnd implements Operation {
   private stopPropagation = false;
   private updated = false;
 
-  constructor(private root: Root) {}
+  constructor(
+    private root: Root,
+    private numericBulletsEnabled: boolean,
+  ) {}
 
   shouldStopPropagation() {
     return this.stopPropagation;
@@ -114,7 +117,7 @@ export class DeleteTillPreviousLineContentEnd implements Operation {
 
       root.replaceCursor(prevEnd);
 
-      recalculateNumericBullets(root);
+      recalculateNumericBullets(root, this.numericBulletsEnabled);
     }
   }
 }

@@ -17,7 +17,11 @@ export function isRangesIntersects(
   return cmpPos(a[1], b[0]) >= 0 && cmpPos(a[0], b[1]) <= 0;
 }
 
-export function recalculateNumericBullets(root: Root) {
+export function recalculateNumericBullets(root: Root, enabled = true) {
+  if (!enabled) {
+    return;
+  }
+
   function visit(parent: Root | List) {
     let index = 1;
 

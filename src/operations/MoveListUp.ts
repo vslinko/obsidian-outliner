@@ -6,7 +6,10 @@ export class MoveListUp implements Operation {
   private stopPropagation = false;
   private updated = false;
 
-  constructor(private root: Root) {}
+  constructor(
+    private root: Root,
+    private numericBulletsEnabled: boolean,
+  ) {}
 
   shouldStopPropagation() {
     return this.stopPropagation;
@@ -66,6 +69,6 @@ export class MoveListUp implements Operation {
       })),
     );
 
-    recalculateNumericBullets(root);
+    recalculateNumericBullets(root, this.numericBulletsEnabled);
   }
 }

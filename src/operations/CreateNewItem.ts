@@ -16,6 +16,7 @@ export class CreateNewItem implements Operation {
     private root: Root,
     private defaultIndentChars: string,
     private getZoomRange: GetZoomRange,
+    private numericBulletsEnabled: boolean,
     private after: boolean = true,
   ) {}
 
@@ -161,6 +162,6 @@ export class CreateNewItem implements Operation {
       ch: newListStart.ch + prefix.length,
     });
 
-    recalculateNumericBullets(root);
+    recalculateNumericBullets(root, this.numericBulletsEnabled);
   }
 }

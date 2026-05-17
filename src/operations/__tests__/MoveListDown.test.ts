@@ -11,7 +11,7 @@ describe("MoveListDown operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new MoveListDown(root);
+    const op = new MoveListDown(root, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- item 3\n- item 2");
@@ -28,7 +28,7 @@ describe("MoveListDown operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new MoveListDown(root);
+    const op = new MoveListDown(root, true);
     op.perform();
 
     expect(root.print()).toBe("- item 2\n- item 1\n  - item 1.1\n  - item 1.2");
@@ -45,7 +45,7 @@ describe("MoveListDown operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new MoveListDown(root);
+    const op = new MoveListDown(root, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n  - item 1.1\n- item 2\n  - item 1.2");
@@ -62,7 +62,7 @@ describe("MoveListDown operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new MoveListDown(root);
+    const op = new MoveListDown(root, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- item 2\n- item 3");
@@ -79,7 +79,7 @@ describe("MoveListDown operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new MoveListDown(root);
+    const op = new MoveListDown(root, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1");
@@ -96,7 +96,7 @@ describe("MoveListDown operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new MoveListDown(root);
+    const op = new MoveListDown(root, true);
     op.perform();
 
     expect(root.print()).toBe("1. item 2\n2. item 1\n3. item 3");
@@ -121,7 +121,7 @@ describe("MoveListDown operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new MoveListDown(root);
+    const op = new MoveListDown(root, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- item 2\n- item 3");
@@ -144,7 +144,7 @@ describe("MoveListDown operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new MoveListDown(root);
+    const op = new MoveListDown(root, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- item 3\n- item 2");
@@ -168,7 +168,7 @@ describe("MoveListDown operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new MoveListDown(root);
+    const op = new MoveListDown(root, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- item 3\n- item 2");
@@ -186,7 +186,7 @@ describe("MoveListDown operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new MoveListDown(root);
+    const op = new MoveListDown(root, true);
     op.perform();
 
     expect(op.shouldStopPropagation()).toBe(true);

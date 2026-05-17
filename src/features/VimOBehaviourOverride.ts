@@ -107,6 +107,7 @@ export class VimOBehaviourOverride implements Feature {
             root,
             defaultIndentChars,
             getZoomRange,
+            this.obsidianSettings.isSmartIndentListEnabled(),
             operatorArgs.after,
           ),
           editor,

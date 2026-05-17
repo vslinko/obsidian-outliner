@@ -11,7 +11,7 @@ describe("OutdentList operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new OutdentList(root);
+    const op = new OutdentList(root, true);
     op.perform();
 
     expect(root.print()).toBe("- parent\n  - child\n  - grandchild");
@@ -28,7 +28,7 @@ describe("OutdentList operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new OutdentList(root);
+    const op = new OutdentList(root, true);
     op.perform();
 
     expect(root.print()).toBe(
@@ -47,7 +47,7 @@ describe("OutdentList operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new OutdentList(root);
+    const op = new OutdentList(root, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- item 2\n- item 3");
@@ -65,7 +65,7 @@ describe("OutdentList operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new OutdentList(root);
+    const op = new OutdentList(root, true);
     op.perform();
 
     // The numeric bullet for the outdented item should be adjusted
@@ -91,7 +91,7 @@ describe("OutdentList operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new OutdentList(root);
+    const op = new OutdentList(root, true);
     op.perform();
 
     expect(root.print()).toBe("- parent\n  - child\n    - grandchild");
@@ -108,7 +108,7 @@ describe("OutdentList operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new OutdentList(root);
+    const op = new OutdentList(root, true);
     op.perform();
 
     expect(op.shouldStopPropagation()).toBe(true);

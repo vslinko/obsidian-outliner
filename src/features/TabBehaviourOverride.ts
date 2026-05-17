@@ -45,9 +45,31 @@ export class TabBehaviourOverride implements Feature {
   };
 
   private run = (editor: MyEditor) => {
-    return this.operationPerformer.perform(
-      (root) =>
-        new IndentList(root, this.obsidianSettings.getDefaultIndentChars()),
+    const root = this.operationPerformer.parse(editor);
+
+    if (!root) {
+      return {
+        shouldUpdate: false,
+        shouldStopPropagation: false,
+      };
+    }
+
+    const currentList = root.getListUnderCursor();
+    const orderedList = /^\d+\.$/.test(currentList.getBullet());
+    if (orderedList && !this.obsidianSettings.isSmartIndentListEnabled()) {
+      return {
+        shouldUpdate: false,
+        shouldStopPropagation: false,
+      };
+    }
+
+    return this.operationPerformer.eval(
+      root,
+      new IndentList(
+        root,
+        this.obsidianSettings.getDefaultIndentChars(),
+        this.obsidianSettings.isSmartIndentListEnabled(),
+      ),
       editor,
     );
   };

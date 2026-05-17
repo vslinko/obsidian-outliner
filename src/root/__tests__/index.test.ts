@@ -39,7 +39,7 @@ describe("isRangesIntersects", () => {
 });
 
 describe("recalculateNumericBullets", () => {
-  test("should return list under line", () => {
+  test("should recalculate numeric bullets by default", () => {
     const root = makeRoot({
       editor: makeEditor({
         text: "4. one\n\t3. two\n\t2. three\n1. four",
@@ -50,6 +50,19 @@ describe("recalculateNumericBullets", () => {
     recalculateNumericBullets(root);
 
     expect(root.print()).toBe("1. one\n\t1. two\n\t2. three\n2. four");
+  });
+
+  test("should not recalculate numeric bullets when disabled", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: "4. one\n\t3. two\n\t2. three\n1. four",
+        cursor: { line: 0, ch: 0 },
+      }),
+    });
+
+    recalculateNumericBullets(root, false);
+
+    expect(root.print()).toBe("4. one\n\t3. two\n\t2. three\n1. four");
   });
 });
 

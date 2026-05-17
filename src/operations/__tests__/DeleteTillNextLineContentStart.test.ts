@@ -10,7 +10,7 @@ test("should delete content from cursor to start of next line content when curso
     settings: makeSettings(),
   });
 
-  const op = new DeleteTillNextLineContentStart(root);
+  const op = new DeleteTillNextLineContentStart(root, true);
   op.perform();
 
   expect(root.print()).toBe(
@@ -29,7 +29,7 @@ test("should not do anything if cursor is in the middle of a line", () => {
     settings: makeSettings(),
   });
 
-  const op = new DeleteTillNextLineContentStart(root);
+  const op = new DeleteTillNextLineContentStart(root, true);
   op.perform();
 
   // Since cursor is not at end of line, operation does nothing
@@ -49,7 +49,7 @@ test("should delete content from cursor to start of next sublist item content", 
     settings: makeSettings(),
   });
 
-  const op = new DeleteTillNextLineContentStart(root);
+  const op = new DeleteTillNextLineContentStart(root, true);
   op.perform();
 
   expect(root.print()).toBe(
@@ -68,7 +68,7 @@ test("should delete content from cursor to start of next line when next line is 
     settings: makeSettings(),
   });
 
-  const op = new DeleteTillNextLineContentStart(root);
+  const op = new DeleteTillNextLineContentStart(root, true);
   op.perform();
 
   expect(root.print()).toBe(
@@ -87,7 +87,7 @@ test("should do nothing when cursor is at the end of the last line", () => {
     settings: makeSettings(),
   });
 
-  const op = new DeleteTillNextLineContentStart(root);
+  const op = new DeleteTillNextLineContentStart(root, true);
   op.perform();
 
   expect(root.print()).toBe(
@@ -106,7 +106,7 @@ test("should not do anything if the cursor is not at the end of a line", () => {
     settings: makeSettings(),
   });
 
-  const op = new DeleteTillNextLineContentStart(root);
+  const op = new DeleteTillNextLineContentStart(root, true);
   op.perform();
 
   // In this case, cursor is not at the end of the line, so the operation does nothing
@@ -135,7 +135,7 @@ test("should not do anything if there are multiple selections", () => {
     settings: makeSettings(),
   });
 
-  const op = new DeleteTillNextLineContentStart(root);
+  const op = new DeleteTillNextLineContentStart(root, true);
   op.perform();
 
   // Should not change the text
@@ -153,7 +153,7 @@ test("should stop propagation and update editor", () => {
     settings: makeSettings(),
   });
 
-  const op = new DeleteTillNextLineContentStart(root);
+  const op = new DeleteTillNextLineContentStart(root, true);
   op.perform();
 
   expect(op.shouldStopPropagation()).toBe(true);

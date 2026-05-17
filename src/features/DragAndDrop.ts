@@ -211,6 +211,7 @@ export class DragAndDrop implements Feature {
         dropVariant.placeToMove,
         dropVariant.whereToMove,
         this.obisidian.getDefaultIndentChars(),
+        this.obisidian.isSmartIndentListEnabled(),
       ),
       editor,
     );
