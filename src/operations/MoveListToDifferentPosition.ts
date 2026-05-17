@@ -18,6 +18,7 @@ export class MoveListToDifferentPosition implements Operation {
     private placeToMove: List,
     private whereToMove: "before" | "after" | "inside",
     private defaultIndentChars: string,
+    private numericBulletsEnabled: boolean,
   ) {}
 
   shouldStopPropagation() {
@@ -40,7 +41,7 @@ export class MoveListToDifferentPosition implements Operation {
     this.moveList();
     this.changeIndent();
     this.restoreCursor(cursorAnchor);
-    recalculateNumericBullets(this.root);
+    recalculateNumericBullets(this.root, this.numericBulletsEnabled);
   }
 
   private calculateCursorAnchor(): CursorAnchor {

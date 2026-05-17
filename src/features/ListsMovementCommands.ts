@@ -93,7 +93,8 @@ export class ListsMovementCommands implements Feature {
 
   private runMoveListDown = (editor: MyEditor) => {
     return this.operationPerformer.perform(
-      (root) => new MoveListDown(root),
+      (root) =>
+        new MoveListDown(root, this.obsidianSettings.isSmartIndentListEnabled()),
       editor,
     );
   };
@@ -105,7 +106,8 @@ export class ListsMovementCommands implements Feature {
 
   private runMoveListUp = (editor: MyEditor) => {
     return this.operationPerformer.perform(
-      (root) => new MoveListUp(root),
+      (root) =>
+        new MoveListUp(root, this.obsidianSettings.isSmartIndentListEnabled()),
       editor,
     );
   };
@@ -118,7 +120,11 @@ export class ListsMovementCommands implements Feature {
   private indentList = (editor: MyEditor) => {
     const { shouldStopPropagation } = this.operationPerformer.perform(
       (root) =>
-        new IndentList(root, this.obsidianSettings.getDefaultIndentChars()),
+        new IndentList(
+          root,
+          this.obsidianSettings.getDefaultIndentChars(),
+          this.obsidianSettings.isSmartIndentListEnabled(),
+        ),
       editor,
     );
 
@@ -127,7 +133,8 @@ export class ListsMovementCommands implements Feature {
 
   private outdentList = (editor: MyEditor) => {
     const { shouldStopPropagation } = this.operationPerformer.perform(
-      (root) => new OutdentList(root),
+      (root) =>
+        new OutdentList(root, this.obsidianSettings.isSmartIndentListEnabled()),
       editor,
     );
 

@@ -11,7 +11,7 @@ describe("MoveListUp operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new MoveListUp(root);
+    const op = new MoveListUp(root, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- item 3\n- item 2");
@@ -28,7 +28,7 @@ describe("MoveListUp operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new MoveListUp(root);
+    const op = new MoveListUp(root, true);
     op.perform();
 
     expect(root.print()).toBe(
@@ -47,7 +47,7 @@ describe("MoveListUp operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new MoveListUp(root);
+    const op = new MoveListUp(root, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- item 2\n- item 3");
@@ -64,7 +64,7 @@ describe("MoveListUp operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new MoveListUp(root);
+    const op = new MoveListUp(root, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n  - item 1.1\n  - item 2.1\n- item 2");
@@ -81,7 +81,7 @@ describe("MoveListUp operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new MoveListUp(root);
+    const op = new MoveListUp(root, true);
     op.perform();
 
     expect(root.print()).toBe("1. item 1\n2. item 3\n3. item 2");
@@ -106,7 +106,7 @@ describe("MoveListUp operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new MoveListUp(root);
+    const op = new MoveListUp(root, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- item 2\n- item 3");
@@ -127,7 +127,7 @@ describe("MoveListUp operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new MoveListUp(root);
+    const op = new MoveListUp(root, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- item 3\n- item 2");
@@ -151,7 +151,7 @@ describe("MoveListUp operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new MoveListUp(root);
+    const op = new MoveListUp(root, true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- item 3\n- item 2");
@@ -169,7 +169,7 @@ describe("MoveListUp operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new MoveListUp(root);
+    const op = new MoveListUp(root, true);
     op.perform();
 
     expect(op.shouldStopPropagation()).toBe(true);
@@ -185,7 +185,7 @@ describe("MoveListUp operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new MoveListUp(root);
+    const op = new MoveListUp(root, true);
     op.perform();
 
     expect(op.shouldStopPropagation()).toBe(true);

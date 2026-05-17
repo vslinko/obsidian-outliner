@@ -8,6 +8,7 @@ import { Feature } from "./Feature";
 import { MyEditor } from "../editor";
 import { OutdentList } from "../operations/OutdentList";
 import { IMEDetector } from "../services/IMEDetector";
+import { ObsidianSettings } from "../services/ObsidianSettings";
 import { OperationPerformer } from "../services/OperationPerformer";
 import { Settings } from "../services/Settings";
 import { createKeymapRunCallback } from "../utils/createKeymapRunCallback";
@@ -16,6 +17,7 @@ export class ShiftTabBehaviourOverride implements Feature {
   constructor(
     private plugin: Plugin,
     private imeDetector: IMEDetector,
+    private obsidianSettings: ObsidianSettings,
     private settings: Settings,
     private operationPerformer: OperationPerformer,
   ) {}
@@ -43,8 +45,27 @@ export class ShiftTabBehaviourOverride implements Feature {
   };
 
   private run = (editor: MyEditor) => {
-    return this.operationPerformer.perform(
-      (root) => new OutdentList(root),
+    const root = this.operationPerformer.parse(editor);
+
+    if (!root) {
+      return {
+        shouldUpdate: false,
+        shouldStopPropagation: false,
+      };
+    }
+
+    const currentList = root.getListUnderCursor();
+    const orderedList = /^\d+\.$/.test(currentList.getBullet());
+    if (orderedList && !this.obsidianSettings.isSmartIndentListEnabled()) {
+      return {
+        shouldUpdate: false,
+        shouldStopPropagation: false,
+      };
+    }
+
+    return this.operationPerformer.eval(
+      root,
+      new OutdentList(root, this.obsidianSettings.isSmartIndentListEnabled()),
       editor,
     );
   };

@@ -7,8 +7,11 @@ import { isEmptyLineOrEmptyCheckbox } from "../utils/isEmptyLineOrEmptyCheckbox"
 export class OutdentListIfItsEmpty implements Operation {
   private outdentList: OutdentList;
 
-  constructor(private root: Root) {
-    this.outdentList = new OutdentList(root);
+  constructor(
+    private root: Root,
+    private numericBulletsEnabled: boolean,
+  ) {
+    this.outdentList = new OutdentList(root, numericBulletsEnabled);
   }
 
   shouldStopPropagation() {

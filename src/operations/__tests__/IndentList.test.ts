@@ -11,7 +11,7 @@ describe("IndentList operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new IndentList(root, "  ");
+    const op = new IndentList(root, "  ", true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- item 2\n  - item 3");
@@ -28,7 +28,7 @@ describe("IndentList operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new IndentList(root, "  ");
+    const op = new IndentList(root, "  ", true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- item 2\n- item 3");
@@ -45,7 +45,7 @@ describe("IndentList operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new IndentList(root, "  ");
+    const op = new IndentList(root, "  ", true);
     op.perform();
 
     expect(root.print()).toBe(
@@ -64,7 +64,7 @@ describe("IndentList operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new IndentList(root, "  ");
+    const op = new IndentList(root, "  ", true);
     op.perform();
 
     // Instead of checking the exact string, check for the key aspects we care about
@@ -88,7 +88,7 @@ describe("IndentList operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new IndentList(root, "    "); // Different default indent
+    const op = new IndentList(root, "    ", true); // Different default indent
     op.perform();
 
     expect(root.print()).toBe("- item 1\n  - item 1.1\n  - item 2");
@@ -113,7 +113,7 @@ describe("IndentList operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new IndentList(root, "  ");
+    const op = new IndentList(root, "  ", true);
     op.perform();
 
     expect(root.print()).toBe("- item 1\n- item 2\n- item 3");
@@ -130,7 +130,7 @@ describe("IndentList operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new IndentList(root, "  ");
+    const op = new IndentList(root, "  ", true);
     op.perform();
 
     expect(op.shouldStopPropagation()).toBe(true);
@@ -146,7 +146,7 @@ describe("IndentList operation", () => {
       settings: makeSettings(),
     });
 
-    const op = new IndentList(root, "  ");
+    const op = new IndentList(root, "  ", true);
     op.perform();
 
     expect(root.print()).toBe(

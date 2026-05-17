@@ -20,6 +20,7 @@ describe("MoveListToDifferentPosition operation", () => {
       placeToMove,
       "before",
       "  ",
+      true,
     );
     op.perform();
 
@@ -46,6 +47,7 @@ describe("MoveListToDifferentPosition operation", () => {
       placeToMove,
       "after",
       "  ",
+      true,
     );
     op.perform();
 
@@ -70,6 +72,7 @@ describe("MoveListToDifferentPosition operation", () => {
       placeToMove,
       "inside",
       "  ",
+      true,
     );
     op.perform();
 
@@ -94,6 +97,7 @@ describe("MoveListToDifferentPosition operation", () => {
       placeToMove,
       "inside",
       "  ",
+      true,
     );
     op.perform();
 
@@ -118,6 +122,7 @@ describe("MoveListToDifferentPosition operation", () => {
       placeToMove,
       "after",
       "  ",
+      true,
     );
     op.perform();
 
@@ -144,6 +149,7 @@ describe("MoveListToDifferentPosition operation", () => {
       placeToMove,
       "after",
       "  ",
+      true,
     );
     op.perform();
 
@@ -170,6 +176,7 @@ describe("MoveListToDifferentPosition operation", () => {
       placeToMove,
       "after",
       "  ",
+      true,
     );
     op.perform();
 
@@ -194,6 +201,7 @@ describe("MoveListToDifferentPosition operation", () => {
       placeToMove,
       "before",
       "  ",
+      true,
     );
     op.perform();
 

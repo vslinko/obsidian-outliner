@@ -9,6 +9,7 @@ export class IndentList implements Operation {
   constructor(
     private root: Root,
     private defaultIndentChars: string,
+    private numericBulletsEnabled: boolean,
   ) {}
 
   shouldStopPropagation() {
@@ -77,6 +78,6 @@ export class IndentList implements Operation {
       ch: cursor.ch + indentChars.length,
     });
 
-    recalculateNumericBullets(root);
+    recalculateNumericBullets(root, this.numericBulletsEnabled);
   }
 }

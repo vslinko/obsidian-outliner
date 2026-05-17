@@ -90,6 +90,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this,
         this.settings,
         this.imeDetector,
+        this.obsidianSettings,
         this.operationPerformer,
       ),
       new MetaBackspaceBehaviourOverride(
@@ -102,6 +103,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this,
         this.settings,
         this.imeDetector,
+        this.obsidianSettings,
         this.operationPerformer,
       ),
 
@@ -116,6 +118,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
       new ShiftTabBehaviourOverride(
         this,
         this.imeDetector,
+        this.obsidianSettings,
         this.settings,
         this.operationPerformer,
       ),

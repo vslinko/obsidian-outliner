@@ -9,6 +9,10 @@ export interface ObsidianFoldSettings {
   foldIndent: boolean;
 }
 
+export interface ObsidianSmartListSettings {
+  smartIndentList: boolean;
+}
+
 function getHiddenObsidianConfig(app: App) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (app.vault as any).config;
@@ -48,6 +52,17 @@ export class ObsidianSettings {
       foldIndent: true,
       ...getHiddenObsidianConfig(this.app),
     };
+  }
+
+  getSmartListSettings(): ObsidianSmartListSettings {
+    return {
+      smartIndentList: true,
+      ...getHiddenObsidianConfig(this.app),
+    };
+  }
+
+  isSmartIndentListEnabled() {
+    return this.getSmartListSettings().smartIndentList;
   }
 
   getDefaultIndentChars() {

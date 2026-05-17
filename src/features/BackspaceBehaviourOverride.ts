@@ -7,6 +7,7 @@ import { Feature } from "./Feature";
 import { MyEditor } from "../editor";
 import { DeleteTillPreviousLineContentEnd } from "../operations/DeleteTillPreviousLineContentEnd";
 import { IMEDetector } from "../services/IMEDetector";
+import { ObsidianSettings } from "../services/ObsidianSettings";
 import { OperationPerformer } from "../services/OperationPerformer";
 import { Settings } from "../services/Settings";
 import { createKeymapRunCallback } from "../utils/createKeymapRunCallback";
@@ -16,6 +17,7 @@ export class BackspaceBehaviourOverride implements Feature {
     private plugin: Plugin,
     private settings: Settings,
     private imeDetector: IMEDetector,
+    private obsidianSettings: ObsidianSettings,
     private operationPerformer: OperationPerformer,
   ) {}
 
@@ -44,7 +46,11 @@ export class BackspaceBehaviourOverride implements Feature {
 
   private run = (editor: MyEditor) => {
     return this.operationPerformer.perform(
-      (root) => new DeleteTillPreviousLineContentEnd(root),
+      (root) =>
+        new DeleteTillPreviousLineContentEnd(
+          root,
+          this.obsidianSettings.isSmartIndentListEnabled(),
+        ),
       editor,
     );
   };

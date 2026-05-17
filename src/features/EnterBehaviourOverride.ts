@@ -57,10 +57,22 @@ export class EnterBehaviourOverride implements Feature {
       };
     }
 
+    const currentList = root.getListUnderCursor();
+    const orderedList = /^\d+\.$/.test(currentList.getBullet());
+    if (orderedList && !this.obsidianSettings.isSmartIndentListEnabled()) {
+      return {
+        shouldUpdate: false,
+        shouldStopPropagation: false,
+      };
+    }
+
     {
       const res = this.operationPerformer.eval(
         root,
-        new OutdentListIfItsEmpty(root),
+        new OutdentListIfItsEmpty(
+          root,
+          this.obsidianSettings.isSmartIndentListEnabled(),
+        ),
         editor,
       );
 
@@ -78,7 +90,12 @@ export class EnterBehaviourOverride implements Feature {
 
       const res = this.operationPerformer.eval(
         root,
-        new CreateNewItem(root, defaultIndentChars, getZoomRange),
+        new CreateNewItem(
+          root,
+          defaultIndentChars,
+          getZoomRange,
+          this.obsidianSettings.isSmartIndentListEnabled(),
+        ),
         editor,
       );
 

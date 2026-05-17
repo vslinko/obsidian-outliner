@@ -10,7 +10,7 @@ test("should merge current line with previous line when cursor is at start of li
     settings: makeSettings(),
   });
 
-  const op = new DeleteTillPreviousLineContentEnd(root);
+  const op = new DeleteTillPreviousLineContentEnd(root, true);
   op.perform();
 
   expect(root.print()).toBe(
@@ -29,7 +29,7 @@ test("should merge with previous note line", () => {
     settings: makeSettings(),
   });
 
-  const op = new DeleteTillPreviousLineContentEnd(root);
+  const op = new DeleteTillPreviousLineContentEnd(root, true);
   op.perform();
 
   expect(root.print()).toBe("- item 1\n  note for item 1more notes\n- item 2");
@@ -46,7 +46,7 @@ test("should merge empty bullets with previous bullet", () => {
     settings: makeSettings(),
   });
 
-  const op = new DeleteTillPreviousLineContentEnd(root);
+  const op = new DeleteTillPreviousLineContentEnd(root, true);
   op.perform();
 
   expect(root.print()).toBe("- item 1\n- item 3");
@@ -63,7 +63,7 @@ test("should merge child bullet with parent if child is empty", () => {
     settings: makeSettings(),
   });
 
-  const op = new DeleteTillPreviousLineContentEnd(root);
+  const op = new DeleteTillPreviousLineContentEnd(root, true);
   op.perform();
 
   expect(root.print()).toBe("- item 1\n- item 3");
@@ -88,7 +88,7 @@ test("should not do anything if there are multiple selections", () => {
     settings: makeSettings(),
   });
 
-  const op = new DeleteTillPreviousLineContentEnd(root);
+  const op = new DeleteTillPreviousLineContentEnd(root, true);
   op.perform();
 
   // Should not change the text
@@ -106,7 +106,7 @@ test("should not merge the first item if it's the only one in the document", () 
     settings: makeSettings(),
   });
 
-  const op = new DeleteTillPreviousLineContentEnd(root);
+  const op = new DeleteTillPreviousLineContentEnd(root, true);
   op.perform();
 
   expect(root.print()).toBe("- item 1");
@@ -123,7 +123,7 @@ test("should stop propagation and update editor when merging", () => {
     settings: makeSettings(),
   });
 
-  const op = new DeleteTillPreviousLineContentEnd(root);
+  const op = new DeleteTillPreviousLineContentEnd(root, true);
   op.perform();
 
   expect(op.shouldStopPropagation()).toBe(true);
