@@ -6,6 +6,7 @@
 - #552: Move lists and sublists up/down now works again on newer Obsidian versions such as 1.8.4.
 - #555: Ordered lists now defer to Obsidian when Smart lists is disabled, so pressing Enter no longer renumbers items unexpectedly.
 - #556: Vim `o/O` no longer recurses on non-list lines and now inserts a plain line instead of overflowing the call stack.
+- #566: Vim `o/O` now falls back to inserting a plain line outside lists instead of recursing through the outliner action path.
 - #577: Vim `O` now inserts a sibling above the current parent item instead of creating a nested child when the item already has sub-items.
 - #579: BetterEnter now handles `Shift-Enter` as a real note line insertion, so it no longer falls back to creating another bullet or leaving broken indentation.
 - #569: BetterEnter now keeps the cursor after the space in ordered list item `10. ` and higher instead of leaving the caret inside the bullet prefix.
