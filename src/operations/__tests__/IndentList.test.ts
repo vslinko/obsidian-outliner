@@ -96,6 +96,23 @@ describe("IndentList operation", () => {
     expect(root.getCursor().ch).toBe(7); // Uses the "  " indent from item 1.1, not the default
   });
 
+  test("should use the current default indent width after Obsidian indent settings change", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: "- item 1\n    - item 2\n    - item 3\n",
+        cursor: { line: 2, ch: 10 },
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new IndentList(root, "  ", true);
+    op.perform();
+
+    expect(root.print()).toBe("- item 1\n    - item 2\n      - item 3");
+    expect(root.getCursor().line).toBe(2);
+    expect(root.getCursor().ch).toBe(12);
+  });
+
   test("should do nothing if there are multiple selections", () => {
     const editor = makeEditor({
       text: "- item 1\n- item 2\n- item 3\n",

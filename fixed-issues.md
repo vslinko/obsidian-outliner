@@ -6,4 +6,5 @@
 - #552: Move lists and sublists up/down now works again on newer Obsidian versions such as 1.8.4.
 - #555: Ordered lists now defer to Obsidian when Smart lists is disabled, so pressing Enter no longer renumbers items unexpectedly.
 - #556: Vim `o/O` no longer recurses on non-list lines and now inserts a plain line instead of overflowing the call stack.
+- #585: Tab indentation now uses the current Obsidian indent setting for legacy list items, so changing the editor indent width no longer leaves old space-indented lists stuck on the previous width.
 - #592: Move list up/down hotkeys are registered in the editor scope so Cmd/Ctrl+Shift+ArrowUp/Down works reliably again.
