@@ -8,5 +8,6 @@
 - #556: Vim `o/O` no longer recurses on non-list lines and now inserts a plain line instead of overflowing the call stack.
 - #577: Vim `O` now inserts a sibling above the current parent item instead of creating a nested child when the item already has sub-items.
 - #585: Tab indentation now uses the current Obsidian indent setting for legacy list items, so changing the editor indent width no longer leaves old space-indented lists stuck on the previous width.
+- #590: ArrowUp recovery now also covers root-level list items when visual cursor movement lands in CSS-added top padding before the list content.
 - #591: Parser-based commands now keep working when root list items share leading whitespace and when sibling items mix spaces and tabs for indentation instead of failing the entire list parse.
 - #592: Move list up/down hotkeys are registered in the editor scope so Cmd/Ctrl+Shift+ArrowUp/Down works reliably again.
