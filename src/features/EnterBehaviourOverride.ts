@@ -7,6 +7,7 @@ import { Feature } from "./Feature";
 
 import { MyEditor } from "../editor";
 import { CreateNewItem } from "../operations/CreateNewItem";
+import { InsertNewLineWithoutBullet } from "../operations/InsertNewLineWithoutBullet";
 import { OutdentListIfItsEmpty } from "../operations/OutdentListIfItsEmpty";
 import { IMEDetector } from "../services/IMEDetector";
 import { ObsidianSettings } from "../services/ObsidianSettings";
@@ -29,6 +30,13 @@ export class EnterBehaviourOverride implements Feature {
     this.plugin.registerEditorExtension(
       Prec.highest(
         keymap.of([
+          {
+            key: "Shift-Enter",
+            run: createKeymapRunCallback({
+              check: this.check,
+              run: this.runShiftEnter,
+            }),
+          },
           {
             key: "Enter",
             run: createKeymapRunCallback({
@@ -105,5 +113,22 @@ export class EnterBehaviourOverride implements Feature {
 
       return res;
     }
+  };
+
+  private runShiftEnter = (editor: MyEditor) => {
+    const root = this.parser.parse(editor);
+
+    if (!root) {
+      return {
+        shouldUpdate: false,
+        shouldStopPropagation: false,
+      };
+    }
+
+    return this.operationPerformer.eval(
+      root,
+      new InsertNewLineWithoutBullet(root),
+      editor,
+    );
   };
 }
