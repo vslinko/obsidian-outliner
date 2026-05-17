@@ -7,6 +7,7 @@
 - #555: Ordered lists now defer to Obsidian when Smart lists is disabled, so pressing Enter no longer renumbers items unexpectedly.
 - #556: Vim `o/O` no longer recurses on non-list lines and now inserts a plain line instead of overflowing the call stack.
 - #577: Vim `O` now inserts a sibling above the current parent item instead of creating a nested child when the item already has sub-items.
+- #579: BetterEnter now handles `Shift-Enter` as a real note line insertion, so it no longer falls back to creating another bullet or leaving broken indentation.
 - #569: BetterEnter now keeps the cursor after the space in ordered list item `10. ` and higher instead of leaving the caret inside the bullet prefix.
 - #585: Tab indentation now uses the current Obsidian indent setting for legacy list items, so changing the editor indent width no longer leaves old space-indented lists stuck on the previous width.
 - #590: ArrowUp recovery now also covers root-level list items when visual cursor movement lands in CSS-added top padding before the list content.
