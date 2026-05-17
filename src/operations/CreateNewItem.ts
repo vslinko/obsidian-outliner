@@ -18,6 +18,7 @@ export class CreateNewItem implements Operation {
     private getZoomRange: GetZoomRange,
     private numericBulletsEnabled: boolean,
     private after: boolean = true,
+    private documentPrefixBeforeRoot: string = "",
   ) {}
 
   shouldStopPropagation() {
@@ -76,8 +77,10 @@ export class CreateNewItem implements Operation {
     );
 
     const codeBlockBacticks = oldLines.join("\n").split("```").length - 1;
+    const codeBlockBacticksBeforeRoot =
+      this.documentPrefixBeforeRoot.split("```").length - 1;
     const isInsideCodeblock =
-      codeBlockBacticks > 0 && codeBlockBacticks % 2 !== 0;
+      (codeBlockBacticksBeforeRoot + codeBlockBacticks) % 2 !== 0;
 
     if (isInsideCodeblock) {
       return;
