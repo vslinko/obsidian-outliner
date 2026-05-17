@@ -1,5 +1,8 @@
 import { Plugin } from "obsidian";
 
+import { Prec } from "@codemirror/state";
+import { keymap } from "@codemirror/view";
+
 import { Feature } from "./Feature";
 
 import { MyEditor } from "../editor";
@@ -10,6 +13,7 @@ import { OutdentList } from "../operations/OutdentList";
 import { ObsidianSettings } from "../services/ObsidianSettings";
 import { OperationPerformer } from "../services/OperationPerformer";
 import { createEditorCallback } from "../utils/createEditorCallback";
+import { createKeymapRunCallback } from "../utils/createKeymapRunCallback";
 
 export class ListsMovementCommands implements Feature {
   constructor(
@@ -19,6 +23,29 @@ export class ListsMovementCommands implements Feature {
   ) {}
 
   async load() {
+    this.plugin.registerEditorExtension(
+      Prec.highest(
+        keymap.of([
+          {
+            mac: "Meta-Shift-ArrowUp",
+            win: "Ctrl-Shift-ArrowUp",
+            linux: "Ctrl-Shift-ArrowUp",
+            run: createKeymapRunCallback({
+              run: this.runMoveListUp,
+            }),
+          },
+          {
+            mac: "Meta-Shift-ArrowDown",
+            win: "Ctrl-Shift-ArrowDown",
+            linux: "Ctrl-Shift-ArrowDown",
+            run: createKeymapRunCallback({
+              run: this.runMoveListDown,
+            }),
+          },
+        ]),
+      ),
+    );
+
     this.plugin.addCommand({
       id: "move-list-item-up",
       icon: "arrow-up",
@@ -64,21 +91,27 @@ export class ListsMovementCommands implements Feature {
 
   async unload() {}
 
-  private moveListDown = (editor: MyEditor) => {
-    const { shouldStopPropagation } = this.operationPerformer.perform(
+  private runMoveListDown = (editor: MyEditor) => {
+    return this.operationPerformer.perform(
       (root) => new MoveListDown(root),
       editor,
     );
+  };
 
+  private moveListDown = (editor: MyEditor) => {
+    const { shouldStopPropagation } = this.runMoveListDown(editor);
     return shouldStopPropagation;
   };
 
-  private moveListUp = (editor: MyEditor) => {
-    const { shouldStopPropagation } = this.operationPerformer.perform(
+  private runMoveListUp = (editor: MyEditor) => {
+    return this.operationPerformer.perform(
       (root) => new MoveListUp(root),
       editor,
     );
+  };
 
+  private moveListUp = (editor: MyEditor) => {
+    const { shouldStopPropagation } = this.runMoveListUp(editor);
     return shouldStopPropagation;
   };
 
