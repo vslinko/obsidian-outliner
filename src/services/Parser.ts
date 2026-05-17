@@ -6,8 +6,8 @@ import { checkboxRe } from "../utils/checkboxRe";
 
 const bulletSignRe = `(?:[-*+]|\\d+\\.)`;
 const optionalCheckboxRe = `(?:${checkboxRe})?`;
+const defaultTabSize = 4;
 
-const listItemWithoutSpacesRe = new RegExp(`^${bulletSignRe}( |\t)`);
 const listItemRe = new RegExp(`^[ \t]*${bulletSignRe}( |\t)`);
 const stringWithSpacesRe = new RegExp(`^[ \t]+`);
 const parseListItemRe = new RegExp(
@@ -114,7 +114,7 @@ export class Parser {
       if (!this.isListItem(line) && !this.isLineWithIndent(line)) {
         break;
       }
-      if (this.isListItemWithoutSpaces(line)) {
+      if (this.isListItem(line)) {
         listStartLine = listStartLineLookup;
         if (listStartLineLookup <= limitFrom) {
           break;
@@ -170,9 +170,16 @@ export class Parser {
       })),
     );
 
+    const firstListItem = parseListItemRe.exec(editor.getLine(listStartLine));
+    const baseIndentWidth = firstListItem
+      ? this.getIndentWidth(firstListItem[1])
+      : 0;
+    const indentWidths = new WeakMap<ParseListList, number>();
+
     let currentParent: ParseListList = root.getRootList();
+    indentWidths.set(currentParent, 0);
     let currentList: ParseListList | null = null;
-    let currentIndent = "";
+    let currentIndentWidth = 0;
 
     const foldedLines = editor.getAllFoldedLines();
 
@@ -189,32 +196,23 @@ export class Parser {
           optionalCheckbox = "";
         }
 
-        const compareLength = Math.min(currentIndent.length, indent.length);
-        const indentSlice = indent.slice(0, compareLength);
-        const currentIndentSlice = currentIndent.slice(0, compareLength);
+        const indentWidth = this.getIndentWidth(indent) - baseIndentWidth;
 
-        if (indentSlice !== currentIndentSlice) {
-          const expected = currentIndentSlice
-            .replace(/ /g, "S")
-            .replace(/\t/g, "T");
-          const got = indentSlice.replace(/ /g, "S").replace(/\t/g, "T");
-
-          return error(
-            `Unable to parse list: expected indent "${expected}", got "${got}"`,
-          );
+        if (indentWidth < 0) {
+          return error(`Unable to parse list: negative indent after base shift`);
         }
 
-        if (indent.length > currentIndent.length) {
+        if (indentWidth > currentIndentWidth) {
           currentParent = currentList;
-          currentIndent = indent;
-        } else if (indent.length < currentIndent.length) {
+          currentIndentWidth = indentWidth;
+        } else if (indentWidth < currentIndentWidth) {
           while (
-            currentParent.getFirstLineIndent().length >= indent.length &&
+            indentWidths.get(currentParent) >= indentWidth &&
             currentParent.getParent()
           ) {
             currentParent = currentParent.getParent();
           }
-          currentIndent = indent;
+          currentIndentWidth = indentWidth;
         }
 
         const foldRoot = foldedLines.includes(l);
@@ -229,6 +227,7 @@ export class Parser {
           foldRoot,
         );
         currentParent.addAfterAll(currentList);
+        indentWidths.set(currentList, indentWidth);
       } else if (this.isLineWithIndent(line)) {
         if (!currentList) {
           return error(
@@ -236,14 +235,20 @@ export class Parser {
           );
         }
 
-        const indentToCheck = currentList.getNotesIndent() || currentIndent;
+        const noteIndentRaw = line.match(/^[ \t]*/)?.[0] || "";
+        const noteIndentWidth = this.getIndentWidth(noteIndentRaw) - baseIndentWidth;
+        const listIndentWidth = indentWidths.get(currentList);
+        const expectedNoteIndent = currentList.getNotesIndent();
+        const expectedNoteIndentWidth = expectedNoteIndent
+          ? this.getIndentWidth(expectedNoteIndent) - baseIndentWidth
+          : null;
 
-        if (line.indexOf(indentToCheck) !== 0) {
-          const expected = indentToCheck.replace(/ /g, "S").replace(/\t/g, "T");
-          const got = line
-            .match(/^[ \t]*/)[0]
-            .replace(/ /g, "S")
-            .replace(/\t/g, "T");
+        if (
+          expectedNoteIndentWidth !== null &&
+          noteIndentWidth !== expectedNoteIndentWidth
+        ) {
+          const expected = expectedNoteIndent.replace(/ /g, "S").replace(/\t/g, "T");
+          const got = noteIndentRaw.replace(/ /g, "S").replace(/\t/g, "T");
 
           return error(
             `Unable to parse list: expected indent "${expected}", got "${got}"`,
@@ -251,9 +256,7 @@ export class Parser {
         }
 
         if (!currentList.getNotesIndent()) {
-          const matches = line.match(/^[ \t]+/);
-
-          if (!matches || matches[0].length <= currentIndent.length) {
+          if (!noteIndentRaw || noteIndentWidth <= listIndentWidth) {
             if (/^\s+$/.test(line)) {
               continue;
             }
@@ -263,10 +266,10 @@ export class Parser {
             );
           }
 
-          currentList.setNotesIndent(matches[0]);
+          currentList.setNotesIndent(noteIndentRaw);
         }
 
-        currentList.addLine(line.slice(currentList.getNotesIndent().length));
+        currentList.addLine(line.slice(noteIndentRaw.length));
       } else {
         return error(
           `Unable to parse list: expected list item or note, got "${line}"`,
@@ -289,7 +292,17 @@ export class Parser {
     return listItemRe.test(line);
   }
 
-  private isListItemWithoutSpaces(line: string) {
-    return listItemWithoutSpacesRe.test(line);
+  private getIndentWidth(indent: string) {
+    let width = 0;
+
+    for (const char of indent) {
+      if (char === "\t") {
+        width += defaultTabSize;
+      } else {
+        width++;
+      }
+    }
+
+    return width;
   }
 }

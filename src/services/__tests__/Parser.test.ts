@@ -97,7 +97,20 @@ describe("parseList", () => {
     expect(list.print()).toBe("- three\n- four");
   });
 
-  test("should error if indent is not match 1", () => {
+  test("should parse root items with leading whitespace", () => {
+    const parser = makeParser();
+    const editor = makeEditor({
+      text: " - one\n - two\n     - three",
+      cursor: { line: 0, ch: 0 },
+    });
+
+    const list = parser.parse(editor as any);
+
+    expect(list).toBeTruthy();
+    expect(list.print()).toBe(" - one\n - two\n     - three");
+  });
+
+  test("should parse mixed spaces and tabs without failing", () => {
     const logger = makeLogger();
     const parser = makeParser({ logger });
     const editor = makeEditor({
@@ -107,28 +120,9 @@ describe("parseList", () => {
 
     const list = parser.parse(editor as any);
 
-    expect(list).toBeNull();
-    expect(logger.log).toHaveBeenCalledWith(
-      "parseList",
-      `Unable to parse list: expected indent "S", got "T"`,
-    );
-  });
-
-  test("should error if indent is not match 2", () => {
-    const logger = makeLogger();
-    const parser = makeParser({ logger });
-    const editor = makeEditor({
-      text: "- one\n\t- two\n  - three",
-      cursor: { line: 0, ch: 0 },
-    });
-
-    const list = parser.parse(editor as any);
-
-    expect(list).toBeNull();
-    expect(logger.log).toHaveBeenCalledWith(
-      "parseList",
-      `Unable to parse list: expected indent "T", got "S"`,
-    );
+    expect(list).toBeTruthy();
+    expect(logger.log).not.toHaveBeenCalled();
+    expect(list.print()).toBe("- one\n  - two\n\t- three");
   });
 
   test("should error if note indent is not match", () => {
@@ -144,7 +138,7 @@ describe("parseList", () => {
     expect(list).toBeNull();
     expect(logger.log).toHaveBeenCalledWith(
       "parseList",
-      `Unable to parse list: expected indent "T", got "SS"`,
+      `Unable to parse list: expected some indent, got no indent`,
     );
   });
 
