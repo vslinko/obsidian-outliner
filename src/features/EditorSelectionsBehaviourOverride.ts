@@ -1,17 +1,21 @@
 import { Plugin } from "obsidian";
 
 import { EditorState, Transaction } from "@codemirror/state";
+import { EditorView } from "@codemirror/view";
 
 import { Feature } from "./Feature";
 
-import { MyEditor, getEditorFromState } from "../editor";
+import { MyEditor, MyEditorPosition, getEditorFromState } from "../editor";
 import { KeepCursorOutsideFoldedLines } from "../operations/KeepCursorOutsideFoldedLines";
 import { KeepCursorWithinListContent } from "../operations/KeepCursorWithinListContent";
+import { RecoverCursorAfterArrowUp } from "../operations/RecoverCursorAfterArrowUp";
 import { OperationPerformer } from "../services/OperationPerformer";
 import { Parser } from "../services/Parser";
 import { Settings } from "../services/Settings";
 
 export class EditorSelectionsBehaviourOverride implements Feature {
+  private lastKey: string | null = null;
+
   constructor(
     private plugin: Plugin,
     private settings: Settings,
@@ -20,9 +24,12 @@ export class EditorSelectionsBehaviourOverride implements Feature {
   ) {}
 
   async load() {
-    this.plugin.registerEditorExtension(
+    this.plugin.registerEditorExtension([
+      EditorView.domEventObservers({
+        keydown: this.handleKeyDown,
+      }),
       EditorState.transactionExtender.of(this.transactionExtender),
-    );
+    ]);
   }
 
   async unload() {}
@@ -33,15 +40,21 @@ export class EditorSelectionsBehaviourOverride implements Feature {
     }
 
     const editor = getEditorFromState(tr.startState);
+    const previousCursor = this.getSingleCursor(tr.startState);
+    const pressedKey = this.lastKey;
 
     setTimeout(() => {
-      this.handleSelectionsChanges(editor);
+      this.handleSelectionsChanges(editor, previousCursor, pressedKey);
     }, 0);
 
     return null;
   };
 
-  private handleSelectionsChanges = (editor: MyEditor) => {
+  private handleSelectionsChanges = (
+    editor: MyEditor,
+    previousCursor: MyEditorPosition | null,
+    pressedKey: string | null,
+  ) => {
     const root = this.parser.parse(editor);
 
     if (!root) {
@@ -60,10 +73,42 @@ export class EditorSelectionsBehaviourOverride implements Feature {
       }
     }
 
+    if (pressedKey === "ArrowUp" && previousCursor) {
+      const { shouldStopPropagation } = this.operationPerformer.eval(
+        root,
+        new RecoverCursorAfterArrowUp(root, previousCursor),
+        editor,
+      );
+
+      if (shouldStopPropagation) {
+        return;
+      }
+    }
+
     this.operationPerformer.eval(
       root,
       new KeepCursorWithinListContent(root),
       editor,
     );
   };
+
+  private handleKeyDown = (e: KeyboardEvent) => {
+    this.lastKey = e.key;
+  };
+
+  private getSingleCursor(state: EditorState): MyEditorPosition | null {
+    const ranges = state.selection.ranges;
+
+    if (ranges.length !== 1) {
+      return null;
+    }
+
+    const { anchor, head } = ranges[0];
+
+    if (anchor !== head) {
+      return null;
+    }
+
+    return getEditorFromState(state).offsetToPos(head);
+  }
 }
