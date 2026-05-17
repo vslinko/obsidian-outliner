@@ -50,6 +50,7 @@ export class CreateNewItem implements Operation {
 
     const cursor = root.getCursor();
     const lineUnderCursor = lines.find((l) => l.from.line === cursor.line);
+    const lineIndex = lines.findIndex((l) => l.from.line === cursor.line);
 
     if (cursor.ch < lineUnderCursor.from.ch) {
       return;
@@ -88,6 +89,24 @@ export class CreateNewItem implements Operation {
 
     this.stopPropagation = true;
     this.updated = true;
+
+    if (lineIndex > 0) {
+      const lineOffset = cursor.ch - lineUnderCursor.from.ch;
+      const lineText = lines[lineIndex].text;
+      const left = lineText.slice(0, lineOffset);
+      const right = lineText.slice(lineOffset);
+      const newLines = list.getLines();
+
+      newLines.splice(lineIndex, 1, left, right);
+      list.replaceLines(newLines);
+
+      root.replaceCursor({
+        line: cursor.line + 1,
+        ch: list.getNotesIndent().length,
+      });
+
+      return;
+    }
 
     const zoomRange = this.getZoomRange.getZoomRange();
     const listIsZoomingRoot = Boolean(
