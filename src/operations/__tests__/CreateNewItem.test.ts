@@ -307,4 +307,21 @@ describe("CreateNewItem operation", () => {
     expect(op.shouldStopPropagation()).toBe(false);
     expect(op.shouldUpdate()).toBe(false);
   });
+
+  test("should create another note line when pressing Enter on an existing note line", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: "- item 1\n  |A|B|\n- item 2\n",
+        cursor: { line: 1, ch: 7 },
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new CreateNewItem(root, "  ", getZoomRange, true);
+    op.perform();
+
+    expect(root.print()).toBe("- item 1\n  |A|B|\n  \n- item 2");
+    expect(root.getCursor().line).toBe(2);
+    expect(root.getCursor().ch).toBe(2);
+  });
 });
