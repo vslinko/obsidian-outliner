@@ -111,6 +111,25 @@ describe("CreateNewItem operation", () => {
     expect(root.getCursor().ch).toBe(6);
   });
 
+  test("should keep a space after ordered list bullets when creating item 10", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text:
+          "1. one\n2. two\n3. three\n4. four\n5. five\n6. six\n7. seven\n8. eight\n9. nine\n",
+        cursor: { line: 8, ch: 7 },
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new CreateNewItem(root, "  ", getZoomRange, true);
+    op.perform();
+
+    const lines = root.print().split("\n");
+    expect(lines[9]).toBe("10. ");
+    expect(root.getCursor().line).toBe(9);
+    expect(root.getCursor().ch).toBe(4);
+  });
+
   test("should do nothing for an empty list item", () => {
     const root = makeRoot({
       editor: makeEditor({
