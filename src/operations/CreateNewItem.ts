@@ -156,13 +156,12 @@ export class CreateNewItem implements Operation {
     }
 
     list.replaceLines(oldLines);
+    recalculateNumericBullets(root, this.numericBulletsEnabled);
 
     const newListStart = newList.getFirstLineContentStart();
     root.replaceCursor({
       line: newListStart.line,
       ch: newListStart.ch + prefix.length,
     });
-
-    recalculateNumericBullets(root, this.numericBulletsEnabled);
   }
 }
