@@ -1,17 +1,17 @@
 export function getDragAndDropLeftPadding(view: {
   dom: Pick<HTMLElement, "querySelector">;
 }) {
+  const cmLine = view.dom.querySelector("div.cm-line");
+  if (isElementLike(cmLine)) {
+    return cmLine.getBoundingClientRect().left;
+  }
+
   const scroller = view.dom.querySelector("div.cm-scroller");
   if (isElementLike(scroller)) {
     return (
       scroller.getBoundingClientRect().left +
       Number.parseFloat(getComputedStyleFor(scroller).paddingLeft || "0")
     );
-  }
-
-  const cmLine = view.dom.querySelector("div.cm-line");
-  if (isElementLike(cmLine)) {
-    return cmLine.getBoundingClientRect().left;
   }
 
   return 0;
