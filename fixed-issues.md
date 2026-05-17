@@ -9,6 +9,7 @@
 - #577: Vim `O` now inserts a sibling above the current parent item instead of creating a nested child when the item already has sub-items.
 - #579: BetterEnter now handles `Shift-Enter` as a real note line insertion, so it no longer falls back to creating another bullet or leaving broken indentation.
 - #569: BetterEnter now keeps the cursor after the space in ordered list item `10. ` and higher instead of leaving the caret inside the bullet prefix.
+- #574: BetterEnter now ignores list-looking lines inside fenced code blocks even when the opening fence is outside the parsed list range.
 - #585: Tab indentation now uses the current Obsidian indent setting for legacy list items, so changing the editor indent width no longer leaves old space-indented lists stuck on the previous width.
 - #590: ArrowUp recovery now also covers root-level list items when visual cursor movement lands in CSS-added top padding before the list content.
 - #591: Parser-based commands now keep working when root list items share leading whitespace and when sibling items mix spaces and tabs for indentation instead of failing the entire list parse.

@@ -92,6 +92,10 @@ export class EnterBehaviourOverride implements Feature {
     {
       const defaultIndentChars = this.obsidianSettings.getDefaultIndentChars();
       const zoomRange = editor.getZoomRange();
+      const documentPrefixBeforeRoot = editor.getRange(
+        { line: 0, ch: 0 },
+        { line: root.getContentStart().line, ch: 0 },
+      );
       const getZoomRange = {
         getZoomRange: () => zoomRange,
       };
@@ -103,6 +107,8 @@ export class EnterBehaviourOverride implements Feature {
           defaultIndentChars,
           getZoomRange,
           this.obsidianSettings.isSmartIndentListEnabled(),
+          true,
+          documentPrefixBeforeRoot,
         ),
         editor,
       );

@@ -288,4 +288,23 @@ describe("CreateNewItem operation", () => {
     // Adjust the expected output to match actual behavior
     expect(root.print()).toBe("- par\n- ent item\n  - child 1\n  - child 2");
   });
+
+  test("should do nothing inside a fenced code block", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: "```\n- code line\n```\n",
+        cursor: { line: 1, ch: 11 },
+      }),
+      settings: makeSettings(),
+    });
+
+    expect(root).toBeTruthy();
+
+    const op = new CreateNewItem(root, "  ", getZoomRange, true, true, "```\n");
+    op.perform();
+
+    expect(root.print()).toBe("- code line");
+    expect(op.shouldStopPropagation()).toBe(false);
+    expect(op.shouldUpdate()).toBe(false);
+  });
 });
