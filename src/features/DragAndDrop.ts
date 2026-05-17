@@ -5,6 +5,7 @@ import { StateEffect, StateField } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
 
 import { Feature } from "./Feature";
+import { getDragAndDropLeftPadding } from "./dragAndDropMeasurements";
 
 import { MyEditor, getEditorFromState } from "../editor";
 import { MoveListToDifferentPosition } from "../operations/MoveListToDifferentPosition";
@@ -439,8 +440,7 @@ class DragAndDropState {
   }
 
   private calculateLeftPadding() {
-    const cmLine = this.view.dom.querySelector("div.cm-line");
-    this.leftPadding = cmLine.getBoundingClientRect().left;
+    this.leftPadding = getDragAndDropLeftPadding(this.view);
   }
 
   private calculateTabWidth() {
