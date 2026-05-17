@@ -19,6 +19,23 @@ describe("MoveListUp operation", () => {
     expect(root.getCursor().ch).toBe(5);
   });
 
+  test("should move root items up even when they have shared leading whitespace", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: " - item 1\n - item 2\n - item 3\n",
+        cursor: { line: 2, ch: 6 },
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new MoveListUp(root, true);
+    op.perform();
+
+    expect(root.print()).toBe(" - item 1\n - item 3\n - item 2");
+    expect(root.getCursor().line).toBe(1);
+    expect(root.getCursor().ch).toBe(6);
+  });
+
   test("should move a list item up to previous parent's level if it's the first child", () => {
     const root = makeRoot({
       editor: makeEditor({
