@@ -112,6 +112,54 @@ describe("MoveListUp operation", () => {
     expect(root.print()).toBe("- item 1\n- item 2\n- item 3");
   });
 
+  test("should move a list item up when a single line has a text selection", () => {
+    const editor = makeEditor({
+      text: "- item 1\n- item 2\n- item 3\n",
+      cursor: { line: 2, ch: 7 },
+    });
+
+    editor.listSelections = () => [
+      { anchor: { line: 2, ch: 3 }, head: { line: 2, ch: 7 } },
+    ];
+
+    const root = makeRoot({
+      editor,
+      settings: makeSettings(),
+    });
+
+    const op = new MoveListUp(root);
+    op.perform();
+
+    expect(root.print()).toBe("- item 1\n- item 3\n- item 2");
+    expect(root.getSelections()).toEqual([
+      { anchor: { line: 1, ch: 3 }, head: { line: 1, ch: 7 } },
+    ]);
+  });
+
+  test("should move a list item up when a single selection spans multiple lines", () => {
+    const editor = makeEditor({
+      text: "- item 1\n- item 2\n- item 3\n",
+      cursor: { line: 2, ch: 5 },
+    });
+
+    editor.listSelections = () => [
+      { anchor: { line: 1, ch: 2 }, head: { line: 2, ch: 5 } },
+    ];
+
+    const root = makeRoot({
+      editor,
+      settings: makeSettings(),
+    });
+
+    const op = new MoveListUp(root);
+    op.perform();
+
+    expect(root.print()).toBe("- item 1\n- item 3\n- item 2");
+    expect(root.getSelections()).toEqual([
+      { anchor: { line: 0, ch: 2 }, head: { line: 1, ch: 5 } },
+    ]);
+  });
+
   test("should stop propagation and update editor when successful", () => {
     const root = makeRoot({
       editor: makeEditor({
