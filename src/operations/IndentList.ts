@@ -52,6 +52,10 @@ export class IndentList implements Operation {
     }
 
     if (indentChars === "") {
+      indentChars = this.defaultIndentChars;
+    }
+
+    if (indentChars === "") {
       indentChars = list
         .getFirstLineIndent()
         .slice(parent.getFirstLineIndent().length);
