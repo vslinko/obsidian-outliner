@@ -19,7 +19,7 @@ export class MoveListDown implements Operation {
   perform() {
     const { root } = this;
 
-    if (!root.hasSingleCursor()) {
+    if (!root.hasSingleSelection()) {
       return;
     }
 
@@ -53,11 +53,18 @@ export class MoveListDown implements Operation {
     const listStartLineAfter = root.getContentLinesRangeOf(list)[0];
     const lineDiff = listStartLineAfter - listStartLineBefore;
 
-    const cursor = root.getCursor();
-    root.replaceCursor({
-      line: cursor.line + lineDiff,
-      ch: cursor.ch,
-    });
+    root.replaceSelections(
+      root.getSelections().map((selection) => ({
+        anchor: {
+          line: selection.anchor.line + lineDiff,
+          ch: selection.anchor.ch,
+        },
+        head: {
+          line: selection.head.line + lineDiff,
+          ch: selection.head.ch,
+        },
+      })),
+    );
 
     recalculateNumericBullets(root);
   }
