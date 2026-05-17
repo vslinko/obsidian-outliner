@@ -58,6 +58,25 @@ describe("CreateNewItem operation", () => {
     expect(root.getCursor().ch).toBe(4);
   });
 
+  test("should create a sibling above the current item when inserting before a parent with children", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: "- item 1\n  - child 1\n  - child 2\n- item 2\n",
+        cursor: { line: 0, ch: 8 },
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new CreateNewItem(root, "  ", getZoomRange, true, false);
+    op.perform();
+
+    expect(root.print()).toBe(
+      "- \n- item 1\n  - child 1\n  - child 2\n- item 2",
+    );
+    expect(root.getCursor().line).toBe(0);
+    expect(root.getCursor().ch).toBe(2);
+  });
+
   test("should split line at cursor position", () => {
     const root = makeRoot({
       editor: makeEditor({
