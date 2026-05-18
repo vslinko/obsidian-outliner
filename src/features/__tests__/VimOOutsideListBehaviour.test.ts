@@ -119,12 +119,12 @@ describe("VimOBehaviourOverride outside lists", () => {
       } as never;
       const parser = {
         parse: jest.fn().mockReturnValue(null),
-      } as never;
+      };
       const feature = new VimOBehaviourOverride(
         plugin,
         settings,
         {} as never,
-        parser,
+        parser as never,
         {} as never,
       );
 

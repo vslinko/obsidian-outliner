@@ -113,6 +113,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this.imeDetector,
         this.obsidianSettings,
         this.settings,
+        this.parser,
         this.operationPerformer,
       ),
       new ShiftTabBehaviourOverride(
@@ -120,6 +121,7 @@ export default class ObsidianOutlinerPlugin extends Plugin {
         this.imeDetector,
         this.obsidianSettings,
         this.settings,
+        this.parser,
         this.operationPerformer,
       ),
 
