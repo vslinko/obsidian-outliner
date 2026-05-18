@@ -94,7 +94,10 @@ export class ListsMovementCommands implements Feature {
   private runMoveListDown = (editor: MyEditor) => {
     return this.operationPerformer.perform(
       (root) =>
-        new MoveListDown(root, this.obsidianSettings.isSmartIndentListEnabled()),
+        new MoveListDown(
+          root,
+          this.obsidianSettings.isSmartIndentListEnabled(),
+        ),
       editor,
     );
   };

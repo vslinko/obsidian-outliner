@@ -114,8 +114,7 @@ describe("CreateNewItem operation", () => {
   test("should keep a space after ordered list bullets when creating item 10", () => {
     const root = makeRoot({
       editor: makeEditor({
-        text:
-          "1. one\n2. two\n3. three\n4. four\n5. five\n6. six\n7. seven\n8. eight\n9. nine\n",
+        text: "1. one\n2. two\n3. three\n4. four\n5. five\n6. six\n7. seven\n8. eight\n9. nine\n",
         cursor: { line: 8, ch: 7 },
       }),
       settings: makeSettings(),

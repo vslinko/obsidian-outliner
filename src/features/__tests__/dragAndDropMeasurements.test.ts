@@ -10,15 +10,13 @@ describe("getDragAndDropLeftPadding", () => {
       getBoundingClientRect: jest.fn().mockReturnValue({ left: 120 }),
     };
     const dom = {
-      querySelector: jest
-        .fn()
-        .mockImplementation((selector: string) => {
-          if (selector === "div.cm-line") {
-            return null;
-          }
+      querySelector: jest.fn().mockImplementation((selector: string) => {
+        if (selector === "div.cm-line") {
+          return null;
+        }
 
-          return selector === "div.cm-scroller" ? scroller : null;
-        }),
+        return selector === "div.cm-scroller" ? scroller : null;
+      }),
     };
 
     const getComputedStyle = jest.fn().mockReturnValue({ paddingLeft: "24px" });

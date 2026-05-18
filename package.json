@@ -1,13 +1,13 @@
 {
   "name": "obsidian-outliner",
-  "version": "4.10.0",
+  "version": "5.0.0",
   "description": "Work with your lists like in Workflowy or RoamResearch.",
   "main": "dist/main.js",
   "scripts": {
     "dev": "rollup --config rollup.config.mjs -w --configWithTests",
     "build-with-tests": "rollup --config rollup.config.mjs --configWithTests",
     "build": "rollup --config rollup.config.mjs",
-    "lint": "prettier --check src && eslint src",
+    "lint": "prettier --write --check src && eslint src",
     "test": "jest --forceExit",
     "test:unit": "SKIP_OBSIDIAN=1 jest --forceExit src",
     "prepare": "husky"

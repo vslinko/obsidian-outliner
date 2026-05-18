@@ -1,45 +1,78 @@
-jest.mock("obsidian", () => ({
-  MarkdownView: class MarkdownView {},
-  Notice: class Notice {},
-  Plugin: class Plugin {},
-}), { virtual: true });
-
-jest.mock("src/editor", () => ({
-  MyEditor: class MyEditor {
-    public editor: unknown;
-
-    constructor(editor: unknown) {
-      this.editor = editor;
-    }
-  },
-}), { virtual: true });
-
-jest.mock("src/operations/CreateNewItem", () => ({
-  CreateNewItem: class CreateNewItem {},
-}), { virtual: true });
-
-jest.mock("src/services/ObsidianSettings", () => ({
-  ObsidianSettings: class ObsidianSettings {},
-}), { virtual: true });
-
-jest.mock("src/services/OperationPerformer", () => ({
-  OperationPerformer: class OperationPerformer {},
-}), { virtual: true });
-
-jest.mock("src/services/Parser", () => ({
-  Parser: class Parser {},
-}), { virtual: true });
-
-jest.mock("src/services/Settings", () => ({
-  Settings: class Settings {},
-}), { virtual: true });
-
-jest.mock("src/utils/insertPlainLine", () => ({
-  insertPlainLine: jest.fn(),
-}), { virtual: true });
+import { insertPlainLine } from "src/utils/insertPlainLine";
 
 import { VimOBehaviourOverride } from "../VimOBehaviourOverride";
-import { insertPlainLine } from "src/utils/insertPlainLine";
+
+jest.mock(
+  "obsidian",
+  () => ({
+    MarkdownView: class MarkdownView {},
+    Notice: class Notice {},
+    Plugin: class Plugin {},
+  }),
+  { virtual: true },
+);
+
+jest.mock(
+  "src/editor",
+  () => ({
+    MyEditor: class MyEditor {
+      public editor: unknown;
+
+      constructor(editor: unknown) {
+        this.editor = editor;
+      }
+    },
+  }),
+  { virtual: true },
+);
+
+jest.mock(
+  "src/operations/CreateNewItem",
+  () => ({
+    CreateNewItem: class CreateNewItem {},
+  }),
+  { virtual: true },
+);
+
+jest.mock(
+  "src/services/ObsidianSettings",
+  () => ({
+    ObsidianSettings: class ObsidianSettings {},
+  }),
+  { virtual: true },
+);
+
+jest.mock(
+  "src/services/OperationPerformer",
+  () => ({
+    OperationPerformer: class OperationPerformer {},
+  }),
+  { virtual: true },
+);
+
+jest.mock(
+  "src/services/Parser",
+  () => ({
+    Parser: class Parser {},
+  }),
+  { virtual: true },
+);
+
+jest.mock(
+  "src/services/Settings",
+  () => ({
+    Settings: class Settings {},
+  }),
+  { virtual: true },
+);
+
+jest.mock(
+  "src/utils/insertPlainLine",
+  () => ({
+    insertPlainLine: jest.fn(),
+  }),
+  { virtual: true },
+);
 
 describe("VimOBehaviourOverride outside lists", () => {
   const insertPlainLineMock = insertPlainLine as jest.MockedFunction<

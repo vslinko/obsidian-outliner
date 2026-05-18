@@ -199,7 +199,9 @@ export class Parser {
         const indentWidth = this.getIndentWidth(indent) - baseIndentWidth;
 
         if (indentWidth < 0) {
-          return error(`Unable to parse list: negative indent after base shift`);
+          return error(
+            `Unable to parse list: negative indent after base shift`,
+          );
         }
 
         if (indentWidth > currentIndentWidth) {
@@ -236,7 +238,8 @@ export class Parser {
         }
 
         const noteIndentRaw = line.match(/^[ \t]*/)?.[0] || "";
-        const noteIndentWidth = this.getIndentWidth(noteIndentRaw) - baseIndentWidth;
+        const noteIndentWidth =
+          this.getIndentWidth(noteIndentRaw) - baseIndentWidth;
         const listIndentWidth = indentWidths.get(currentList);
         const expectedNoteIndent = currentList.getNotesIndent();
         const expectedNoteIndentWidth = expectedNoteIndent
@@ -247,7 +250,9 @@ export class Parser {
           expectedNoteIndentWidth !== null &&
           noteIndentWidth !== expectedNoteIndentWidth
         ) {
-          const expected = expectedNoteIndent.replace(/ /g, "S").replace(/\t/g, "T");
+          const expected = expectedNoteIndent
+            .replace(/ /g, "S")
+            .replace(/\t/g, "T");
           const got = noteIndentRaw.replace(/ /g, "S").replace(/\t/g, "T");
 
           return error(

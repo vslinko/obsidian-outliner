@@ -31,7 +31,10 @@ function isElementLike(
 function getComputedStyleFor(
   element: Element,
 ): Pick<CSSStyleDeclaration, "paddingLeft"> {
-  if (typeof window !== "undefined" && typeof window.getComputedStyle === "function") {
+  if (
+    typeof window !== "undefined" &&
+    typeof window.getComputedStyle === "function"
+  ) {
     return window.getComputedStyle(element);
   }
 
