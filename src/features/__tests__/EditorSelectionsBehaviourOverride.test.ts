@@ -34,6 +34,26 @@ describe("getTrackedNavigationKey", () => {
     ).toBe("ArrowDown");
   });
 
+  test("should track Vim j/k navigation keys", () => {
+    expect(
+      getTrackedNavigationKey({
+        key: "j",
+        altKey: false,
+        ctrlKey: false,
+        metaKey: false,
+      } as KeyboardEvent),
+    ).toBe("ArrowDown");
+
+    expect(
+      getTrackedNavigationKey({
+        key: "k",
+        altKey: false,
+        ctrlKey: false,
+        metaKey: false,
+      } as KeyboardEvent),
+    ).toBe("ArrowUp");
+  });
+
   test("should ignore modified vertical navigation keys", () => {
     expect(
       getTrackedNavigationKey({
