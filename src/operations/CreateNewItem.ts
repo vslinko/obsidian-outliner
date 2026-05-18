@@ -90,9 +90,16 @@ export class CreateNewItem implements Operation {
     this.stopPropagation = true;
     this.updated = true;
 
-    const hasCheckboxInContent = new RegExp(`^${checkboxRe}`).test(
+    const checkboxAtContentStart = new RegExp(`^${checkboxRe}`).exec(
       lines[0].text,
     );
+    const cursorOffsetInCurrentLine = selection.from - lineUnderCursor.from.ch;
+    const cursorInsideLeadingCheckbox =
+      lineIndex === 0 &&
+      checkboxAtContentStart !== null &&
+      cursorOffsetInCurrentLine < checkboxAtContentStart[0].length;
+    const hasCheckboxInContent =
+      checkboxAtContentStart !== null && !cursorInsideLeadingCheckbox;
     const hasCheckbox = hasCheckboxInContent || list.getCheckboxLength() > 0;
 
     if (lineIndex > 0 && list.isEmpty() && !hasCheckbox) {
@@ -145,7 +152,7 @@ export class CreateNewItem implements Operation {
         ? list.getChildren()[0].getSpaceAfterBullet()
         : list.getSpaceAfterBullet();
 
-    const prefix = oldLines[0].match(checkboxRe) ? "[ ] " : "";
+    const prefix = hasCheckbox ? "[ ] " : "";
 
     const newList = new List(
       list.getRoot(),
