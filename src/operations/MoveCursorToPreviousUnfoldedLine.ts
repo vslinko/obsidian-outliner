@@ -1,12 +1,16 @@
 import { Operation } from "./Operation";
 
+import { MyEditor } from "../editor";
 import { ListLine, Position, Root } from "../root";
 
 export class MoveCursorToPreviousUnfoldedLine implements Operation {
   private stopPropagation = false;
   private updated = false;
 
-  constructor(private root: Root) {}
+  constructor(
+    private root: Root,
+    private editor: MyEditor,
+  ) {}
 
   shouldStopPropagation() {
     return this.stopPropagation;
@@ -55,6 +59,17 @@ export class MoveCursorToPreviousUnfoldedLine implements Operation {
     const prev = root.getListUnderLine(cursor.line - 1);
 
     if (!prev) {
+      if (cursor.line < 1) {
+        return;
+      }
+
+      this.stopPropagation = true;
+      this.updated = true;
+
+      root.replaceCursor({
+        line: cursor.line - 1,
+        ch: this.editor.getLine(cursor.line - 1).length,
+      });
       return;
     }
 
