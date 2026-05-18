@@ -93,7 +93,7 @@ the text instead of the markdown syntax.
 
 | Setting                         | Default value |
 |---------------------------------|:-------------:|
-| Stick the cursor to the content |    `true`     |
+| Stick the cursor to the content | `Bullets and checkboxes` |
 
 ### Enhance the Enter key
 
