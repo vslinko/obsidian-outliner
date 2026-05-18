@@ -67,3 +67,20 @@
 - [ ] one|
 - [ ] two
 ```
+
+# cursor should leave the first list row to the previous plain line
+
+- applyState:
+
+```md
+intro paragraph
+- |one
+```
+
+- keydown: `ArrowLeft`
+- assertState:
+
+```md
+intro paragraph|
+- one
+```

@@ -52,7 +52,7 @@ export class ArrowLeftAndCtrlArrowLeftBehaviourOverride implements Feature {
 
   private run = (editor: MyEditor) => {
     return this.operationPerformer.perform(
-      (root) => new MoveCursorToPreviousUnfoldedLine(root),
+      (root) => new MoveCursorToPreviousUnfoldedLine(root, editor),
       editor,
     );
   };
