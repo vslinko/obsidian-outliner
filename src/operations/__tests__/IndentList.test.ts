@@ -170,4 +170,20 @@ describe("IndentList operation", () => {
       "- item 1\n  - item 1.1\n  - item 1.2\n- item 2\n  - item 2.1\n  - item 3",
     );
   });
+
+  test("should keep cursor at the same relative text position when indenting text with delimiters", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: "- parent\n- **test** item\n",
+        cursor: { line: 1, ch: 9 },
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new IndentList(root, "  ", true);
+    op.perform();
+
+    expect(root.print()).toBe("- parent\n  - **test** item");
+    expect(root.getCursor()).toEqual({ line: 1, ch: 11 });
+  });
 });
