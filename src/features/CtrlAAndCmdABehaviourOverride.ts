@@ -9,6 +9,7 @@ import { SelectAllContent } from "../operations/SelectAllContent";
 import { IMEDetector } from "../services/IMEDetector";
 import { OperationPerformer } from "../services/OperationPerformer";
 import { Settings } from "../services/Settings";
+import { createEditorCallback } from "../utils/createEditorCallback";
 import { createKeymapRunCallback } from "../utils/createKeymapRunCallback";
 
 export class CtrlAAndCmdABehaviourOverride implements Feature {
@@ -32,6 +33,14 @@ export class CtrlAAndCmdABehaviourOverride implements Feature {
         },
       ]),
     );
+
+    this.plugin.addCommand({
+      id: "select-list-content",
+      icon: "list",
+      name: "Select list content",
+      editorCallback: createEditorCallback(this.selectListContent),
+      hotkeys: [],
+    });
   }
 
   async unload() {}
@@ -47,5 +56,10 @@ export class CtrlAAndCmdABehaviourOverride implements Feature {
       (root) => new SelectAllContent(root),
       editor,
     );
+  };
+
+  private selectListContent = (editor: MyEditor) => {
+    const { shouldStopPropagation } = this.run(editor);
+    return shouldStopPropagation;
   };
 }

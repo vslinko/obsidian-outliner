@@ -14,6 +14,7 @@ import { ObsidianSettings } from "../services/ObsidianSettings";
 import { OperationPerformer } from "../services/OperationPerformer";
 import { Parser } from "../services/Parser";
 import { Settings } from "../services/Settings";
+import { createEditorCallback } from "../utils/createEditorCallback";
 import { createKeymapRunCallback } from "../utils/createKeymapRunCallback";
 
 export class EnterBehaviourOverride implements Feature {
@@ -47,6 +48,14 @@ export class EnterBehaviourOverride implements Feature {
         ]),
       ),
     );
+
+    this.plugin.addCommand({
+      id: "insert-note-line",
+      icon: "list-plus",
+      name: "Insert note line",
+      editorCallback: createEditorCallback(this.insertNoteLine),
+      hotkeys: [],
+    });
   }
 
   async unload() {}
@@ -136,5 +145,10 @@ export class EnterBehaviourOverride implements Feature {
       new InsertNewLineWithoutBullet(root),
       editor,
     );
+  };
+
+  private insertNoteLine = (editor: MyEditor) => {
+    const { shouldStopPropagation } = this.runShiftEnter(editor);
+    return shouldStopPropagation;
   };
 }

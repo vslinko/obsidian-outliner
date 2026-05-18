@@ -23,6 +23,7 @@
 - #574: BetterEnter now ignores list-looking lines inside fenced code blocks even when the opening fence is outside the parsed list range.
 - #577: Vim `O` now inserts a sibling above the current parent item instead of creating a nested child when the item already has sub-items.
 - #579: BetterEnter now handles `Shift-Enter` as a real note line insertion, so it no longer falls back to creating another bullet or leaving broken indentation.
+- #580: New editor commands expose enhanced select-all and note-line insertion without keyboard shortcuts, so iOS and Android toolbars can trigger the same list-aware behavior as `Ctrl/Cmd+A` and `Shift-Enter`.
 - #582: Enhanced Tab indentation now also intercepts Obsidian editor `indentMore`/`indentLess` commands, so Android and iOS toolbar indent actions follow the same list-aware logic as Tab and Shift-Tab.
 - #585: Tab indentation now uses the current Obsidian indent setting for legacy list items, so changing the editor indent width no longer leaves old space-indented lists stuck on the previous width.
 - #586: Repeated Tab indentation now keeps using the narrower surrounding indent step instead of alternating between short and overly deep levels when the current Obsidian tab width is wider than the existing list structure.
