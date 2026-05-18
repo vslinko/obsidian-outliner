@@ -158,7 +158,17 @@ export class DragAndDrop implements Feature {
     const editor = getEditorFromState(view.state);
     const pos = editor.offsetToPos(view.posAtCoords({ x, y }));
     const root = this.parser.parse(editor, pos);
+    if (!root) {
+      this.notifyInvalidListStructure();
+      return;
+    }
+
     const list = root.getListUnderLine(pos.line);
+    if (!list) {
+      this.notifyInvalidListStructure();
+      return;
+    }
+
     const state = new DragAndDropState(view, editor, root, list);
 
     if (!state.hasDropVariants()) {
@@ -232,6 +242,13 @@ export class DragAndDrop implements Feature {
     });
 
     document.body.classList.add("outliner-plugin-dragging");
+  }
+
+  private notifyInvalidListStructure() {
+    new Notice(
+      `The item cannot be moved. Fix the invalid list indentation and try again.`,
+      5000,
+    );
   }
 
   private unhightlightDraggingLines() {
