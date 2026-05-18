@@ -79,6 +79,8 @@ jobs:
     if: ${{ github.event_name == 'release' }}
     runs-on: ubuntu-24.04
     needs: [lint, test-on-linux, test-on-osx]
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
