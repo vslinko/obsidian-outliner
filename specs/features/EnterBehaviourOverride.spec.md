@@ -245,6 +245,22 @@
 - [ ] |
 ```
 
+# enter should keep the original checked checkbox when inserting above it
+
+- applyState:
+
+```md
+- [x] |checked task
+```
+
+- keydown: `Enter`
+- assertState:
+
+```md
+- [ ] |
+- [x] checked task
+```
+
 # enter should create unchecked checkbox if current item contains checkbox with custom state
 
 - applyState:

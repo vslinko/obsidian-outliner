@@ -56,7 +56,19 @@ export class CreateNewItem implements Operation {
       return;
     }
 
-    const { oldLines, newLines } = lines.reduce(
+    const checkboxAtContentStart = new RegExp(`^${checkboxRe}`).exec(
+      lines[0].text,
+    );
+    const cursorOffsetInCurrentLine = selection.from - lineUnderCursor.from.ch;
+    const cursorInsideLeadingCheckbox =
+      lineIndex === 0 &&
+      checkboxAtContentStart !== null &&
+      cursorOffsetInCurrentLine < checkboxAtContentStart[0].length;
+    const hasCheckboxInContent =
+      checkboxAtContentStart !== null && !cursorInsideLeadingCheckbox;
+    const hasCheckbox = hasCheckboxInContent || list.getCheckboxLength() > 0;
+
+    let { oldLines, newLines } = lines.reduce(
       (acc, line) => {
         if (cursor.line > line.from.line) {
           acc.oldLines.push(line.text);
@@ -77,6 +89,16 @@ export class CreateNewItem implements Operation {
       },
     );
 
+    const shouldInsertUncheckedSiblingBeforeCurrentItem =
+      lineIndex === 0 &&
+      checkboxAtContentStart !== null &&
+      oldLines[0] === checkboxAtContentStart[0];
+
+    if (shouldInsertUncheckedSiblingBeforeCurrentItem) {
+      oldLines = lines.map((line) => line.text);
+      newLines = [""];
+    }
+
     const codeBlockBacticks = oldLines.join("\n").split("```").length - 1;
     const codeBlockBacticksBeforeRoot =
       this.documentPrefixBeforeRoot.split("```").length - 1;
@@ -89,18 +111,6 @@ export class CreateNewItem implements Operation {
 
     this.stopPropagation = true;
     this.updated = true;
-
-    const checkboxAtContentStart = new RegExp(`^${checkboxRe}`).exec(
-      lines[0].text,
-    );
-    const cursorOffsetInCurrentLine = selection.from - lineUnderCursor.from.ch;
-    const cursorInsideLeadingCheckbox =
-      lineIndex === 0 &&
-      checkboxAtContentStart !== null &&
-      cursorOffsetInCurrentLine < checkboxAtContentStart[0].length;
-    const hasCheckboxInContent =
-      checkboxAtContentStart !== null && !cursorInsideLeadingCheckbox;
-    const hasCheckbox = hasCheckboxInContent || list.getCheckboxLength() > 0;
 
     if (lineIndex > 0 && list.isEmpty() && !hasCheckbox) {
       const lineOffset = cursor.ch - lineUnderCursor.from.ch;
@@ -131,10 +141,11 @@ export class CreateNewItem implements Operation {
     const childIsFolded = list.isFoldRoot();
     const endPos = list.getLastLineContentEnd();
     const endOfLine = cursor.line === endPos.line && cursor.ch === endPos.ch;
+    const insertAfter = this.after && !shouldInsertUncheckedSiblingBeforeCurrentItem;
 
     const onChildLevel =
       listIsZoomingRoot ||
-      (this.after && hasChildren && !childIsFolded && endOfLine);
+      (insertAfter && hasChildren && !childIsFolded && endOfLine);
 
     const indent = onChildLevel
       ? hasChildren
@@ -174,7 +185,7 @@ export class CreateNewItem implements Operation {
     if (onChildLevel) {
       list.addBeforeAll(newList);
     } else {
-      if (this.after && (!childIsFolded || !endOfLine)) {
+      if (insertAfter && (!childIsFolded || !endOfLine)) {
         const children = list.getChildren();
         for (const child of children) {
           list.removeChild(child);
@@ -182,7 +193,7 @@ export class CreateNewItem implements Operation {
         }
       }
 
-      if (this.after) {
+      if (insertAfter) {
         list.getParent().addAfter(list, newList);
       } else {
         list.getParent().addBefore(list, newList);
