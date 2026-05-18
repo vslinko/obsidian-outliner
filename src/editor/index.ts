@@ -25,7 +25,8 @@ export class MyEditorSelection {
 }
 
 export function getEditorFromState(state: EditorState) {
-  const { editor } = state.field(editorInfoField);
+  const editorInfo = state.field(editorInfoField);
+  const editor = editorInfo?.editor;
 
   if (!editor) {
     return null;
@@ -35,7 +36,8 @@ export function getEditorFromState(state: EditorState) {
 }
 
 export function getFoldedLinesFromState(state: EditorState): number[] {
-  const { editor } = state.field(editorInfoField);
+  const editorInfo = state.field(editorInfoField);
+  const editor = editorInfo?.editor;
 
   if (!editor) {
     return [];

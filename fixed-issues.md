@@ -1,5 +1,6 @@
 # Fixed Issues
 
+- #503: Vertical lines and other editor-state lookups now tolerate an uninitialized `editorInfoField`, so opening Obsidian no longer throws `Cannot read properties of undefined (reading 'editor')` before an editor is attached.
 - #337: ArrowUp now recovers correctly from checkbox lines when the cursor gets stuck in the hidden bullet/checkbox prefix instead of moving to the previous item.
 - #504: ArrowLeft now leaves the first row of a list for the previous plain line instead of snapping back to the bullet/checkbox when stick-cursor mode is enabled.
 - #505: Pressing Enter immediately after a leading checked/custom checkbox now inserts a new unchecked sibling above it while preserving the original item's checkbox state and text.
