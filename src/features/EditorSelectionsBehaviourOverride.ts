@@ -42,10 +42,18 @@ export function getTrackedNavigationKey(
 }
 
 export function shouldSkipSelectionAdjustmentsForKeydown(e: KeyboardEvent) {
+  if (e.altKey) {
+    return true;
+  }
+
   return (
     (e.key === "ArrowUp" || e.key === "ArrowDown") &&
     (e.altKey || e.ctrlKey || e.metaKey)
   );
+}
+
+export function shouldSkipSelectionAdjustmentsForMousedown(e: MouseEvent) {
+  return e.altKey;
 }
 
 export class EditorSelectionsBehaviourOverride implements Feature {
@@ -63,6 +71,7 @@ export class EditorSelectionsBehaviourOverride implements Feature {
     this.plugin.registerEditorExtension([
       EditorView.domEventObservers({
         keydown: this.handleKeyDown,
+        mousedown: this.handleMouseDown,
       }),
       EditorState.transactionExtender.of(this.transactionExtender),
     ]);
@@ -168,6 +177,12 @@ export class EditorSelectionsBehaviourOverride implements Feature {
   private handleKeyDown = (e: KeyboardEvent) => {
     this.skipSelectionAdjustments = shouldSkipSelectionAdjustmentsForKeydown(e);
     this.lastKey = getTrackedNavigationKey(e);
+  };
+
+  private handleMouseDown = (e: MouseEvent) => {
+    this.skipSelectionAdjustments =
+      shouldSkipSelectionAdjustmentsForMousedown(e);
+    this.lastKey = null;
   };
 
   private getSingleCursor(state: EditorState): MyEditorPosition | null {

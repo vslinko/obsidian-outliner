@@ -10,6 +10,7 @@
 - #531: Drag-and-drop now fails gracefully with a clear notice when invalid indented note text breaks list parsing, instead of throwing a `getListUnderLine` TypeError.
 - #543: Indent and outdent now keep the caret at the same relative text position even inside delimited inline markup such as `**bold**`.
 - #544: The "Stick the cursor to the content" setting now explains each mode in the settings UI, including when to use `Never`, `Bullets`, and `Bullets and checkboxes`.
+- #545: Holding `Alt`/`Option` now temporarily bypasses cursor-stick post-processing for keyboard navigation and mouse placement, so you can place the caret inside bullet/checkbox markup without changing the setting.
 - #549: ArrowDown now moves from a folded item to the next visible sibling instead of trapping the caret inside the folded block.
 - #550: Vim `j`/`k` navigation now preserves folded items, so moving down from a folded block no longer expands it and drop the cursor into hidden children.
 - #552: Move lists and sublists up/down now works again on newer Obsidian versions such as 1.8.4.

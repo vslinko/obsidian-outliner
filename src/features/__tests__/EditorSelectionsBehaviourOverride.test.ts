@@ -1,6 +1,7 @@
 import {
   getTrackedNavigationKey,
   shouldSkipSelectionAdjustmentsForKeydown,
+  shouldSkipSelectionAdjustmentsForMousedown,
 } from "../EditorSelectionsBehaviourOverride";
 
 jest.mock(
@@ -114,10 +115,37 @@ describe("getTrackedNavigationKey", () => {
     expect(
       shouldSkipSelectionAdjustmentsForKeydown({
         key: "ArrowLeft",
+        altKey: true,
+        ctrlKey: false,
+        metaKey: false,
+      } as KeyboardEvent),
+    ).toBe(true);
+
+    expect(
+      shouldSkipSelectionAdjustmentsForKeydown({
+        key: "ArrowLeft",
         altKey: false,
         ctrlKey: true,
         metaKey: false,
       } as KeyboardEvent),
+    ).toBe(false);
+  });
+});
+
+describe("shouldSkipSelectionAdjustmentsForMousedown", () => {
+  test("should skip selection adjustments while Alt/Opt is held", () => {
+    expect(
+      shouldSkipSelectionAdjustmentsForMousedown({
+        altKey: true,
+      } as MouseEvent),
+    ).toBe(true);
+  });
+
+  test("should keep selection adjustments for plain clicks", () => {
+    expect(
+      shouldSkipSelectionAdjustmentsForMousedown({
+        altKey: false,
+      } as MouseEvent),
     ).toBe(false);
   });
 });
