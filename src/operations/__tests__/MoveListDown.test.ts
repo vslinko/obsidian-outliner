@@ -36,6 +36,40 @@ describe("MoveListDown operation", () => {
     expect(root.getCursor().ch).toBe(5);
   });
 
+  test("should move root items down even when they have shared leading whitespace", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: " - item 1\n - item 2\n - item 3\n",
+        cursor: { line: 0, ch: 6 },
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new MoveListDown(root, true);
+    op.perform();
+
+    expect(root.print()).toBe(" - item 2\n - item 1\n - item 3");
+    expect(root.getCursor().line).toBe(1);
+    expect(root.getCursor().ch).toBe(6);
+  });
+
+  test("should move a mixed-indentation sibling down without corrupting the list", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: "- item 1\n    - item 1.1\n\t- item 1.2\n",
+        cursor: { line: 1, ch: 7 },
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new MoveListDown(root, true);
+    op.perform();
+
+    expect(root.print()).toBe("- item 1\n\t- item 1.2\n    - item 1.1");
+    expect(root.getCursor().line).toBe(2);
+    expect(root.getCursor().ch).toBe(7);
+  });
+
   test("should move a list item to the next parent level if it's the last sibling", () => {
     const root = makeRoot({
       editor: makeEditor({
