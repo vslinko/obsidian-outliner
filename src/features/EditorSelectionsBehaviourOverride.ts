@@ -13,8 +13,30 @@ import { OperationPerformer } from "../services/OperationPerformer";
 import { Parser } from "../services/Parser";
 import { Settings } from "../services/Settings";
 
+export function getTrackedNavigationKey(
+  e: KeyboardEvent,
+): "ArrowUp" | "ArrowDown" | null {
+  if (shouldSkipSelectionAdjustmentsForKeydown(e)) {
+    return null;
+  }
+
+  if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+    return e.key;
+  }
+
+  return null;
+}
+
+export function shouldSkipSelectionAdjustmentsForKeydown(e: KeyboardEvent) {
+  return (
+    (e.key === "ArrowUp" || e.key === "ArrowDown") &&
+    (e.altKey || e.ctrlKey || e.metaKey)
+  );
+}
+
 export class EditorSelectionsBehaviourOverride implements Feature {
   private lastKey: string | null = null;
+  private skipSelectionAdjustments = false;
 
   constructor(
     private plugin: Plugin,
@@ -42,6 +64,12 @@ export class EditorSelectionsBehaviourOverride implements Feature {
     const editor = getEditorFromState(tr.startState);
     const previousCursor = this.getSingleCursor(tr.startState);
     const pressedKey = this.lastKey;
+    const shouldSkipSelectionAdjustments = this.skipSelectionAdjustments;
+    this.skipSelectionAdjustments = false;
+
+    if (shouldSkipSelectionAdjustments) {
+      return null;
+    }
 
     setTimeout(() => {
       this.handleSelectionsChanges(editor, previousCursor, pressedKey);
@@ -93,7 +121,8 @@ export class EditorSelectionsBehaviourOverride implements Feature {
   };
 
   private handleKeyDown = (e: KeyboardEvent) => {
-    this.lastKey = e.key;
+    this.skipSelectionAdjustments = shouldSkipSelectionAdjustmentsForKeydown(e);
+    this.lastKey = getTrackedNavigationKey(e);
   };
 
   private getSingleCursor(state: EditorState): MyEditorPosition | null {
