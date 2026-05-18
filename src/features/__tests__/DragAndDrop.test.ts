@@ -206,11 +206,11 @@ describe("DragAndDrop", () => {
       }
     ).handleSettingsChange();
 
-    expect(
-      mainDocument.body.classList.contains("outliner-plugin-dnd"),
-    ).toBe(false);
-    expect(
-      popoutDocument.body.classList.contains("outliner-plugin-dnd"),
-    ).toBe(false);
+    expect(mainDocument.body.classList.contains("outliner-plugin-dnd")).toBe(
+      false,
+    );
+    expect(popoutDocument.body.classList.contains("outliner-plugin-dnd")).toBe(
+      false,
+    );
   });
 });

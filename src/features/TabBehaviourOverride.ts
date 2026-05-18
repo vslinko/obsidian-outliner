@@ -61,7 +61,10 @@ export class TabBehaviourOverride implements Feature {
   private runIndent(editor: MyEditor) {
     const root = this.parser.parse(editor);
 
-    if (!root || !this.shouldHandleListEditing(root.getListUnderCursor().getBullet())) {
+    if (
+      !root ||
+      !this.shouldHandleListEditing(root.getListUnderCursor().getBullet())
+    ) {
       return {
         shouldUpdate: false,
         shouldStopPropagation: false,
@@ -82,7 +85,10 @@ export class TabBehaviourOverride implements Feature {
   private runOutdent(editor: MyEditor) {
     const root = this.parser.parse(editor);
 
-    if (!root || !this.shouldHandleListEditing(root.getListUnderCursor().getBullet())) {
+    if (
+      !root ||
+      !this.shouldHandleListEditing(root.getListUnderCursor().getBullet())
+    ) {
       return {
         shouldUpdate: false,
         shouldStopPropagation: false,
@@ -139,5 +145,5 @@ export class TabBehaviourOverride implements Feature {
     }
 
     return false;
-  };
+  }
 }

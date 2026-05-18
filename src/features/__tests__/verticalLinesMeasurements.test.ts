@@ -12,9 +12,11 @@ describe("getVerticalLinesContentLeft", () => {
     const contentParent = { offsetLeft: 56 };
     const view: Parameters<typeof getVerticalLinesContentLeft>[0] = {
       dom: {
-        querySelector: jest.fn().mockImplementation((selector: string) =>
-          selector === "div.cm-line" ? line : null,
-        ),
+        querySelector: jest
+          .fn()
+          .mockImplementation((selector: string) =>
+            selector === "div.cm-line" ? line : null,
+          ),
       },
       scrollDOM,
       contentDOM: {

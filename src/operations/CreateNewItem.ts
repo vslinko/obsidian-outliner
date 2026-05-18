@@ -141,7 +141,8 @@ export class CreateNewItem implements Operation {
     const childIsFolded = list.isFoldRoot();
     const endPos = list.getLastLineContentEnd();
     const endOfLine = cursor.line === endPos.line && cursor.ch === endPos.ch;
-    const insertAfter = this.after && !shouldInsertUncheckedSiblingBeforeCurrentItem;
+    const insertAfter =
+      this.after && !shouldInsertUncheckedSiblingBeforeCurrentItem;
 
     const onChildLevel =
       listIsZoomingRoot ||

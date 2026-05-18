@@ -12,9 +12,9 @@ import {
   getFoldedLinesFromState,
 } from "../editor";
 import { KeepCursorOutsideFoldedLines } from "../operations/KeepCursorOutsideFoldedLines";
-import { RecoverCursorAfterFoldedNavigation } from "../operations/RecoverCursorAfterFoldedNavigation";
 import { KeepCursorWithinListContent } from "../operations/KeepCursorWithinListContent";
 import { RecoverCursorAfterArrowUp } from "../operations/RecoverCursorAfterArrowUp";
+import { RecoverCursorAfterFoldedNavigation } from "../operations/RecoverCursorAfterFoldedNavigation";
 import { OperationPerformer } from "../services/OperationPerformer";
 import { Parser } from "../services/Parser";
 import { Settings } from "../services/Settings";

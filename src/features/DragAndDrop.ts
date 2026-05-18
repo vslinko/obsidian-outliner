@@ -317,7 +317,9 @@ export class DragAndDrop implements Feature {
   private drawDropZone() {
     const { state } = this;
     const { view, editor, dropVariant } = state;
-    const { dropZone, dropZonePadding, doc } = this.getDocumentContext(state.doc);
+    const { dropZone, dropZonePadding, doc } = this.getDocumentContext(
+      state.doc,
+    );
 
     const newParent =
       dropVariant.whereToMove === "inside"
@@ -343,7 +345,9 @@ export class DragAndDrop implements Feature {
       const width = indentWidth * level;
       const dashPadding = 3;
       const dashWidth = indentWidth - dashPadding;
-      const color = getComputedStyle(doc.body).getPropertyValue("--color-accent");
+      const color = getComputedStyle(doc.body).getPropertyValue(
+        "--color-accent",
+      );
 
       dropZonePadding.style.width = `${width}px`;
       dropZonePadding.style.marginLeft = `-${width}px`;

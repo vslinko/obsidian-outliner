@@ -29,7 +29,11 @@ export class RecoverCursorAfterFoldedNavigation implements Operation {
   perform() {
     const { root, previousCursor, previousFoldedLines, pressedKey } = this;
 
-    if (!root.hasSingleCursor() || !previousCursor || pressedKey !== "ArrowDown") {
+    if (
+      !root.hasSingleCursor() ||
+      !previousCursor ||
+      pressedKey !== "ArrowDown"
+    ) {
       return;
     }
 

@@ -8,13 +8,13 @@ import {
 } from "@codemirror/view";
 
 import { Feature } from "./Feature";
+import { getVerticalLinesContentLeft } from "./verticalLinesMeasurements";
 
 import { MyEditor, getEditorFromState } from "../editor";
 import { List } from "../root";
 import { ObsidianSettings } from "../services/ObsidianSettings";
 import { Parser } from "../services/Parser";
 import { Settings } from "../services/Settings";
-import { getVerticalLinesContentLeft } from "./verticalLinesMeasurements";
 
 const VERTICAL_LINES_BODY_CLASS = "outliner-plugin-vertical-lines";
 

@@ -28,11 +28,7 @@ describe("getEditorFromState", () => {
       field: jest.fn().mockReturnValue(undefined),
     };
 
-    expect(
-      getEditorFromState(
-        state as never,
-      ),
-    ).toBeNull();
+    expect(getEditorFromState(state as never)).toBeNull();
   });
 });
 
@@ -42,10 +38,6 @@ describe("getFoldedLinesFromState", () => {
       field: jest.fn().mockReturnValue(undefined),
     };
 
-    expect(
-      getFoldedLinesFromState(
-        state as never,
-      ),
-    ).toEqual([]);
+    expect(getFoldedLinesFromState(state as never)).toEqual([]);
   });
 });
