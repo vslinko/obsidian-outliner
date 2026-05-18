@@ -76,7 +76,20 @@ Move lists with children wherever you want without breaking the structure.
 
 ### Stick the cursor to the content
 
-Don't let the cursor move to the bullet position. Affects cursor movement, text deletion, text selection.
+Keep the caret inside the editable text instead of letting it drift into the
+hidden markdown prefix. This affects arrow-key navigation, deletion, and text
+selection in Live Preview.
+
+- `Never`: let the caret move anywhere, including the bullet and checkbox
+  markup.
+- `Stick cursor out of bullets`: keep the caret out of the bullet marker such
+  as `- ` or `1. `, but allow it inside checkbox markup.
+- `Stick cursor out of bullets and checkboxes`: keep the caret out of both the
+  bullet marker and checkbox markup such as `- [ ] ` or `- [x] `.
+
+This is useful if you want list editing to feel closer to an outliner or block
+editor, where the caret stays on the content and keyboard actions operate on
+the text instead of the markdown syntax.
 
 | Setting                         | Default value |
 |---------------------------------|:-------------:|

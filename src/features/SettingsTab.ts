@@ -24,7 +24,9 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Stick the cursor to the content")
-      .setDesc("Don't let the cursor move to the bullet position.")
+      .setDesc(
+        "Keep the caret in list content instead of the markdown prefix. Choose whether to block bullets only or bullets and checkboxes.",
+      )
       .addDropdown((dropdown) => {
         dropdown
           .addOptions({
