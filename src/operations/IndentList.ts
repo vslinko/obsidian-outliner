@@ -20,6 +20,32 @@ export class IndentList implements Operation {
     return this.updated;
   }
 
+  private getIndentWidth(indent: string) {
+    let width = 0;
+
+    for (const char of indent) {
+      width += char === "\t" ? 4 : 1;
+    }
+
+    return width;
+  }
+
+  private getSmallestIndentUnit(...indents: string[]) {
+    return indents.reduce((smallest, current) => {
+      if (current === "") {
+        return smallest;
+      }
+
+      if (smallest === "") {
+        return current;
+      }
+
+      return this.getIndentWidth(current) < this.getIndentWidth(smallest)
+        ? current
+        : smallest;
+    }, "");
+  }
+
   perform() {
     const { root } = this;
 
@@ -52,17 +78,20 @@ export class IndentList implements Operation {
     }
 
     if (indentChars === "") {
-      indentChars = this.defaultIndentChars;
-    }
-
-    if (indentChars === "") {
-      indentChars = list
+      const currentIndentChars = list
         .getFirstLineIndent()
         .slice(parent.getFirstLineIndent().length);
+      indentChars = this.getSmallestIndentUnit(
+        currentIndentChars,
+        this.defaultIndentChars,
+      );
     }
 
     if (indentChars === "" && !list.isEmpty()) {
-      indentChars = list.getChildren()[0].getFirstLineIndent();
+      indentChars = list
+        .getChildren()[0]
+        .getFirstLineIndent()
+        .slice(list.getFirstLineIndent().length);
     }
 
     if (indentChars === "") {
