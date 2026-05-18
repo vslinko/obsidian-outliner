@@ -323,4 +323,55 @@ describe("CreateNewItem operation", () => {
     expect(root.getCursor().line).toBe(2);
     expect(root.getCursor().ch).toBe(2);
   });
+
+  test("should create a child item when cursor is at the end of notes and the item has children", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: "- one\n  - two\n    notes\n    - three\n",
+        cursor: { line: 2, ch: 9 },
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new CreateNewItem(root, "  ", getZoomRange, true);
+    op.perform();
+
+    expect(root.print()).toBe("- one\n  - two\n    notes\n    - \n    - three");
+    expect(root.getCursor().line).toBe(3);
+    expect(root.getCursor().ch).toBe(6);
+  });
+
+  test("should create a sibling checkbox when cursor is at the end of notes", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: "- [ ] one\n  qwe\n",
+        cursor: { line: 1, ch: 5 },
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new CreateNewItem(root, "  ", getZoomRange, true);
+    op.perform();
+
+    expect(root.print()).toBe("- [ ] one\n  qwe\n- [ ] ");
+    expect(root.getCursor().line).toBe(2);
+    expect(root.getCursor().ch).toBe(6);
+  });
+
+  test("should create a sibling checkbox and split note text", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: "- [ ] one\n  qwe\n",
+        cursor: { line: 1, ch: 3 },
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new CreateNewItem(root, "  ", getZoomRange, true);
+    op.perform();
+
+    expect(root.print()).toBe("- [ ] one\n  q\n- [ ] we");
+    expect(root.getCursor().line).toBe(2);
+    expect(root.getCursor().ch).toBe(6);
+  });
 });
