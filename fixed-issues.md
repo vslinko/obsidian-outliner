@@ -6,6 +6,7 @@
 - #506: Drag and drop now keeps working when CodeMirror cannot provide coordinates for off-screen lines and when the editor has extra left padding from document properties/frontmatter.
 - #509: Move lists and sublists up/down now works with a single text selection, including multiline selections.
 - #529: BetterEnter now preserves plain bullets when the item text merely contains checkbox-like inline text such as `-[a] ` instead of promoting the new item to a checkbox.
+- #531: Drag-and-drop now fails gracefully with a clear notice when invalid indented note text breaks list parsing, instead of throwing a `getListUnderLine` TypeError.
 - #567: Move-list commands now also cover a single multiline selection in integration tests, so moving selected blocks up no longer regresses silently.
 - #552: Move lists and sublists up/down now works again on newer Obsidian versions such as 1.8.4.
 - #555: Ordered lists now defer to Obsidian when Smart lists is disabled, so pressing Enter no longer renumbers items unexpectedly.
@@ -17,7 +18,7 @@
 - #569: BetterEnter now keeps the cursor after the space in ordered list item `10. ` and higher instead of leaving the caret inside the bullet prefix.
 - #574: BetterEnter now ignores list-looking lines inside fenced code blocks even when the opening fence is outside the parsed list range.
 - #585: Tab indentation now uses the current Obsidian indent setting for legacy list items, so changing the editor indent width no longer leaves old space-indented lists stuck on the previous width.
+- #588: Drag-and-drop now keeps a separate DOM context per Obsidian window, so pop-out windows get their own listeners, drop zone, and body classes instead of depending on the main document.
 - #590: ArrowUp recovery now also covers root-level list items when visual cursor movement lands in CSS-added top padding before the list content.
 - #591: Parser-based commands now keep working when root list items share leading whitespace and when sibling items mix spaces and tabs for indentation instead of failing the entire list parse.
 - #592: Move list up/down hotkeys are registered in the editor scope so Cmd/Ctrl+Shift+ArrowUp/Down works reliably again.
-- #531: Drag-and-drop now fails gracefully with a clear notice when invalid indented note text breaks list parsing, instead of throwing a `getListUnderLine` TypeError.
