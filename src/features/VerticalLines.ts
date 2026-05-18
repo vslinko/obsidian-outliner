@@ -14,6 +14,7 @@ import { List } from "../root";
 import { ObsidianSettings } from "../services/ObsidianSettings";
 import { Parser } from "../services/Parser";
 import { Settings } from "../services/Settings";
+import { getVerticalLinesContentLeft } from "./verticalLinesMeasurements";
 
 const VERTICAL_LINES_BODY_CLASS = "outliner-plugin-vertical-lines";
 
@@ -278,7 +279,7 @@ class VerticalLinesPluginValue implements PluginValue {
     this.scroller.style.top = cmScroll.offsetTop + "px";
     this.contentContainer.style.height = cmSizerChildrenSumHeight + "px";
     this.contentContainer.style.marginLeft =
-      cmContentContainer.offsetLeft + "px";
+      getVerticalLinesContentLeft(this.view) + "px";
     this.contentContainer.style.marginTop =
       (cmContent.firstElementChild as HTMLElement).offsetTop - 24 + "px";
 
