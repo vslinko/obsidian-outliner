@@ -34,6 +34,22 @@ export function getEditorFromState(state: EditorState) {
   return new MyEditor(editor);
 }
 
+export function getFoldedLinesFromState(state: EditorState): number[] {
+  const { editor } = state.field(editorInfoField);
+
+  if (!editor) {
+    return [];
+  }
+
+  const c = foldedRanges(state).iter();
+  const res: number[] = [];
+  while (c.value) {
+    res.push(editor.offsetToPos(c.from).line);
+    c.next();
+  }
+  return res;
+}
+
 declare global {
   interface Window {
     ObsidianZoomPlugin?: {

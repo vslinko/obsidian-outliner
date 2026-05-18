@@ -24,3 +24,4 @@
 - #591: Parser-based commands now keep working when root list items share leading whitespace and when sibling items mix spaces and tabs for indentation instead of failing the entire list parse.
 - #592: Move list up/down hotkeys are registered in the editor scope so Cmd/Ctrl+Shift+ArrowUp/Down works reliably again.
 - #559: Vertical indentation lines now anchor to the actual rendered text column, so enabling Obsidian line numbers no longer shifts them away from the list bullets.
+- #550: Vim `j`/`k` navigation now preserves folded items, so moving down from a folded block no longer expands it and drop the cursor into hidden children.

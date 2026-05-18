@@ -5,8 +5,14 @@ import { EditorView } from "@codemirror/view";
 
 import { Feature } from "./Feature";
 
-import { MyEditor, MyEditorPosition, getEditorFromState } from "../editor";
+import {
+  MyEditor,
+  MyEditorPosition,
+  getEditorFromState,
+  getFoldedLinesFromState,
+} from "../editor";
 import { KeepCursorOutsideFoldedLines } from "../operations/KeepCursorOutsideFoldedLines";
+import { RecoverCursorAfterFoldedNavigation } from "../operations/RecoverCursorAfterFoldedNavigation";
 import { KeepCursorWithinListContent } from "../operations/KeepCursorWithinListContent";
 import { RecoverCursorAfterArrowUp } from "../operations/RecoverCursorAfterArrowUp";
 import { OperationPerformer } from "../services/OperationPerformer";
@@ -22,6 +28,14 @@ export function getTrackedNavigationKey(
 
   if (e.key === "ArrowUp" || e.key === "ArrowDown") {
     return e.key;
+  }
+
+  if (e.key === "j") {
+    return "ArrowDown";
+  }
+
+  if (e.key === "k") {
+    return "ArrowUp";
   }
 
   return null;
@@ -63,6 +77,7 @@ export class EditorSelectionsBehaviourOverride implements Feature {
 
     const editor = getEditorFromState(tr.startState);
     const previousCursor = this.getSingleCursor(tr.startState);
+    const previousFoldedLines = getFoldedLinesFromState(tr.startState);
     const pressedKey = this.lastKey;
     const shouldSkipSelectionAdjustments = this.skipSelectionAdjustments;
     this.skipSelectionAdjustments = false;
@@ -72,7 +87,12 @@ export class EditorSelectionsBehaviourOverride implements Feature {
     }
 
     setTimeout(() => {
-      this.handleSelectionsChanges(editor, previousCursor, pressedKey);
+      this.handleSelectionsChanges(
+        editor,
+        previousCursor,
+        previousFoldedLines,
+        pressedKey,
+      );
     }, 0);
 
     return null;
@@ -81,12 +101,37 @@ export class EditorSelectionsBehaviourOverride implements Feature {
   private handleSelectionsChanges = (
     editor: MyEditor,
     previousCursor: MyEditorPosition | null,
+    previousFoldedLines: number[],
     pressedKey: string | null,
   ) => {
     const root = this.parser.parse(editor);
 
     if (!root) {
       return;
+    }
+
+    {
+      const recovery = new RecoverCursorAfterFoldedNavigation(
+        root,
+        previousCursor,
+        previousFoldedLines,
+        pressedKey,
+      );
+      const { shouldStopPropagation } = this.operationPerformer.eval(
+        root,
+        recovery,
+        editor,
+      );
+
+      if (shouldStopPropagation) {
+        const refoldLine = recovery.getRefoldLine();
+
+        if (refoldLine !== null) {
+          editor.fold(refoldLine);
+        }
+
+        return;
+      }
     }
 
     {
