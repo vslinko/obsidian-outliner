@@ -113,6 +113,23 @@ describe("IndentList operation", () => {
     expect(root.getCursor().ch).toBe(12);
   });
 
+  test("should keep nested indentation width consistent when the current setting is wider", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: "- item 1\n  - item 1.1\n  - item 2\n",
+        cursor: { line: 2, ch: 7 },
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new IndentList(root, "    ", true);
+    op.perform();
+
+    expect(root.print()).toBe("- item 1\n  - item 1.1\n    - item 2");
+    expect(root.getCursor().line).toBe(2);
+    expect(root.getCursor().ch).toBe(9);
+  });
+
   test("should do nothing if there are multiple selections", () => {
     const editor = makeEditor({
       text: "- item 1\n- item 2\n- item 3\n",

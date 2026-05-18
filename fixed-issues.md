@@ -18,6 +18,7 @@
 - #569: BetterEnter now keeps the cursor after the space in ordered list item `10. ` and higher instead of leaving the caret inside the bullet prefix.
 - #574: BetterEnter now ignores list-looking lines inside fenced code blocks even when the opening fence is outside the parsed list range.
 - #585: Tab indentation now uses the current Obsidian indent setting for legacy list items, so changing the editor indent width no longer leaves old space-indented lists stuck on the previous width.
+- #586: Repeated Tab indentation now keeps using the narrower surrounding indent step instead of alternating between short and overly deep levels when the current Obsidian tab width is wider than the existing list structure.
 - #588: Drag-and-drop now keeps a separate DOM context per Obsidian window, so pop-out windows get their own listeners, drop zone, and body classes instead of depending on the main document.
 - #590: ArrowUp recovery now also covers root-level list items when visual cursor movement lands in CSS-added top padding before the list content.
 - #591: Parser-based commands now keep working when root list items share leading whitespace and when sibling items mix spaces and tabs for indentation instead of failing the entire list parse.
