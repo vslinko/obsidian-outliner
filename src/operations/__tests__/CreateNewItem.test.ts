@@ -111,6 +111,23 @@ describe("CreateNewItem operation", () => {
     expect(root.getCursor().ch).toBe(6);
   });
 
+  test("should keep the original checked checkbox state when splitting at the content start", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: "- [x] checked task\n",
+        cursor: { line: 0, ch: 6 },
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new CreateNewItem(root, "  ", getZoomRange, true);
+    op.perform();
+
+    expect(root.print()).toBe("- [ ] \n- [x] checked task");
+    expect(root.getCursor().line).toBe(0);
+    expect(root.getCursor().ch).toBe(6);
+  });
+
   test("should not turn a bullet with inline checkbox-like text into a checkbox", () => {
     const root = makeRoot({
       editor: makeEditor({
