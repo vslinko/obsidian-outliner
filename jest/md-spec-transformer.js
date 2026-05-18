@@ -233,6 +233,8 @@ class LinesIterator {
   }
 }
 
+const currentPlatform = process.platform;
+
 module.exports.process = function process(sourceText, sourcePath, options) {
   const l = new LinesIterator(sourceText.split("\n"));
   const s = (v) => JSON.stringify(v);
@@ -245,7 +247,7 @@ module.exports.process = function process(sourceText, sourcePath, options) {
   for (const test of parseTests(l)) {
     const platform = test.actions.find((a) => a.type === "platform");
     const testFn =
-      platform && process.platform !== platform.platform ? "test.skip" : "test";
+      platform && currentPlatform !== platform.platform ? "test.skip" : "test";
 
     code += `  ${testFn}(${s(test.title)}, async () => {\n`;
     code += `    await resetSettings();\n`;
