@@ -145,7 +145,7 @@ export class CreateNewItem implements Operation {
         ? list.getChildren()[0].getSpaceAfterBullet()
         : list.getSpaceAfterBullet();
 
-    const prefix = oldLines[0].match(checkboxRe) ? "[ ] " : "";
+    const prefix = hasCheckbox ? "[ ] " : "";
 
     const newList = new List(
       list.getRoot(),

@@ -111,6 +111,23 @@ describe("CreateNewItem operation", () => {
     expect(root.getCursor().ch).toBe(6);
   });
 
+  test("should not turn a bullet with inline checkbox-like text into a checkbox", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: "- $-[a] est$\n",
+        cursor: { line: 0, ch: 12 },
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new CreateNewItem(root, "  ", getZoomRange, true);
+    op.perform();
+
+    expect(root.print()).toBe("- $-[a] est$\n- ");
+    expect(root.getCursor().line).toBe(1);
+    expect(root.getCursor().ch).toBe(2);
+  });
+
   test("should keep a space after ordered list bullets when creating item 10", () => {
     const root = makeRoot({
       editor: makeEditor({
