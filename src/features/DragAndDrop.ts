@@ -17,9 +17,14 @@ import { Settings } from "../services/Settings";
 
 const BODY_CLASS = "outliner-plugin-dnd";
 
+interface DragAndDropDocumentContext {
+  doc: Document;
+  dropZone: HTMLDivElement;
+  dropZonePadding: HTMLDivElement;
+}
+
 export class DragAndDrop implements Feature {
-  private dropZone: HTMLDivElement;
-  private dropZonePadding: HTMLDivElement;
+  private documents = new Map<Document, DragAndDropDocumentContext>();
   private preStart: DragAndDropPreStartState | null = null;
   private state: DragAndDropState | null = null;
 
@@ -37,13 +42,19 @@ export class DragAndDrop implements Feature {
       droppingLinesStateField,
     ]);
     this.enableFeatureToggle();
-    this.createDropZone();
-    this.addEventListeners();
+    this.addManagedDocument(document);
+    this.plugin.registerEvent(
+      this.plugin.app.workspace.on("window-open", this.handleWindowOpen),
+    );
+    this.plugin.registerEvent(
+      this.plugin.app.workspace.on("window-close", this.handleWindowClose),
+    );
   }
 
   async unload() {
-    this.removeEventListeners();
-    this.removeDropZone();
+    for (const doc of Array.from(this.documents.keys())) {
+      this.removeManagedDocument(doc);
+    }
     this.disableFeatureToggle();
   }
 
@@ -54,41 +65,82 @@ export class DragAndDrop implements Feature {
 
   private disableFeatureToggle() {
     this.settings.removeCallback(this.handleSettingsChange);
-    document.body.classList.remove(BODY_CLASS);
+    for (const doc of this.documents.keys()) {
+      doc.body.classList.remove(BODY_CLASS);
+    }
   }
 
-  private createDropZone() {
-    this.dropZonePadding = document.createElement("div");
-    this.dropZonePadding.classList.add("outliner-plugin-drop-zone-padding");
-    this.dropZone = document.createElement("div");
-    this.dropZone.classList.add("outliner-plugin-drop-zone");
-    this.dropZone.style.display = "none";
-    this.dropZone.appendChild(this.dropZonePadding);
-    document.body.appendChild(this.dropZone);
+  private handleWindowOpen = (_win: unknown, window: Window) => {
+    this.addManagedDocument(window.document);
+  };
+
+  private handleWindowClose = (_win: unknown, window: Window) => {
+    this.removeManagedDocument(window.document);
+  };
+
+  private addManagedDocument(doc: Document) {
+    if (this.documents.has(doc)) {
+      return;
+    }
+
+    const dropZonePadding = doc.createElement("div");
+    dropZonePadding.classList.add("outliner-plugin-drop-zone-padding");
+    const dropZone = doc.createElement("div");
+    dropZone.classList.add("outliner-plugin-drop-zone");
+    dropZone.style.display = "none";
+    dropZone.appendChild(dropZonePadding);
+    doc.body.appendChild(dropZone);
+
+    this.documents.set(doc, {
+      doc,
+      dropZone,
+      dropZonePadding,
+    });
+    this.addEventListeners(doc);
+
+    if (isFeatureSupported() && this.settings.dragAndDrop) {
+      doc.body.classList.add(BODY_CLASS);
+    }
   }
 
-  private removeDropZone() {
-    document.body.removeChild(this.dropZone);
-    this.dropZonePadding = null;
-    this.dropZone = null;
+  private removeManagedDocument(doc: Document) {
+    if (this.preStart?.doc === doc) {
+      this.preStart = null;
+    }
+
+    if (this.state?.doc === doc) {
+      this.cancelDragging();
+    }
+
+    const context = this.documents.get(doc);
+    if (!context) {
+      return;
+    }
+
+    this.removeEventListeners(doc);
+    doc.body.classList.remove(BODY_CLASS);
+    if (context.dropZone.parentNode === doc.body) {
+      doc.body.removeChild(context.dropZone);
+    }
+    this.documents.delete(doc);
   }
 
-  private addEventListeners() {
-    document.addEventListener("mousedown", this.handleMouseDown, {
+  private addEventListeners(doc: Document) {
+    doc.addEventListener("mousedown", this.handleMouseDown, {
       capture: true,
     });
-    document.addEventListener("mousemove", this.handleMouseMove);
-    document.addEventListener("mouseup", this.handleMouseUp);
-    document.addEventListener("keydown", this.handleKeyDown);
+    doc.addEventListener("mousemove", this.handleMouseMove);
+    doc.addEventListener("mouseup", this.handleMouseUp);
+    doc.addEventListener("keydown", this.handleKeyDown);
   }
 
-  private removeEventListeners() {
-    document.removeEventListener("mousedown", this.handleMouseDown, {
+  private removeEventListeners(doc: Document) {
+    doc.removeEventListener("mousedown", this.handleMouseDown, {
       capture: true,
     });
-    document.removeEventListener("mousemove", this.handleMouseMove);
-    document.removeEventListener("mouseup", this.handleMouseUp);
-    document.removeEventListener("keydown", this.handleKeyDown);
+    doc.removeEventListener("mousemove", this.handleMouseMove);
+    doc.removeEventListener("mouseup", this.handleMouseUp);
+    doc.removeEventListener("keydown", this.handleKeyDown);
   }
 
   private handleSettingsChange = () => {
@@ -96,10 +148,12 @@ export class DragAndDrop implements Feature {
       return;
     }
 
-    if (this.settings.dragAndDrop) {
-      document.body.classList.add(BODY_CLASS);
-    } else {
-      document.body.classList.remove(BODY_CLASS);
+    for (const doc of this.documents.keys()) {
+      if (this.settings.dragAndDrop) {
+        doc.body.classList.add(BODY_CLASS);
+      } else {
+        doc.body.classList.remove(BODY_CLASS);
+      }
     }
   };
 
@@ -124,6 +178,7 @@ export class DragAndDrop implements Feature {
       x: e.x,
       y: e.y,
       view,
+      doc: getEventDocument(e),
     };
   };
 
@@ -241,7 +296,7 @@ export class DragAndDrop implements Feature {
       effects: [dndStarted.of(lines)],
     });
 
-    document.body.classList.add("outliner-plugin-dragging");
+    this.state.doc.body.classList.add("outliner-plugin-dragging");
   }
 
   private notifyInvalidListStructure() {
@@ -252,7 +307,7 @@ export class DragAndDrop implements Feature {
   }
 
   private unhightlightDraggingLines() {
-    document.body.classList.remove("outliner-plugin-dragging");
+    this.state.doc.body.classList.remove("outliner-plugin-dragging");
 
     this.state.view.dispatch({
       effects: [dndEnded.of()],
@@ -262,6 +317,7 @@ export class DragAndDrop implements Feature {
   private drawDropZone() {
     const { state } = this;
     const { view, editor, dropVariant } = state;
+    const { dropZone, dropZonePadding, doc } = this.getDocumentContext(state.doc);
 
     const newParent =
       dropVariant.whereToMove === "inside"
@@ -275,10 +331,10 @@ export class DragAndDrop implements Feature {
           (dropVariant.left - this.state.leftPadding),
       );
 
-      this.dropZone.style.display = "block";
-      this.dropZone.style.top = dropVariant.top + "px";
-      this.dropZone.style.left = dropVariant.left + "px";
-      this.dropZone.style.width = width + "px";
+      dropZone.style.display = "block";
+      dropZone.style.top = dropVariant.top + "px";
+      dropZone.style.left = dropVariant.left + "px";
+      dropZone.style.width = width + "px";
     }
 
     {
@@ -287,13 +343,11 @@ export class DragAndDrop implements Feature {
       const width = indentWidth * level;
       const dashPadding = 3;
       const dashWidth = indentWidth - dashPadding;
-      const color = getComputedStyle(document.body).getPropertyValue(
-        "--color-accent",
-      );
+      const color = getComputedStyle(doc.body).getPropertyValue("--color-accent");
 
-      this.dropZonePadding.style.width = `${width}px`;
-      this.dropZonePadding.style.marginLeft = `-${width}px`;
-      this.dropZonePadding.style.backgroundImage = `url('data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%20${width}%204%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cline%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%22${width}%22%20y2%3D%220%22%20stroke%3D%22${color}%22%20stroke-width%3D%228%22%20stroke-dasharray%3D%22${dashWidth}%20${dashPadding}%22%2F%3E%3C%2Fsvg%3E')`;
+      dropZonePadding.style.width = `${width}px`;
+      dropZonePadding.style.marginLeft = `-${width}px`;
+      dropZonePadding.style.backgroundImage = `url('data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%20${width}%204%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cline%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%22${width}%22%20y2%3D%220%22%20stroke%3D%22${color}%22%20stroke-width%3D%228%22%20stroke-dasharray%3D%22${dashWidth}%20${dashPadding}%22%2F%3E%3C%2Fsvg%3E')`;
     }
 
     this.state.view.dispatch({
@@ -311,7 +365,16 @@ export class DragAndDrop implements Feature {
   }
 
   private hideDropZone() {
-    this.dropZone.style.display = "none";
+    this.getDocumentContext(this.state.doc).dropZone.style.display = "none";
+  }
+
+  private getDocumentContext(doc: Document) {
+    const context = this.documents.get(doc);
+    if (!context) {
+      throw new Error(`Missing drag-and-drop document context`);
+    }
+
+    return context;
   }
 }
 
@@ -328,6 +391,7 @@ interface DragAndDropPreStartState {
   x: number;
   y: number;
   view: EditorView;
+  doc: Document;
 }
 
 class DragAndDropState {
@@ -341,6 +405,7 @@ class DragAndDropState {
     public readonly editor: MyEditor,
     public readonly root: Root,
     public readonly list: List,
+    public readonly doc: Document = view.dom.ownerDocument,
   ) {
     this.collectDropVariants();
     this.calculateLeftPadding();
@@ -605,4 +670,13 @@ function isSameRoots(a: Root, b: Root) {
 
 function isFeatureSupported() {
   return Platform.isDesktop;
+}
+
+function getEventDocument(e: Event) {
+  const target = e.target;
+  if (target instanceof Node && target.ownerDocument) {
+    return target.ownerDocument;
+  }
+
+  return document;
 }
