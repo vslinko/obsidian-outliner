@@ -90,7 +90,12 @@ export class CreateNewItem implements Operation {
     this.stopPropagation = true;
     this.updated = true;
 
-    if (lineIndex > 0) {
+    const hasCheckboxInContent = new RegExp(`^${checkboxRe}`).test(
+      lines[0].text,
+    );
+    const hasCheckbox = hasCheckboxInContent || list.getCheckboxLength() > 0;
+
+    if (lineIndex > 0 && list.isEmpty() && !hasCheckbox) {
       const lineOffset = cursor.ch - lineUnderCursor.from.ch;
       const lineText = lines[lineIndex].text;
       const left = lineText.slice(0, lineOffset);

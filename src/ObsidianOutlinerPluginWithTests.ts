@@ -37,6 +37,11 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
   resetSettings() {
     this.settings.reset();
     this.settings.previousRelease = "999.999.999";
+
+    const vault = this.app.vault as any;
+    if (typeof vault.setConfig === "function") {
+      vault.setConfig("smartIndentList", true);
+    }
   }
 
   simulateKeydown(keys: string) {
