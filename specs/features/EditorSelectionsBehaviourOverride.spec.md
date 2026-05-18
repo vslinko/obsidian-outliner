@@ -162,3 +162,22 @@
 ```md
 - [[|]]
 ```
+
+# cursor should move to the next visible item when pressing ArrowDown on a folded block
+
+- applyState:
+
+```md
+- |one #folded
+  - hidden
+- two
+```
+
+- keydown: `ArrowDown`
+- assertState:
+
+```md
+- one #folded
+  - hidden
+- |two
+```
