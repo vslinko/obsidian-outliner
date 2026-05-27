@@ -1,13 +1,13 @@
-import { MarkdownView, Notice, Plugin } from "obsidian";
-
-import { MyEditor } from "src/editor";
-import { CreateNewItem } from "src/operations/CreateNewItem";
-import { ObsidianSettings } from "src/services/ObsidianSettings";
-import { OperationPerformer } from "src/services/OperationPerformer";
-import { Parser } from "src/services/Parser";
-import { Settings } from "src/services/Settings";
+import { type Editor, MarkdownView, Notice, Plugin } from "obsidian";
 
 import { Feature } from "./Feature";
+
+import { MyEditor } from "../editor";
+import { CreateNewItem } from "../operations/CreateNewItem";
+import { ObsidianSettings } from "../services/ObsidianSettings";
+import { OperationPerformer } from "../services/OperationPerformer";
+import { Parser } from "../services/Parser";
+import { Settings } from "../services/Settings";
 
 declare global {
   type CM = object;
@@ -51,8 +51,36 @@ export class VimOBehaviourOverride implements Feature {
     this.handleSettingsChange();
   }
 
+  private moveCursorToLineEnd(editor: Editor) {
+    const cursor = editor.getCursor();
+    editor.setCursor({
+      line: cursor.line,
+      ch: editor.getLine(cursor.line).length,
+    });
+  }
+
+  private getLineIndent(line: string) {
+    return line.match(/^[ \t]*/)[0];
+  }
+
+  private openPlainLine(editor: Editor, after: boolean) {
+    const cursor = editor.getCursor();
+    const line = editor.getLine(cursor.line);
+    const indent = this.getLineIndent(line);
+
+    if (after) {
+      const insertAt = { line: cursor.line, ch: line.length };
+      editor.replaceRange(`\n${indent}`, insertAt, insertAt);
+      editor.setCursor({ line: cursor.line + 1, ch: indent.length });
+    } else {
+      const insertAt = { line: cursor.line, ch: 0 };
+      editor.replaceRange(`${indent}\n`, insertAt, insertAt);
+      editor.setCursor({ line: cursor.line, ch: indent.length });
+    }
+  }
+
   private handleSettingsChange = () => {
-    if (!this.settings.overrideVimOBehaviour) {
+    if (this.inited || !this.settings.overrideVimOBehaviour) {
       return;
     }
 
@@ -71,29 +99,27 @@ export class VimOBehaviourOverride implements Feature {
     vim.defineAction(
       "insertLineAfterBullet",
       (cm, operatorArgs: { after: boolean }) => {
-        // Move the cursor to the end of the line
-        vim.handleEx(cm, "normal! A");
+        const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+        const obsidianEditor = view?.editor;
 
-        if (!settings.overrideVimOBehaviour) {
-          if (operatorArgs.after) {
-            vim.handleEx(cm, "normal! o");
-          } else {
-            vim.handleEx(cm, "normal! O");
-          }
+        if (!obsidianEditor) {
           vim.enterInsertMode(cm);
           return;
         }
 
-        const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
-        const editor = new MyEditor(view.editor);
+        this.moveCursorToLineEnd(obsidianEditor);
+
+        if (!settings.overrideVimOBehaviour) {
+          this.openPlainLine(obsidianEditor, operatorArgs.after);
+          vim.enterInsertMode(cm);
+          return;
+        }
+
+        const editor = new MyEditor(obsidianEditor);
         const root = parser.parse(editor);
 
         if (!root) {
-          if (operatorArgs.after) {
-            vim.handleEx(cm, "normal! o");
-          } else {
-            vim.handleEx(cm, "normal! O");
-          }
+          this.openPlainLine(obsidianEditor, operatorArgs.after);
           vim.enterInsertMode(cm);
           return;
         }
