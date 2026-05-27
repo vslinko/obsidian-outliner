@@ -235,6 +235,23 @@ describe("CreateNewItem operation", () => {
     expect(root.print()).toBe("- zoomed\n  - \n  - child");
   });
 
+  test("should create sibling above (not child) when after=false and item has unfolded children", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: "- 1\n- 2\n  - a\n- 3\n",
+        cursor: { line: 1, ch: 3 },
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new CreateNewItem(root, "  ", getZoomRange, false);
+    op.perform();
+
+    expect(root.print()).toBe("- 1\n- \n- 2\n  - a\n- 3");
+    expect(root.getCursor().line).toBe(1);
+    expect(root.getCursor().ch).toBe(2);
+  });
+
   test("should not move children when not at end of line", () => {
     const root = makeRoot({
       editor: makeEditor({
