@@ -17,6 +17,7 @@ export class CreateNewItem implements Operation {
     private defaultIndentChars: string,
     private getZoomRange: GetZoomRange,
     private after: boolean = true,
+    private shouldOutdentEmptyLines: boolean = true,
   ) {}
 
   shouldStopPropagation() {
@@ -42,7 +43,13 @@ export class CreateNewItem implements Operation {
     const list = root.getListUnderCursor();
     const lines = list.getLinesInfo();
 
-    if (lines.length === 1 && isEmptyLineOrEmptyCheckbox(lines[0].text)) {
+    // Only skip creation of new items for empty lines if outdenting is enabled
+    // When outdenting is disabled, we want to create new items for empty lines
+    if (
+      lines.length === 1 &&
+      isEmptyLineOrEmptyCheckbox(lines[0].text) &&
+      this.shouldOutdentEmptyLines
+    ) {
       return;
     }
 

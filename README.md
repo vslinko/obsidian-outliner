@@ -86,7 +86,7 @@ Don't let the cursor move to the bullet position. Affects cursor movement, text 
 
 Make the Enter key behave the same as other outliners:
 
-- Enter outdents list item if it's empty.
+- Enter outdents list item if it's empty (optional setting).
 - Enter creates new line on children level if there are any children.
 - Shift-Enter creates a new note line.
 
