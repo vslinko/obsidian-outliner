@@ -10,6 +10,7 @@ const keysMap: { [key: string]: number } = {
   Backspace: 8,
   Tab: 9,
   Enter: 13,
+  Escape: 27,
   Home: 36,
   ArrowLeft: 37,
   ArrowUp: 38,
@@ -17,6 +18,7 @@ const keysMap: { [key: string]: number } = {
   ArrowDown: 40,
   Delete: 46,
   KeyA: 65,
+  KeyO: 79,
 };
 
 export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlugin {
@@ -51,6 +53,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       defaultPrevented: false,
       returnValue: true,
       cancelBubble: false,
+      key: "",
       preventDefault: function () {
         e.defaultPrevented = true;
         e.returnValue = true;
@@ -88,7 +91,39 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       throw new Error("Unknown key: " + e.code);
     }
 
+    if (e.code === "Escape" || e.code === "KeyO") {
+      e.key = this.getKeyName(e.code, e.shiftKey);
+      this.dispatchKeydown(e as KeyboardEvent);
+      return;
+    }
+
     this.editor.triggerOnKeyDown(e as KeyboardEvent);
+  }
+
+  private getKeyName(code: string, shiftKey: boolean) {
+    if (code.startsWith("Key")) {
+      const key = code.slice(3);
+      return shiftKey ? key : key.toLowerCase();
+    }
+
+    return code;
+  }
+
+  private dispatchKeydown(e: KeyboardEvent) {
+    const view: EditorView = (this.editor as any).view;
+    const event = new KeyboardEvent("keydown", {
+      key: e.key,
+      code: e.code,
+      shiftKey: e.shiftKey,
+      metaKey: e.metaKey,
+      altKey: e.altKey,
+      ctrlKey: e.ctrlKey,
+      bubbles: true,
+      cancelable: true,
+    });
+
+    Object.defineProperty(event, "keyCode", { get: () => e.keyCode });
+    view.contentDOM.dispatchEvent(event);
   }
 
   insertText(text: string) {
