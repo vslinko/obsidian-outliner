@@ -169,6 +169,12 @@ class VerticalLinesPluginValue implements PluginValue {
     }
 
     const coords = this.view.coordsAtPos(fromOffset, 1);
+    if (!coords) {
+      // coordsAtPos() returns null when the position is temporarily outside
+      // the rendered viewport (scroll, fold, tab switch); skip this pass and
+      // let the next recalculation redraw it. Fixes #601.
+      return;
+    }
     if (parentCtx.rootLeft === undefined) {
       parentCtx.rootLeft = coords.left;
     }
