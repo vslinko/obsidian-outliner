@@ -155,9 +155,22 @@ export class DragAndDrop implements Feature {
     this.preStart = null;
 
     const editor = getEditorFromState(view.state);
-    const pos = editor.offsetToPos(view.posAtCoords({ x, y }));
+    const offset = view.posAtCoords({ x, y });
+    if (offset == null) {
+      return;
+    }
+
+    const pos = editor.offsetToPos(offset);
     const root = this.parser.parse(editor, pos);
+    if (!root) {
+      return;
+    }
+
     const list = root.getListUnderLine(pos.line);
+    if (!list) {
+      return;
+    }
+
     const state = new DragAndDropState(view, editor, root, list);
 
     if (!state.hasDropVariants()) {
