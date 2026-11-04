@@ -144,21 +144,34 @@ export class Parser {
       listEndLineLookup++;
     }
 
-    if (listStartLine > parsingStartLine || listEndLine < parsingStartLine) {
-      return null;
+    // Whitespace that cannot be represented as a note separates lists. Resolve
+    // both boundaries before building the model, regardless of cursor position.
+    for (const boundary of this.findWhitespaceBoundaries(
+      editor,
+      listStartLine,
+      listEndLine,
+    )) {
+      if (boundary === parsingStartLine) {
+        return null;
+      }
+      if (boundary < parsingStartLine) {
+        listStartLine = boundary + 1;
+      } else {
+        listEndLine = boundary - 1;
+        break;
+      }
     }
 
-    // if the last line contains only spaces and that's incorrect indent, then ignore the last line
-    // https://github.com/vslinko/obsidian-outliner/issues/368
-    if (listEndLine > listStartLine) {
-      const lastLine = editor.getLine(listEndLine);
-      if (lastLine.trim().length === 0) {
-        const prevLine = editor.getLine(listEndLine - 1);
-        const [, prevLineIndent] = /^(\s*)/.exec(prevLine);
-        if (!lastLine.startsWith(prevLineIndent)) {
-          listEndLine--;
-        }
-      }
+    // A segment must start with a top-level item, not orphaned notes/children.
+    while (
+      listStartLine <= parsingStartLine &&
+      !this.isListItemWithoutSpaces(editor.getLine(listStartLine))
+    ) {
+      listStartLine++;
+    }
+
+    if (listStartLine > parsingStartLine || listEndLine < parsingStartLine) {
+      return null;
     }
 
     const root = new Root(
@@ -254,10 +267,7 @@ export class Parser {
           const matches = line.match(/^[ \t]+/);
 
           if (!matches || matches[0].length <= currentIndent.length) {
-            if (/^\s+$/.test(line)) {
-              continue;
-            }
-
+            // Skipping a line would desynchronize the model and editor ranges.
             return error(
               `Unable to parse list: expected some indent, got no indent`,
             );
@@ -275,6 +285,40 @@ export class Parser {
     }
 
     return root;
+  }
+
+  private findWhitespaceBoundaries(
+    editor: Reader,
+    fromLine: number,
+    toLine: number,
+  ): number[] {
+    const boundaries: number[] = [];
+    let itemIndent = "";
+    let notesIndent: string | null = null;
+
+    for (let l = fromLine; l <= toLine; l++) {
+      const line = editor.getLine(l);
+      const item = parseListItemRe.exec(line);
+      if (item) {
+        itemIndent = item[1];
+        notesIndent = null;
+      } else if (this.isLineWithIndent(line)) {
+        const indent = line.match(/^[ \t]+/)[0];
+        if (
+          /^\s+$/.test(line) &&
+          (!line.startsWith(notesIndent ?? itemIndent) ||
+            (notesIndent === null && indent.length <= itemIndent.length))
+        ) {
+          boundaries.push(l);
+          itemIndent = "";
+          notesIndent = null;
+        } else if (notesIndent === null) {
+          notesIndent = indent;
+        }
+      }
+    }
+
+    return boundaries;
   }
 
   private isEmptyLine(line: string) {
