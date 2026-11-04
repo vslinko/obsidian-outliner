@@ -31,14 +31,24 @@ export class MoveListUp implements Operation {
     const prev = parent.getPrevSiblingOf(list);
 
     const listStartLineBefore = root.getContentLinesRangeOf(list)[0];
+    let indentDiff = 0;
 
     if (!prev && grandParent) {
       const newParent = grandParent.getPrevSiblingOf(parent);
 
       if (newParent) {
+        const oldIndent = list.getFirstLineIndent();
+        const newIndent =
+          newParent.getChildren().last()?.getFirstLineIndent() ??
+          newParent.getFirstLineIndent() +
+            oldIndent.slice(parent.getFirstLineIndent().length);
+
         this.updated = true;
         parent.removeChild(list);
         newParent.addAfterAll(list);
+        list.unindentContent(0, oldIndent.length);
+        list.indentContent(0, newIndent);
+        indentDiff = newIndent.length - oldIndent.length;
       }
     } else if (prev) {
       this.updated = true;
@@ -56,7 +66,7 @@ export class MoveListUp implements Operation {
     const cursor = root.getCursor();
     root.replaceCursor({
       line: cursor.line + lineDiff,
-      ch: cursor.ch,
+      ch: cursor.ch + indentDiff,
     });
 
     recalculateNumericBullets(root);

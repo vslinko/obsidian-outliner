@@ -70,6 +70,178 @@
 - two
 ```
 
+# Move down from 2 to 4 spaces keeps receiving siblings independent after reparsing (#619)
+
+- applyState:
+
+```md
+- source
+  - mo|ved
+    note
+    - child
+      child note
+- destination
+    - existing
+      - existing child
+```
+
+- execute: `obsidian-outliner:move-list-item-down`
+- assertState:
+
+```md
+- source
+- destination
+    - mo|ved
+      note
+      - child
+        child note
+    - existing
+      - existing child
+```
+
+- execute: `obsidian-outliner:move-list-item-down`
+- assertState:
+
+```md
+- source
+- destination
+    - existing
+      - existing child
+    - mo|ved
+      note
+      - child
+        child note
+```
+
+# Move down from 4 to 2 spaces preserves a note cursor and independent subtrees (#619)
+
+- applyState:
+
+```md
+- source
+    - moved
+      no|te
+      - child
+        child note
+- destination
+  - existing
+    - existing child
+```
+
+- execute: `obsidian-outliner:move-list-item-down`
+- assertState:
+
+```md
+- source
+- destination
+  - moved
+    no|te
+    - child
+      child note
+  - existing
+    - existing child
+```
+
+- execute: `obsidian-outliner:move-list-item-down`
+- assertState:
+
+```md
+- source
+- destination
+  - existing
+    - existing child
+  - moved
+    no|te
+    - child
+      child note
+```
+
+# Move up from 2 to 4 spaces preserves a note cursor and independent subtrees (#619)
+
+- applyState:
+
+```md
+- destination
+    - existing
+      - existing child
+- source
+  - moved
+    no|te
+    - child
+      child note
+```
+
+- execute: `obsidian-outliner:move-list-item-up`
+- assertState:
+
+```md
+- destination
+    - existing
+      - existing child
+    - moved
+      no|te
+      - child
+        child note
+- source
+```
+
+- execute: `obsidian-outliner:move-list-item-up`
+- assertState:
+
+```md
+- destination
+    - moved
+      no|te
+      - child
+        child note
+    - existing
+      - existing child
+- source
+```
+
+# Move up from 4 to 2 spaces keeps receiving siblings independent after reparsing (#619)
+
+- applyState:
+
+```md
+- destination
+  - existing
+    - existing child
+- source
+    - mo|ved
+      note
+      - child
+        child note
+```
+
+- execute: `obsidian-outliner:move-list-item-up`
+- assertState:
+
+```md
+- destination
+  - existing
+    - existing child
+  - mo|ved
+    note
+    - child
+      child note
+- source
+```
+
+- execute: `obsidian-outliner:move-list-item-up`
+- assertState:
+
+```md
+- destination
+  - mo|ved
+    note
+    - child
+      child note
+  - existing
+    - existing child
+- source
+```
+
 # obsidian-outliner:indent-list should indent line
 
 - applyState:
