@@ -1,7 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { MarkdownView, WorkspaceLeaf } from "obsidian";
 
-import { EditorView } from "@codemirror/view";
+import { Compartment, StateEffect, StateField } from "@codemirror/state";
+import {
+  Decoration,
+  DecorationSet,
+  EditorView,
+  WidgetType,
+} from "@codemirror/view";
 
 import ObsidianOutlinerPlugin from "./ObsidianOutlinerPlugin";
 import { MyEditor, MyEditorPosition } from "./editor";
@@ -28,6 +34,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
   private popoutLeaf: WorkspaceLeaf | null = null;
   // Keep the last document available for cleanup assertions after window-close.
   private popoutDocument: Document | null = null;
+  private handleFixtures = new Map<EditorView, TestHandleFixture>();
   private dropInvalidation: {
     source: MyEditor;
     leaf: WorkspaceLeaf;
@@ -158,6 +165,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
   }
 
   async onunload() {
+    this.clearHandleFixtures();
     await super.onunload();
 
     delete (window as any).ObsidianOutlinerPlugin;
@@ -218,6 +226,9 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
             break;
           case "selectTestEditor":
             this.selectTestEditor(data);
+            break;
+          case "testHandle":
+            result = await this.testHandle(data);
             break;
           case "getDragAndDropSnapshot":
             result = await this.getDragAndDropSnapshot();
@@ -327,6 +338,11 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     }
 
     const win = this.popoutLeaf.getContainer().win;
+    const view: EditorView = (
+      (this.popoutLeaf.view as MarkdownView).editor as any
+    ).cm;
+    this.handleFixtures.get(view)?.clear();
+    this.handleFixtures.delete(view);
     this.popoutLeaf.detach();
     this.popoutLeaf = null;
     this.editor = this.mainEditor;
@@ -567,6 +583,42 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     };
   }
 
+  private clearHandleFixtures() {
+    for (const fixture of this.handleFixtures.values()) {
+      fixture.clear();
+    }
+    this.handleFixtures.clear();
+  }
+
+  private async testHandle(opts: TestHandleCommand) {
+    if (opts.action === "clear") {
+      this.clearHandleFixtures();
+      return;
+    }
+    const view: EditorView = (this.editor as any).view;
+    if (opts.action === "install") {
+      this.handleFixtures.get(view)?.clear();
+      const mainView: EditorView = ((this.mainEditor || this.editor) as any)
+        .view;
+      view.dom.ownerDocument.documentElement.dataset.outlinerTestWindow =
+        view.dom.ownerDocument === mainView.dom.ownerDocument
+          ? "main"
+          : "popout";
+      this.handleFixtures.set(view, new TestHandleFixture(view, opts));
+    }
+    const fixture = this.handleFixtures.get(view);
+    if (!fixture) {
+      throw new Error("No handle fixture in selected editor");
+    }
+    if (opts.action === "programmaticClick") {
+      fixture.handle().click();
+    } else if (opts.action === "focus") {
+      fixture.focusControl();
+    }
+    await this.wait(30);
+    return fixture.snapshot();
+  }
+
   private simulateWindowBlur() {
     const view: EditorView = (this.editor as any).view;
     const win = view.dom.ownerDocument.defaultView as any;
@@ -764,5 +816,202 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
   async setPreviousRelease(previousRelease: string | null = null) {
     this.settings.previousRelease = previousRelease;
     await this.settings.save();
+  }
+}
+
+// A real replacement widget: neither it nor its nested icon uses Obsidian's
+// recognized bullet classes. Keep all decorations/listeners scoped to this
+// fixture; reconfiguration removes the field rather than leaking test state.
+class TestHandleFixture {
+  private compartment = new Compartment();
+  private clicks = 0;
+  private events: TestHandleEvent[] = [];
+  private trace: string[] = [];
+  private downTarget: Element | null = null;
+  private control: HTMLButtonElement | null = null;
+  private doc: Document;
+  private checkbox: HTMLInputElement | null = null;
+
+  constructor(
+    private view: EditorView,
+    opts: TestHandleCommand,
+  ) {
+    this.doc = view.dom.ownerDocument;
+    const line = view.state.doc.line((opts.line ?? 0) + 1);
+    if (opts.kind === "checkbox") {
+      const lineDOM = view.domAtPos(line.from).node;
+      const el =
+        lineDOM.nodeType === 1 ? (lineDOM as Element) : lineDOM.parentElement;
+      this.checkbox = el
+        .closest(".cm-line")
+        ?.querySelector("input[type=checkbox]");
+      if (!this.checkbox) {
+        throw new Error("No rendered native checkbox on fixture line");
+      }
+      this.checkbox.addEventListener("click", this.onClick);
+    } else {
+      const marker = /^(\s*)[-*+] /.exec(line.text);
+      if (!marker) {
+        throw new Error("Fixture requires a list marker");
+      }
+      const from = line.from + marker[1].length;
+      const onClick = this.onClick;
+      const trace = this.trace;
+      // A status icon is a span, not a native button. Keep the widget DOM
+      // stable across DnD line-decoration updates: remounting the mousedown
+      // target makes Chromium cancel its click before Outliner can handle it.
+      class HandleWidget extends WidgetType {
+        private dom: HTMLSpanElement | null = null;
+        eq(other: WidgetType): boolean {
+          return other === this;
+        }
+        updateDOM(dom: HTMLElement) {
+          trace.push(`widget:updateDOM:same=${dom === this.dom}`);
+          return dom === this.dom;
+        }
+        toDOM(view: EditorView) {
+          trace.push(`widget:toDOM:cached=${!!this.dom}`);
+          if (this.dom) return this.dom;
+          const button = view.dom.ownerDocument.createElement("span");
+          this.dom = button;
+          button.dataset.outlinerTestHandle = "true";
+          if (opts.attribute !== false) {
+            button.setAttribute("data-outliner-drag-handle", "");
+          }
+          button.style.cssText =
+            "display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;padding:0;vertical-align:middle;user-select:none;";
+          const icon = button.appendChild(
+            view.dom.ownerDocument.createElement("span"),
+          );
+          icon.dataset.outlinerTestIcon = "true";
+          icon.textContent = "•";
+          icon.style.cssText = "display:inline-block;width:8px;height:12px;";
+          button.addEventListener("click", onClick);
+          button.addEventListener("mouseup", (event) =>
+            event.stopPropagation(),
+          );
+          return button;
+        }
+        ignoreEvent() {
+          return true;
+        }
+        destroy() {
+          trace.push("widget:destroy");
+        }
+      }
+      const decoration = Decoration.replace({
+        widget: new HandleWidget(),
+      }).range(from, from + 2);
+      const field = StateField.define<DecorationSet>({
+        create: () => Decoration.set([decoration]),
+        update: (value, tr) => value.map(tr.changes),
+        provide: (field) => EditorView.decorations.from(field),
+      });
+      view.dispatch({
+        effects: StateEffect.appendConfig.of(this.compartment.of(field)),
+      });
+    }
+    // Window capture observes the browser-generated click even if DnD stops
+    // it at document capture before the widget/default checkbox action.
+    for (const type of ["mousedown", "mouseup", "click", "keydown", "keyup"]) {
+      this.doc.defaultView.addEventListener(type, this.observe, true);
+    }
+  }
+
+  private onClick = () => {
+    this.clicks++;
+  };
+
+  private observe = (event: MouseEvent) => {
+    const target = event.target as Element;
+    const inHandle =
+      target === this.checkbox ||
+      target === this.control ||
+      !!target.closest?.("[data-outliner-test-handle]");
+    if (event.type === "mousedown") this.downTarget = target;
+    this.trace.push(
+      `${event.type}:${target.tagName}.${target.className};handle=${inHandle};downConnected=${this.downTarget?.isConnected};key=${(event as unknown as KeyboardEvent).key || ""}`,
+    );
+    if (inHandle) {
+      this.events.push({
+        type: event.type,
+        trusted: event.isTrusted,
+        detail: event.detail,
+        button: event.button,
+      });
+    }
+  };
+
+  focusControl() {
+    if (!this.control) {
+      this.control = this.doc.createElement("button");
+      this.control.type = "button";
+      this.control.textContent = "Test action";
+      this.control.style.cssText =
+        "position:fixed;right:16px;top:16px;z-index:9999";
+      this.control.addEventListener("click", this.onClick);
+      this.doc.body.appendChild(this.control);
+    }
+    this.control.focus();
+  }
+
+  handle(): HTMLElement {
+    const handle =
+      this.checkbox ||
+      this.view.dom.querySelector<HTMLElement>("[data-outliner-test-handle]");
+    if (!handle?.isConnected) {
+      throw new Error("Fixture handle no longer rendered");
+    }
+    return handle;
+  }
+
+  snapshot(): TestHandleSnapshot {
+    const handle =
+      this.checkbox ||
+      this.view.dom.querySelector<HTMLElement>("[data-outliner-test-handle]");
+    const point = (el: Element, corner = false) => {
+      const rect = el.getBoundingClientRect();
+      return {
+        x: rect.left + (corner ? 3 : rect.width / 2),
+        y: rect.top + rect.height / 2,
+      };
+    };
+    const top = this.view.coordsAtPos(0);
+    return {
+      clicks: this.clicks,
+      events: this.events.slice(),
+      handle: handle?.isConnected ? point(handle, !this.checkbox) : null,
+      nested: handle?.querySelector("[data-outliner-test-icon]")
+        ? point(handle.querySelector("[data-outliner-test-icon]"))
+        : null,
+      top: { x: top.left + 10, y: top.top - 10 },
+      nativeBulletAncestor: !!handle?.closest(
+        ".cm-formatting-list, .cm-fold-indicator",
+      ),
+      checked: this.checkbox?.checked ?? null,
+      focused: this.doc.activeElement === (this.control || handle),
+      activeElement: `${this.doc.activeElement?.tagName}.${this.doc.activeElement?.className}`,
+      hitHandle: handle?.isConnected
+        ? this.doc
+            .elementFromPoint(
+              point(handle, !this.checkbox).x,
+              point(handle, !this.checkbox).y,
+            )
+            ?.outerHTML.slice(0, 300)
+        : null,
+      value: this.view.state.doc.toString(),
+      trace: this.trace.slice(),
+    };
+  }
+
+  clear() {
+    for (const type of ["mousedown", "mouseup", "click", "keydown", "keyup"]) {
+      this.doc.defaultView.removeEventListener(type, this.observe, true);
+    }
+    this.control?.remove();
+    this.checkbox?.removeEventListener("click", this.onClick);
+    if (!this.checkbox) {
+      this.view.dispatch({ effects: this.compartment.reconfigure([]) });
+    }
   }
 }

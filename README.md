@@ -119,6 +119,8 @@ Press the hotkey once to select the current list item. Press the hotkey twice to
 |---------------|:-------------:|
 | Drag-and-Drop |    `true`     |
 
+Plugins that render their own widget in place of the list bullet can make it a drag handle by adding the `data-outliner-drag-handle` attribute to the widget's element.
+
 ### Debug mode
 
 Open DevTools (Command+Option+I or Control+Shift+I) to copy the debug logs.

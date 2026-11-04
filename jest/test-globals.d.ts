@@ -72,6 +72,50 @@ interface DragAndDropSnapshot {
 
 declare function getDragAndDropSnapshot(): Promise<DragAndDropSnapshot>;
 
+interface TestHandleCommand {
+  action: "install" | "snapshot" | "clear" | "programmaticClick" | "focus";
+  kind?: "widget" | "checkbox";
+  line?: number;
+  attribute?: boolean;
+}
+
+interface TestHandleEvent {
+  type: string;
+  trusted: boolean;
+  detail: number;
+  button: number;
+}
+
+interface NativePoint {
+  x: number;
+  y: number;
+}
+
+interface TestHandleSnapshot {
+  clicks: number;
+  events: TestHandleEvent[];
+  handle: NativePoint | null;
+  nested: NativePoint | null;
+  top: NativePoint;
+  nativeBulletAncestor: boolean;
+  checked: boolean | null;
+  focused: boolean;
+  activeElement: string;
+  hitHandle: string | null;
+  value: string;
+  trace: string[];
+}
+
+declare function testHandle(
+  opts: TestHandleCommand,
+): Promise<TestHandleSnapshot>;
+declare function nativeInput(opts: {
+  action: "down" | "move" | "up" | "escape" | "enter" | "reset";
+  window?: "main" | "popout";
+  x?: number;
+  y?: number;
+}): Promise<void>;
+
 declare function openDropInvalidationEditor(): Promise<boolean>;
 declare function replaceFromDropInvalidationEditor(value: string): Promise<{
   value: string;

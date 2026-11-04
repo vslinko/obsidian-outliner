@@ -17,6 +17,11 @@ const OBSIDIAN_APP_CMD =
   process.platform === "darwin"
     ? ["/Applications/Obsidian.app/Contents/MacOS/Obsidian"]
     : ["flatpak", "run", "md.obsidian.Obsidian"];
+// Native gesture regressions use CDP only inside the isolated test profile.
+OBSIDIAN_APP_CMD.push(
+  "--remote-debugging-address=127.0.0.1",
+  "--remote-debugging-port=9222",
+);
 const OBSIDIAN_LOCAL_STORAGE_PATH =
   process.platform === "darwin"
     ? process.env.HOME +
