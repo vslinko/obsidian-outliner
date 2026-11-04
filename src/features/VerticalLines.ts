@@ -170,9 +170,8 @@ class VerticalLinesPluginValue implements PluginValue {
 
     const coords = this.view.coordsAtPos(fromOffset, 1);
     if (!coords) {
-      // coordsAtPos() returns null when the position is temporarily outside
-      // the rendered viewport (scroll, fold, tab switch); skip this pass and
-      // let the next recalculation redraw it. Fixes #601.
+      // Skip this subtree while its starting coordinates are unavailable.
+      // A later editor update can redraw it if the coordinates become available.
       return;
     }
     if (parentCtx.rootLeft === undefined) {
