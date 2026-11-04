@@ -16,8 +16,10 @@ env:
   NODE_VERSION: 26
 
 jobs:
-  test-on-linux:
-    runs-on: ubuntu-24.04
+  test-and-release-on-linux:
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: write
     steps:
       - name: Install Obsidian
         run: |
@@ -27,6 +29,8 @@ jobs:
           flatpak install --user -y flathub md.obsidian.Obsidian
       - name: Checkout
         uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js
         uses: actions/setup-node@v7.1.0
         with:
@@ -38,15 +42,25 @@ jobs:
           npm run lint
       - name: Test
         run: |
+          npm run test:release
           npm run build-with-tests
           Xvfb -ac :0 -screen 0 1280x1024x16 &
           export DISPLAY=:0
           export $(dbus-launch)
           npm test
+      - name: Build release
+        if: ${{ github.event_name == 'release' }}
+        run: npm run build
+      - name: Upload release assets
+        if: ${{ github.event_name == 'release' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$RELEASE_TAG" dist/main.js manifest.json styles.css --repo "$GITHUB_REPOSITORY"
   test-on-osx:
     # Temporarily disabled due to hosted macOS runner capacity constraints.
     if: ${{ false }}
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - name: Install Obsidian
         run: |
@@ -66,25 +80,3 @@ jobs:
         run: |
           npm run build-with-tests
           npm test
-  release:
-    if: ${{ github.event_name == 'release' }}
-    runs-on: ubuntu-24.04
-    needs: [test-on-linux]
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7.0.1
-      - name: Setup Node.js
-        uses: actions/setup-node@v7.1.0
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      - name: Install dependencies
-        run: npm ci
-      - name: Build
-        run: npm run build
-      - name: Upload release assets
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
-        run: gh release upload "$RELEASE_TAG" dist/main.js manifest.json styles.css --repo "$GITHUB_REPOSITORY"
