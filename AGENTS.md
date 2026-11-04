@@ -1,126 +1,94 @@
-# AGENTS.md
+# Working on Obsidian Outliner
 
-This file provides guidance to coding agents when working with code in this repository.
-
-## Project Overview
-
-Obsidian Outliner is an Obsidian plugin that provides outliner functionality (like Workflowy or RoamResearch) with bullet/list operations, drag-and-drop, and more.
+Obsidian Outliner is an Obsidian plugin for list editing, keyboard behaviour overrides, and drag-and-drop. Keep changes focused on the requested behaviour and follow nearby code and tests.
 
 ## Commands
 
+Run commands from the repository root. Use `npm ci` to install locked dependencies; use the Node version in `.github/workflows/build.yml` when reproducing CI.
+
 ```bash
-# Build
-npm run build              # Production build to dist/main.js
-npm run build-with-tests   # Build including test server entry point
-npm run dev                # Watch mode build
+# Build (all variants overwrite dist/main.js)
+npm run build              # Production plugin
+npm run build-with-tests   # Plugin with the integration-test WebSocket client
+npm run dev                # Watch mode using the same test-enabled entry point
 
-# Lint & Format
-npm run lint               # Run prettier check + eslint on src/
-npm run lint:fix           # Run prettier --write + eslint --fix on src/ (not defined but use: prettier --write src && eslint src --fix)
+# Check source formatting and lint
+npm run lint               # Prettier check + ESLint on src/
 
-# Test
-npm test                   # Run all tests (requires a running Obsidian instance for integration tests)
-npm run test:unit          # Run only unit tests, skipping Obsidian integration tests
+# Apply fixes only to the files you intend to change; there is no lint:fix script
+npx prettier --write src/path/to/file.ts
+npx eslint src/path/to/file.ts --fix
+
+# Tests (read the environment requirements below before running Jest)
+npm run test:unit          # Unit tests under src/, with SKIP_OBSIDIAN=1
+npm run test:release       # Release-script tests in temporary Git repositories
+npm test                   # Full Jest suite, including real Obsidian integration tests
 ```
 
-To run a single test file:
+Rollup produces a CJS `dist/main.js`, injects `PLUGIN_VERSION` and `CHANGELOG_MD`, and externalizes Obsidian and CodeMirror. Use `npm run build` for release artifacts; do not distribute the test-enabled bundle.
+
+## Where to Make Changes
+
+- `src/ObsidianOutlinerPlugin.ts`: production entry point and service/feature wiring.
+- `src/features/` and `src/editor/`: user-facing behaviour, lifecycle handlers, and CodeMirror extensions. Features implement `load()`/`unload()`; keep registrations and cleanup consistent with existing features.
+- `src/operations/`: operations that mutate the list model and report whether to update the editor or stop propagation.
+- `src/root/`: `Root`/`List` tree model.
+- `src/services/Parser.ts`, `OperationPerformer.ts`, and `ChangesApplicator.ts`: parse editor text → clone the original model → perform an operation → apply the diff. Reuse this path for list edits rather than duplicating parsing or editor updates.
+- `src/services/Settings.ts` and `ObsidianSettings.ts`: plugin settings and Obsidian-level configuration respectively.
+- `src/__mocks__.ts`: unit-test helpers such as `makeEditor`, `makeRoot`, and `makeSettings`.
+- `src/ObsidianOutlinerPluginWithTests.ts` and `jest/`: test entry point and integration harness.
+
+## Choosing Checks
+
+- For list-model, parser, or operation changes, add a regression test beside the relevant `src/**/__tests__/*.test.ts` tests and run `npm run test:unit`.
+- For keyboard, selection, folding, drag-and-drop, or other editor-facing changes, cover the user interaction in `specs/features/` as well as any useful unit tests. Verify the visible result in real Obsidian; mocks alone do not establish editor behaviour.
+- For changes to `release.mjs`, run `npm run test:release`. These tests do not require Obsidian; running the release script itself is not a substitute, as it changes version files and creates a commit.
+- For source changes, also run `npm run lint` and `npm run build`. Check `.github/workflows/build.yml` for the current CI sequence.
+- Report the commands and source revision/snapshot actually checked, failures, and skipped or unavailable checks. A successful build or an old test image is not evidence that the current integration scenarios pass.
+
+### Jest Environment and Safety
+
+Integration tests require a graphical Obsidian installation: the harness supports the macOS app path and Linux Flatpak (`md.obsidian.Obsidian`); see `jest/global-setup.js` for paths and commands. Linux CI supplies Xvfb and D-Bus.
+
+Build with `npm run build-with-tests` first. Jest setup prepares a `vault/` in the working directory, copies the bundle, starts a WebSocket server on port 8080, and launches Obsidian. The plugin and Jest environment connect to `ws://127.0.0.1:8080`. Merely opening a normal plugin instance is not sufficient.
+
+**Use an isolated test profile/container, not a personal Obsidian session.** Setup stops Obsidian and rewrites its profile/vault configuration. Even unit runs use the shared teardown, which currently attempts to stop Obsidian despite `SKIP_OBSIDIAN=1`. Do not run harness instances concurrently against the same profile or port.
+
+`SKIP_OBSIDIAN=1` bypasses Obsidian setup for unit tests; it does not make integration tests standalone. To run one unit file:
+
 ```bash
-npx jest path/to/test.ts --forceExit
+SKIP_OBSIDIAN=1 npx jest src/operations/__tests__/IndentList.test.ts --forceExit
+```
+
+To run one integration file in the prepared isolated environment:
+
+```bash
+npm run build-with-tests
 npx jest specs/features/EnterBehaviourOverride.spec.md --forceExit
 ```
 
-Integration tests (`.spec.md` files) require a running Obsidian instance with the plugin loaded via `npm run build-with-tests`. The test environment connects via WebSocket on `ws://127.0.0.1:8080`.
-
-Unit tests (`__tests__/*.test.ts`) can run standalone with `SKIP_OBSIDIAN=1`.
-
-## Directory Structure
-
-```
-src/
-├── editor/               # CodeMirror editor utilities
-│   ├── index.ts          # Editor extension registration
-│   ├── checkboxRe.ts     # Checkbox regex patterns
-│   ├── createEditorCallback.ts
-│   ├── createKeymapRunCallback.ts
-│   └── isEmptyLineOrEmptyCheckbox.ts
-├── features/             # Feature implementations (keyboard handlers, UI)
-├── operations/           # List operations (indent, move, outdent, etc.)
-├── root/                 # Core data model (Root, List classes)
-├── services/             # Core services (Parser, ChangesApplicator, etc.)
-├── utils/                # Utility functions
-├── __mocks__.ts          # Test mock helpers
-├── ObsidianOutlinerPlugin.ts           # Main plugin entry
-└── ObsidianOutlinerPluginWithTests.ts  # Test variant with WebSocket server
-```
-
-## Architecture
-
-The plugin follows a layered architecture:
-
-### Core Data Model (`src/root/`)
-`Root` and `List` classes represent the parsed list structure. `Root` holds the entire list block (start/end positions, selections). `List` is a tree node with parent/children, bullet, indent, optional checkbox, and multi-line content (notes). The `Parser` service builds this tree from editor text; `ChangesApplicator` diffs old vs new `Root` and writes minimal editor changes.
-
-### Operations (`src/operations/`)
-Each operation (e.g. `IndentList`, `MoveListUp`, `OutdentListIfItsEmpty`) implements the `Operation` interface with three methods: `perform()`, `shouldUpdate()`, `shouldStopPropagation()`. Operations mutate a `Root` in place. `OperationPerformer` orchestrates: parse → clone root → run operation → apply diff.
-
-### Features (`src/features/`)
-Each feature implements the `Feature` interface (`load()`/`unload()`). Features are behaviour overrides (key handlers, editor extensions) or UI features (settings tab, vertical lines, drag-and-drop). They receive services via constructor injection and register Obsidian event handlers/commands in `load()`.
-
-### Services (`src/services/`)
-- `Parser` — converts raw editor text into `Root`/`List` trees
-- `ChangesApplicator` — applies Root diffs back to the editor
-- `OperationPerformer` — ties Parser + ChangesApplicator together for feature use
-- `Settings` — persists plugin settings via Obsidian's data API
-- `ObsidianSettings` — reads Obsidian-level configuration (indent chars, vim mode, etc.)
-- `IMEDetector` — detects active IME composition to skip key overrides
-- `Logger` — debug logging gated by the debug setting
-
-### Editor (`src/editor/`)
-CodeMirror extensions and editor utilities. Registers keymaps, handles checkbox rendering, and provides editor callbacks for operations.
-
-### Entry Point
-`ObsidianOutlinerPlugin.ts` instantiates all services and features, then calls `load()` on each. The test variant `ObsidianOutlinerPluginWithTests.ts` adds a WebSocket server for the integration test harness.
-
-## Tests
-
-- **Unit tests** (`src/operations/__tests__/*.test.ts`, `src/services/__tests__/`) — use mock helpers from `src/__mocks__.ts` (`makeEditor`, `makeRoot`, `makeSettings`).
-- **Integration tests** (`specs/features/*.spec.md`, `jest/DefaultObsidianBehaviour.spec.md`) — Markdown files parsed by `jest/md-spec-transformer.js`. Each `# heading` is a test case; actions (`applyState`, `keydown`, `assertState`, etc.) drive a real Obsidian instance via WebSocket.
+For harness diagnostics, set `DEBUG=jest-obsidian`. See `jest/global-setup.js`, `jest/obsidian-environment.js`, and `jest/global-teardown.js` for the actual lifecycle.
 
 ### Writing Integration Tests
 
-Test files are markdown (`.spec.md`) with test cases as `# headings`. Available actions:
+Markdown suites in `specs/features/*.spec.md` are parsed by `jest/md-spec-transformer.js`. Each `# heading` starts a test. Actions must start with `- `; key names and inline arguments use backticks. In editor states, `|` marks the cursor. Follow nearby specs for selection markers and more involved interactions.
 
-- `applyState` - Set editor content and cursor position
-- `keydown` - Simulate key press
-- `assertState` - Assert editor content and cursor position
-- `assertSelection` - Assert selection range
+````markdown
+# Enter creates a sibling item
 
+- applyState:
 
-      # Test case name
-      
-      applyState:
-      ```
-      - Item 1|
-      - Item 2
-      ```
-      
-      keydown: Enter
-      
-      assertState:
-      ```
-      - Item 1
-      - |
-      - Item 2
-      ```
-
-
-### Debugging Tests
-
-To debug integration tests, add `console.log` statements in the code. For unit tests:
-```bash
-SKIP_OBSIDIAN=1 npx jest path/to/test.ts --forceExit --verbose
+```md
+- Item 1|
 ```
 
-## Build
+- keydown: `Enter`
+- assertState:
 
-Rollup bundles to a single CJS `dist/main.js`. `PLUGIN_VERSION` and `CHANGELOG_MD` globals are injected at build time. Obsidian, CodeMirror packages are externalized.
+```md
+- Item 1
+- |
+```
+````
+
+Supported actions are defined in `jest/md-spec-transformer.js`: `applyState`, `keydown`, `insertText`, `execute`, `setting`, `assertState`, `platform`, `drag`, `move`, and `drop`. Do not invent actions such as `assertSelection`; use the state assertions and syntax supported by the harness.
