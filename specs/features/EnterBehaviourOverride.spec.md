@@ -424,3 +424,22 @@
 |three
 - four
 ```
+
+# enter should delete last empty bullet left over when closing a list
+
+- applyState:
+
+```md
+- Item 1
+- Item 2
+- |
+```
+
+- keydown: `Enter`
+- assertState:
+
+```md
+- Item 1
+- Item 2
+|
+```
