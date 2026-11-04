@@ -20,6 +20,13 @@ export class DragAndDrop implements Feature {
   private contextsByDocument = new Map<Document, DragAndDropDocumentContext>();
   private preStart: DragAndDropPreStartState | null = null;
   private state: DragAndDropState | null = null;
+  // Escape cancels the move, but the gesture's release must still not click
+  // its handle. Only arm click suppression once that same document gets mouseup.
+  private clickGesture: {
+    document: Document;
+    released: boolean;
+    timeout?: number;
+  } | null = null;
 
   constructor(
     private plugin: Plugin,
@@ -109,8 +116,9 @@ export class DragAndDrop implements Feature {
     doc.addEventListener("mousedown", this.handleMouseDown, {
       capture: true,
     });
+    doc.addEventListener("click", this.handleClick, { capture: true });
     doc.addEventListener("mousemove", this.handleMouseMove);
-    doc.addEventListener("mouseup", this.handleMouseUp);
+    doc.addEventListener("mouseup", this.handleMouseUp, { capture: true });
     doc.addEventListener("keydown", this.handleKeyDown);
     doc.defaultView?.addEventListener("blur", this.handleWindowBlur);
   }
@@ -128,7 +136,8 @@ export class DragAndDrop implements Feature {
     try {
       if (
         this.preStart?.document === doc ||
-        this.state?.context.document === doc
+        this.state?.context.document === doc ||
+        this.clickGesture?.document === doc
       ) {
         this.cancelDragging();
       }
@@ -136,8 +145,9 @@ export class DragAndDrop implements Feature {
       doc.removeEventListener("mousedown", this.handleMouseDown, {
         capture: true,
       });
+      doc.removeEventListener("click", this.handleClick, { capture: true });
       doc.removeEventListener("mousemove", this.handleMouseMove);
-      doc.removeEventListener("mouseup", this.handleMouseUp);
+      doc.removeEventListener("mouseup", this.handleMouseUp, { capture: true });
       doc.removeEventListener("keydown", this.handleKeyDown);
       doc.defaultView?.removeEventListener("blur", this.handleWindowBlur);
 
@@ -227,22 +237,54 @@ export class DragAndDrop implements Feature {
 
   private handleMouseUp = (e: MouseEvent) => {
     this.preStart = null;
+    const gesture = this.clickGesture;
+    if (e.button === 0 && gesture?.document === getEventDocument(e)) {
+      gesture.released = true;
+      // Native click is dispatched with mouseup, before the next timer task.
+      // If there is no click, don't leave suppression armed for later input.
+      gesture.timeout = gesture.document.defaultView?.setTimeout(() => {
+        if (this.clickGesture === gesture) {
+          this.clearClickGesture();
+        }
+      }, 0);
+    } else {
+      this.clearClickGesture();
+    }
     if (this.state && getEventDocument(e) === this.state.context.document) {
       this.stopDragging();
     } else {
       // Releasing in another window cancels; it is not a cross-window drop.
-      this.cancelDragging();
+      // An Escape-cancelled gesture still needs its matching click suppressed.
+      this.cancelDragging(true);
     }
+  };
+
+  private handleClick = (e: MouseEvent) => {
+    if (
+      !this.clickGesture?.released ||
+      this.clickGesture.document !== getEventDocument(e) ||
+      !e.isTrusted ||
+      e.button !== 0 ||
+      e.detail === 0
+    ) {
+      return;
+    }
+    this.clearClickGesture();
+    e.preventDefault();
+    e.stopImmediatePropagation();
   };
 
   private handleKeyDown = (e: KeyboardEvent) => {
     if (e.code === "Escape") {
-      this.cancelDragging();
+      this.cancelDragging(true);
     }
   };
 
   private handleWindowBlur = (e: Event) => {
-    const owner = this.state?.context.document || this.preStart?.document;
+    const owner =
+      this.state?.context.document ||
+      this.preStart?.document ||
+      this.clickGesture?.document;
     if (owner?.defaultView === e.currentTarget) {
       this.cancelDragging();
     }
@@ -283,6 +325,7 @@ export class DragAndDrop implements Feature {
     }
 
     this.state = state;
+    this.clickGesture = { document: dropContext.document, released: false };
     this.highlightDraggingLines();
   }
 
@@ -291,7 +334,19 @@ export class DragAndDrop implements Feature {
     this.drawDropZone();
   }
 
-  private cancelDragging() {
+  private clearClickGesture() {
+    if (this.clickGesture?.timeout !== undefined) {
+      this.clickGesture.document.defaultView?.clearTimeout(
+        this.clickGesture.timeout,
+      );
+    }
+    this.clickGesture = null;
+  }
+
+  private cancelDragging(preserveClickGesture = false) {
+    if (!preserveClickGesture) {
+      this.clearClickGesture();
+    }
     this.stopDragging(false);
   }
 
@@ -685,7 +740,8 @@ function isClickOnBullet(e: MouseEvent) {
     if (
       el.classList.contains("cm-formatting-list") ||
       el.classList.contains("cm-fold-indicator") ||
-      el.classList.contains("task-list-item-checkbox")
+      el.classList.contains("task-list-item-checkbox") ||
+      el.hasAttribute("data-outliner-drag-handle")
     ) {
       return true;
     }
