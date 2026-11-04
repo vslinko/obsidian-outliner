@@ -20,6 +20,9 @@ export class DragAndDrop implements Feature {
   private contextsByDocument = new Map<Document, DragAndDropDocumentContext>();
   private preStart: DragAndDropPreStartState | null = null;
   private state: DragAndDropState | null = null;
+  // Set once a drag really started (even if Escape cancelled it later), so the
+  // click the browser fires on mouseup doesn't reach the handle's own handler.
+  private dragStarted = false;
 
   constructor(
     private plugin: Plugin,
@@ -109,6 +112,7 @@ export class DragAndDrop implements Feature {
     doc.addEventListener("mousedown", this.handleMouseDown, {
       capture: true,
     });
+    doc.addEventListener("click", this.handleClick, { capture: true });
     doc.addEventListener("mousemove", this.handleMouseMove);
     doc.addEventListener("mouseup", this.handleMouseUp);
     doc.addEventListener("keydown", this.handleKeyDown);
@@ -136,6 +140,7 @@ export class DragAndDrop implements Feature {
       doc.removeEventListener("mousedown", this.handleMouseDown, {
         capture: true,
       });
+      doc.removeEventListener("click", this.handleClick, { capture: true });
       doc.removeEventListener("mousemove", this.handleMouseMove);
       doc.removeEventListener("mouseup", this.handleMouseUp);
       doc.removeEventListener("keydown", this.handleKeyDown);
@@ -180,6 +185,7 @@ export class DragAndDrop implements Feature {
   private handleMouseDown = (e: MouseEvent) => {
     // A new gesture must never overwrite another document's drag owner.
     this.cancelDragging();
+    this.dragStarted = false;
     if (
       !isFeatureSupported() ||
       !this.settings.dragAndDrop ||
@@ -227,12 +233,26 @@ export class DragAndDrop implements Feature {
 
   private handleMouseUp = (e: MouseEvent) => {
     this.preStart = null;
+    if (this.dragStarted) {
+      // The click (if any) is dispatched right after mouseup; don't let a
+      // stale flag swallow an unrelated click later.
+      setTimeout(() => (this.dragStarted = false), 0);
+    }
     if (this.state && getEventDocument(e) === this.state.context.document) {
       this.stopDragging();
     } else {
       // Releasing in another window cancels; it is not a cross-window drop.
       this.cancelDragging();
     }
+  };
+
+  private handleClick = (e: MouseEvent) => {
+    if (!this.dragStarted) {
+      return;
+    }
+    this.dragStarted = false;
+    e.preventDefault();
+    e.stopImmediatePropagation();
   };
 
   private handleKeyDown = (e: KeyboardEvent) => {
@@ -279,6 +299,7 @@ export class DragAndDrop implements Feature {
     }
 
     this.state = state;
+    this.dragStarted = true;
     this.highlightDraggingLines();
   }
 
@@ -681,7 +702,8 @@ function isClickOnBullet(e: MouseEvent) {
     if (
       el.classList.contains("cm-formatting-list") ||
       el.classList.contains("cm-fold-indicator") ||
-      el.classList.contains("task-list-item-checkbox")
+      el.classList.contains("task-list-item-checkbox") ||
+      el.hasAttribute("data-outliner-drag-handle")
     ) {
       return true;
     }
