@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { MarkdownView } from "obsidian";
+import { MarkdownView, WorkspaceLeaf } from "obsidian";
 
 import { EditorView } from "@codemirror/view";
 
@@ -21,6 +21,9 @@ const keysMap: { [key: string]: number } = {
 
 export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlugin {
   private editor: MyEditor;
+  private mainEditor: MyEditor | null = null;
+  private mainLeaf: WorkspaceLeaf | null = null;
+  private popoutLeaf: WorkspaceLeaf | null = null;
 
   wait(time: number) {
     return new Promise((resolve) => setTimeout(resolve, time));
@@ -161,6 +164,12 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
           case "applyState":
             await this.applyState(data);
             break;
+          case "openPopoutEditor":
+            result = await this.openPopoutEditor();
+            break;
+          case "closePopoutEditor":
+            await this.closePopoutEditor();
+            break;
           case "simulateKeydown":
             this.simulateKeydown(data);
             break;
@@ -200,19 +209,86 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     });
   }
 
+  private async openPopoutEditor() {
+    if (this.popoutLeaf) {
+      throw new Error("A test pop-out is already open");
+    }
+
+    const mainView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (!mainView?.file) {
+      throw new Error("No active Markdown file to open in a pop-out");
+    }
+
+    this.mainEditor = this.editor;
+    this.mainLeaf = mainView.leaf;
+    // A separate file avoids two editors synchronizing the same document
+    // while applyState resets its text and selections.
+    const filePath = "popout-test.md";
+    let file = this.app.vault
+      .getMarkdownFiles()
+      .find((f) => f.path === filePath);
+    if (!file) {
+      file = await this.app.vault.create(filePath, "");
+    }
+    this.popoutLeaf = this.app.workspace.getLeaf("window");
+    await this.popoutLeaf.openFile(file, { active: true });
+
+    const deadline = Date.now() + 5000;
+    while (Date.now() < deadline) {
+      const markdownView = this.popoutLeaf.view as MarkdownView;
+      const view: EditorView | undefined = (markdownView.editor as any)?.cm;
+      if (
+        view?.dom.isConnected &&
+        view.dom.ownerDocument !== document &&
+        view.dom.getBoundingClientRect().width > 0
+      ) {
+        this.editor = new MyEditor(markdownView.editor);
+        view.focus();
+        return true;
+      }
+      await this.wait(50);
+    }
+    throw new Error(
+      "Pop-out editor did not become ready in a separate document",
+    );
+  }
+
+  private async closePopoutEditor() {
+    if (!this.popoutLeaf) {
+      return;
+    }
+
+    const win = this.popoutLeaf.getContainer().win;
+    this.popoutLeaf.detach();
+    this.popoutLeaf = null;
+    this.editor = this.mainEditor;
+    this.mainEditor = null;
+    this.app.workspace.setActiveLeaf(this.mainLeaf, { focus: true });
+    this.mainLeaf = null;
+
+    const deadline = Date.now() + 5000;
+    while (!win.closed && Date.now() < deadline) {
+      await this.wait(50);
+    }
+    if (!win.closed) {
+      throw new Error("Test pop-out did not close");
+    }
+  }
+
   private drag(opts: { from: { line: number; ch: number } }) {
     const view: EditorView = (this.editor as any).view;
     const coords = view.coordsAtPos(this.editor.posToOffset(opts.from));
     const x = coords.left;
     const y = coords.top;
-    const e = new MouseEvent("mousedown", {
+    const win = view.dom.ownerDocument.defaultView as any;
+    const e = new win.MouseEvent("mousedown", {
       screenX: x,
       screenY: y,
       clientX: x,
       clientY: y,
     });
     const { node } = view.domAtPos(this.editor.posToOffset(opts.from));
-    let el = node instanceof HTMLElement ? node : node.parentElement;
+    let el = node.nodeType === 1 ? (node as HTMLElement) : node.parentElement;
     while (!el.classList.contains("cm-line")) {
       el = el.parentElement;
     }
@@ -231,18 +307,23 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     const coords = view.coordsAtPos(this.editor.posToOffset(opts.to));
     const x = coords.left + opts.offsetX;
     const y = coords.top + opts.offsetY;
-    const e = new MouseEvent("mousemove", {
+    const doc = view.dom.ownerDocument;
+    const win = doc.defaultView as any;
+    const e = new win.MouseEvent("mousemove", {
       screenX: x,
       screenY: y,
       clientX: x,
       clientY: y,
     });
-    document.dispatchEvent(e);
+    doc.dispatchEvent(e);
   }
 
   private drop() {
-    const e = new MouseEvent("mouseup");
-    document.dispatchEvent(e);
+    const view: EditorView = (this.editor as any).view;
+    const doc = view.dom.ownerDocument;
+    const win = doc.defaultView as any;
+    const e = new win.MouseEvent("mouseup");
+    doc.dispatchEvent(e);
   }
 
   async applyState(state: string[]): Promise<void>;

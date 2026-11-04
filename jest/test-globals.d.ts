@@ -40,3 +40,5 @@ declare function move(opts: {
   offsetY: number;
 }): Promise<void>;
 declare function drop(): Promise<void>;
+declare function openPopoutEditor(): Promise<boolean>;
+declare function closePopoutEditor(): Promise<void>;

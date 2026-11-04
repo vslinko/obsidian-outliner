@@ -20,6 +20,8 @@ module.exports = class CustomEnvironment extends TestEnvironment {
     this.createCommand("drag");
     this.createCommand("move");
     this.createCommand("drop");
+    this.createCommand("openPopoutEditor");
+    this.createCommand("closePopoutEditor");
   }
 
   createCommand(type) {
