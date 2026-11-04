@@ -3,6 +3,10 @@ const fs = require("fs");
 const debug = require("debug")("jest-obsidian");
 
 module.exports = () => {
+  if (process.env.SKIP_OBSIDIAN) {
+    return;
+  }
+
   if (global.wss) {
     global.wss.close();
   }
