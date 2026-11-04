@@ -52,9 +52,9 @@ Integration tests require a graphical Obsidian installation: the harness support
 
 Build with `npm run build-with-tests` first. Jest setup prepares a `vault/` in the working directory, copies the bundle, starts a WebSocket server on port 8080, and launches Obsidian. The plugin and Jest environment connect to `ws://127.0.0.1:8080`. Merely opening a normal plugin instance is not sufficient.
 
-**Use an isolated test profile/container, not a personal Obsidian session.** Setup stops Obsidian and rewrites its profile/vault configuration. Even unit runs use the shared teardown, which currently attempts to stop Obsidian despite `SKIP_OBSIDIAN=1`. Do not run harness instances concurrently against the same profile or port.
+**Use an isolated test profile/container, not a personal Obsidian session, for integration tests.** Integration setup stops Obsidian and rewrites its profile/vault configuration. Do not run harness instances concurrently against the same profile or port.
 
-`SKIP_OBSIDIAN=1` bypasses Obsidian setup for unit tests; it does not make integration tests standalone. To run one unit file:
+`SKIP_OBSIDIAN=1` bypasses both Obsidian setup and teardown for unit tests; it does not make integration tests standalone. To run one unit file:
 
 ```bash
 SKIP_OBSIDIAN=1 npx jest src/operations/__tests__/IndentList.test.ts --forceExit
