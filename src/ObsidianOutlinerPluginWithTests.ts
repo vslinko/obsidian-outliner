@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { MarkdownView } from "obsidian";
+import { MarkdownView, WorkspaceLeaf } from "obsidian";
 
 import { EditorView } from "@codemirror/view";
 
@@ -23,6 +23,11 @@ const keysMap: { [key: string]: number } = {
 
 export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlugin {
   private editor: MyEditor;
+  private mainEditor: MyEditor | null = null;
+  private mainLeaf: WorkspaceLeaf | null = null;
+  private popoutLeaf: WorkspaceLeaf | null = null;
+  // Keep the last document available for cleanup assertions after window-close.
+  private popoutDocument: Document | null = null;
 
   wait(time: number) {
     return new Promise((resolve) => setTimeout(resolve, time));
@@ -111,7 +116,8 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
 
   private dispatchKeydown(e: KeyboardEvent) {
     const view: EditorView = (this.editor as any).view;
-    const event = new KeyboardEvent("keydown", {
+    const win = view.dom.ownerDocument.defaultView as any;
+    const event = new win.KeyboardEvent("keydown", {
       key: e.key,
       code: e.code,
       shiftKey: e.shiftKey,
@@ -196,6 +202,21 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
           case "applyState":
             await this.applyState(data);
             break;
+          case "openPopoutEditor":
+            result = await this.openPopoutEditor();
+            break;
+          case "closePopoutEditor":
+            await this.closePopoutEditor();
+            break;
+          case "selectTestEditor":
+            this.selectTestEditor(data);
+            break;
+          case "getDragAndDropSnapshot":
+            result = await this.getDragAndDropSnapshot();
+            break;
+          case "simulateWindowBlur":
+            this.simulateWindowBlur();
+            break;
           case "simulateKeydown":
             this.simulateKeydown(data);
             break;
@@ -235,19 +256,163 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     });
   }
 
+  private async openPopoutEditor() {
+    if (this.popoutLeaf) {
+      throw new Error("A test pop-out is already open");
+    }
+
+    const mainView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (!mainView?.file) {
+      throw new Error("No active Markdown file to open in a pop-out");
+    }
+
+    this.mainEditor = this.editor;
+    this.mainLeaf = mainView.leaf;
+    // A separate file avoids two editors synchronizing the same document
+    // while applyState resets its text and selections.
+    const filePath = "popout-test.md";
+    let file = this.app.vault
+      .getMarkdownFiles()
+      .find((f) => f.path === filePath);
+    if (!file) {
+      file = await this.app.vault.create(filePath, "");
+    }
+    this.popoutLeaf = this.app.workspace.getLeaf("window");
+    await this.popoutLeaf.openFile(file, { active: true });
+
+    const deadline = Date.now() + 5000;
+    while (Date.now() < deadline) {
+      const markdownView = this.popoutLeaf.view as MarkdownView;
+      const view: EditorView | undefined = (markdownView.editor as any)?.cm;
+      if (
+        view?.dom.isConnected &&
+        view.dom.ownerDocument !== document &&
+        view.dom.getBoundingClientRect().width > 0
+      ) {
+        this.editor = new MyEditor(markdownView.editor);
+        this.popoutDocument = view.dom.ownerDocument;
+        view.focus();
+        return true;
+      }
+      await this.wait(50);
+    }
+    throw new Error(
+      "Pop-out editor did not become ready in a separate document",
+    );
+  }
+
+  private async closePopoutEditor() {
+    if (!this.popoutLeaf) {
+      return;
+    }
+
+    const win = this.popoutLeaf.getContainer().win;
+    this.popoutLeaf.detach();
+    this.popoutLeaf = null;
+    this.editor = this.mainEditor;
+    this.mainEditor = null;
+    this.app.workspace.setActiveLeaf(this.mainLeaf, { focus: true });
+    this.mainLeaf = null;
+
+    const deadline = Date.now() + 5000;
+    while (!win.closed && Date.now() < deadline) {
+      await this.wait(50);
+    }
+    if (!win.closed) {
+      throw new Error("Test pop-out did not close");
+    }
+  }
+
+  private selectTestEditor(opts: {
+    window: "main" | "popout";
+    focus?: boolean;
+  }) {
+    if (opts.window === "popout") {
+      if (!this.popoutLeaf) {
+        throw new Error("No test pop-out is open");
+      }
+      this.editor = new MyEditor((this.popoutLeaf.view as MarkdownView).editor);
+    } else if (this.mainEditor) {
+      this.editor = this.mainEditor;
+    }
+
+    // Ownership tests must be able to change only the bridge reference:
+    // focusing another window would itself cancel the source drag on blur.
+    if (opts.focus !== false) {
+      const leaf = opts.window === "popout" ? this.popoutLeaf : this.mainLeaf;
+      if (leaf) {
+        this.app.workspace.setActiveLeaf(leaf, { focus: true });
+      }
+      ((this.editor as any).view as EditorView).focus();
+    }
+  }
+
+  private async getDragAndDropSnapshot(): Promise<DragAndDropSnapshot> {
+    // Let CodeMirror render decoration changes before observing the DOM.
+    await this.wait(20);
+    // Read-only introspection is deliberately confined to the test bridge.
+    const feature = (this as any).features.find(
+      (candidate: any) => candidate.contextsByDocument instanceof Map,
+    );
+    if (!feature) {
+      throw new Error("Drag-and-drop feature not loaded");
+    }
+    const mainView: EditorView = ((this.mainEditor || this.editor) as any).view;
+    const mainDocument = mainView.dom.ownerDocument;
+    const nameOf = (doc: Document): "main" | "popout" =>
+      doc === mainDocument ? "main" : "popout";
+    const documents = [mainDocument];
+    if (this.popoutDocument && this.popoutDocument !== mainDocument) {
+      documents.push(this.popoutDocument);
+    }
+    return {
+      active: !!feature.state,
+      pending: !!feature.preStart,
+      source: feature.state ? nameOf(feature.state.context.document) : null,
+      contextCount: feature.contextsByDocument.size,
+      distinctDocuments:
+        !!this.popoutLeaf && this.popoutDocument !== mainDocument,
+      documents: documents.map((doc) => ({
+        window: nameOf(doc),
+        registered: feature.contextsByDocument.has(doc),
+        enabled: doc.body.classList.contains("outliner-plugin-dnd"),
+        dragging: doc.body.classList.contains("outliner-plugin-dragging"),
+        dropZones: doc.querySelectorAll(".outliner-plugin-drop-zone").length,
+        visibleDropZones: Array.from(
+          doc.querySelectorAll<HTMLElement>(".outliner-plugin-drop-zone"),
+        ).filter((zone) => zone.style.display !== "none").length,
+        draggingLines: doc.querySelectorAll(".outliner-plugin-dragging-line")
+          .length,
+        droppingLines: doc.querySelectorAll(".outliner-plugin-dropping-line")
+          .length,
+      })),
+    };
+  }
+
+  private simulateWindowBlur() {
+    const view: EditorView = (this.editor as any).view;
+    const win = view.dom.ownerDocument.defaultView as any;
+    win.dispatchEvent(new win.Event("blur"));
+  }
+
   private drag(opts: { from: { line: number; ch: number } }) {
     const view: EditorView = (this.editor as any).view;
     const coords = view.coordsAtPos(this.editor.posToOffset(opts.from));
     const x = coords.left;
     const y = coords.top;
-    const e = new MouseEvent("mousedown", {
+    const win = view.dom.ownerDocument.defaultView as any;
+    const e = new win.MouseEvent("mousedown", {
       screenX: x,
       screenY: y,
       clientX: x,
       clientY: y,
+      button: 0,
+      buttons: 1,
+      bubbles: true,
+      cancelable: true,
     });
     const { node } = view.domAtPos(this.editor.posToOffset(opts.from));
-    let el = node instanceof HTMLElement ? node : node.parentElement;
+    let el = node.nodeType === 1 ? (node as HTMLElement) : node.parentElement;
     while (!el.classList.contains("cm-line")) {
       el = el.parentElement;
     }
@@ -261,23 +426,37 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     to: { line: number; ch: number };
     offsetX: number;
     offsetY: number;
+    buttons?: number;
   }) {
     const view: EditorView = (this.editor as any).view;
     const coords = view.coordsAtPos(this.editor.posToOffset(opts.to));
     const x = coords.left + opts.offsetX;
     const y = coords.top + opts.offsetY;
-    const e = new MouseEvent("mousemove", {
+    const doc = view.dom.ownerDocument;
+    const win = doc.defaultView as any;
+    const e = new win.MouseEvent("mousemove", {
       screenX: x,
       screenY: y,
       clientX: x,
       clientY: y,
+      buttons: opts.buttons ?? 1,
+      bubbles: true,
+      cancelable: true,
     });
-    document.dispatchEvent(e);
+    const target = doc.elementFromPoint(x, y) || view.contentDOM;
+    target.dispatchEvent(e);
   }
 
   private drop() {
-    const e = new MouseEvent("mouseup");
-    document.dispatchEvent(e);
+    const view: EditorView = (this.editor as any).view;
+    const win = view.dom.ownerDocument.defaultView as any;
+    const e = new win.MouseEvent("mouseup", {
+      button: 0,
+      buttons: 0,
+      bubbles: true,
+      cancelable: true,
+    });
+    view.contentDOM.dispatchEvent(e);
   }
 
   async applyState(state: string[]): Promise<void>;
