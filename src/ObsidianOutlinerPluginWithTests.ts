@@ -856,16 +856,30 @@ class TestHandleFixture {
       }
       const from = line.from + marker[1].length;
       const onClick = this.onClick;
+      const trace = this.trace;
+      // A status icon is a span, not a native button. Keep the widget DOM
+      // stable across DnD line-decoration updates: remounting the mousedown
+      // target makes Chromium cancel its click before Outliner can handle it.
       class HandleWidget extends WidgetType {
+        private dom: HTMLSpanElement | null = null;
+        eq(other: WidgetType): boolean {
+          return other === this;
+        }
+        updateDOM(dom: HTMLElement) {
+          trace.push(`widget:updateDOM:same=${dom === this.dom}`);
+          return dom === this.dom;
+        }
         toDOM(view: EditorView) {
-          const button = view.dom.ownerDocument.createElement("button");
-          button.type = "button";
+          trace.push(`widget:toDOM:cached=${!!this.dom}`);
+          if (this.dom) return this.dom;
+          const button = view.dom.ownerDocument.createElement("span");
+          this.dom = button;
           button.dataset.outlinerTestHandle = "true";
           if (opts.attribute !== false) {
             button.setAttribute("data-outliner-drag-handle", "");
           }
           button.style.cssText =
-            "display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;padding:0;vertical-align:middle;";
+            "display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;padding:0;vertical-align:middle;user-select:none;";
           const icon = button.appendChild(
             view.dom.ownerDocument.createElement("span"),
           );
@@ -880,6 +894,9 @@ class TestHandleFixture {
         }
         ignoreEvent() {
           return true;
+        }
+        destroy() {
+          trace.push("widget:destroy");
         }
       }
       const decoration = Decoration.replace({
