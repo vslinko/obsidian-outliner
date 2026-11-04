@@ -119,6 +119,43 @@ describe("Drag and drop in separate windows (#589)", () => {
     await expect(await getCurrentState()).toEqualEditorState(initialState);
   }
 
+  test.each(["main", "popout"] as const)(
+    "rejects an orphan bullet in %s without errors and accepts the next drag (#604)",
+    async (window) => {
+      if (window === "popout") {
+        expect(await openPopoutEditor()).toBe(true);
+      }
+      const contextCount = window === "popout" ? 2 : 1;
+      // Parser deliberately excludes this orphan after whitespace boundaries
+      // (#630), although Obsidian still renders its draggable bullet.
+      const orphanState = [
+        "- parent",
+        "  - child",
+        "  ",
+        " ",
+        "  - |orphan",
+        "- last",
+        "- tail",
+      ];
+      await prepare(orphanState);
+      await drag({ from: { line: 4, ch: 2 } });
+      expect(await getDragAndDropSnapshot()).toMatchObject({
+        active: false,
+        pending: true,
+      });
+      // The bridge rejects if a DOM listener reports an uncaught window error.
+      await moveToTop();
+      await expectClean(contextCount);
+      await expect(await getCurrentState()).toEqualEditorState(orphanState);
+      await moveToTop();
+      await drop();
+      await expectClean(contextCount);
+      await expect(await getCurrentState()).toEqualEditorState(orphanState);
+      await moveLastItemToTop(contextCount);
+    },
+    20000,
+  );
+
   test("moves an item in the main window (control)", async () => {
     await moveLastItemToTop(1);
   });

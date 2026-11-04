@@ -268,6 +268,10 @@ export class DragAndDrop implements Feature {
     }
     const pos = editor.offsetToPos(posOffset);
     const root = this.parser.parse(editor, pos);
+    if (!root) {
+      return;
+    }
+
     const list = root.getListUnderLine(pos.line);
     if (!list) {
       return;
