@@ -1,7 +1,7 @@
 import { Operation } from "./Operation";
 import { OutdentList } from "./OutdentList";
 
-import { List, Root, recalculateNumericBullets } from "../root";
+import { List, Root } from "../root";
 import { isEmptyLineOrEmptyCheckbox } from "../utils/isEmptyLineOrEmptyCheckbox";
 
 export class OutdentListIfItsEmpty implements Operation {
@@ -47,15 +47,18 @@ export class OutdentListIfItsEmpty implements Operation {
     const { root } = this;
     const parent = list.getParent();
     const siblings = parent.getChildren();
+    const cursor = root.getCursor();
 
-    if (!list.isEmpty() || siblings[siblings.length - 1] !== list) {
+    if (
+      !list.isEmpty() ||
+      siblings[siblings.length - 1] !== list ||
+      cursor.ch !== list.getLastLineContentEnd().ch
+    ) {
       return;
     }
 
     this.stopPropagation = true;
     this.updated = true;
-
-    const cursor = root.getCursor();
 
     parent.removeChild(list);
     // Closing the list leaves an empty line behind. Root.print() strips
@@ -64,7 +67,5 @@ export class OutdentListIfItsEmpty implements Operation {
     parent.addAfterAll(new List(root, "", "", "", "", "", false));
 
     root.replaceCursor({ line: cursor.line, ch: 0 });
-
-    recalculateNumericBullets(root);
   }
 }

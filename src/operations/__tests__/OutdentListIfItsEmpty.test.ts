@@ -198,3 +198,49 @@ test("should not delete empty top level list item if it has children", () => {
   expect(op.shouldStopPropagation()).toBe(false);
   expect(op.shouldUpdate()).toBe(false);
 });
+
+test.each([
+  ["7. seven\n8. ", "7. seven\n", { line: 1, ch: 3 }],
+  ["7. seven\n- ", "7. seven\n", { line: 1, ch: 2 }],
+  [
+    "- parent\n  5. five\n  6. six\n- ",
+    "- parent\n  5. five\n  6. six\n",
+    { line: 3, ch: 2 },
+  ],
+])(
+  "should preserve existing numbering when closing %s",
+  (text, expected, cursor) => {
+    const root = makeRoot({ editor: makeEditor({ text, cursor }) });
+    const op = new OutdentListIfItsEmpty(root);
+    op.perform();
+
+    expect(root.print()).toBe(expected);
+    expect(root.getCursor()).toStrictEqual({ line: cursor.line, ch: 0 });
+    expect(op.shouldStopPropagation()).toBe(true);
+    expect(op.shouldUpdate()).toBe(true);
+  },
+);
+
+test.each([
+  ["- ", 0],
+  ["- ", 1],
+  ["9. ", 0],
+  ["9. ", 1],
+  ["9. ", 2],
+  ["- [ ] ", 0],
+  ["- [ ] ", 1],
+  ["- [ ] ", 2],
+  ["- [ ] ", 3],
+  ["- [ ] ", 4],
+  ["- [ ] ", 5],
+])("should leave native Enter handling for %s at column %s", (text, ch) => {
+  const cursor = { line: 0, ch };
+  const root = makeRoot({ editor: makeEditor({ text, cursor }) });
+  const op = new OutdentListIfItsEmpty(root);
+  op.perform();
+
+  expect(root.print()).toBe(text);
+  expect(root.getCursor()).toStrictEqual(cursor);
+  expect(op.shouldStopPropagation()).toBe(false);
+  expect(op.shouldUpdate()).toBe(false);
+});
