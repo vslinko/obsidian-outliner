@@ -446,6 +446,15 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
           // dispatchEvent does NOT throw exceptions from DOM event listeners.
           // Listen on the owning windows instead of trusting the RPC response.
           const onError = (event: ErrorEvent) => {
+            // Chromium reports deferred ResizeObserver delivery as an error
+            // event without an exception. It is not a failed DnD handler.
+            if (
+              event.error == null &&
+              event.message ===
+                "ResizeObserver loop completed with undelivered notifications."
+            ) {
+              return;
+            }
             session.errors.push(event.error?.stack || event.message);
           };
           const onRejection = (event: PromiseRejectionEvent) => {
