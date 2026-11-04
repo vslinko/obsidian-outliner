@@ -419,7 +419,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     el =
       el.querySelector(".cm-formatting-list") ||
       el.querySelector(".cm-fold-indicator");
-    el.dispatchEvent(e);
+    this.dispatchMouseEvent(el, e);
   }
 
   private move(opts: {
@@ -444,7 +444,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       cancelable: true,
     });
     const target = doc.elementFromPoint(x, y) || view.contentDOM;
-    target.dispatchEvent(e);
+    this.dispatchMouseEvent(target, e);
   }
 
   private drop() {
@@ -456,7 +456,30 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       bubbles: true,
       cancelable: true,
     });
-    view.contentDOM.dispatchEvent(e);
+    this.dispatchMouseEvent(view.contentDOM, e);
+  }
+
+  private dispatchMouseEvent(target: Element, event: MouseEvent) {
+    // Listener exceptions go to the callback's realm, not necessarily the
+    // target's window: pop-out DnD handlers are created in the plugin window.
+    const windows = new Set([window, target.ownerDocument.defaultView]);
+    let error: string | null = null;
+    const onError = (event: ErrorEvent) => {
+      error = event.message || String(event.error);
+    };
+    for (const win of windows) {
+      win.addEventListener("error", onError);
+    }
+    try {
+      target.dispatchEvent(event);
+    } finally {
+      for (const win of windows) {
+        win.removeEventListener("error", onError);
+      }
+    }
+    if (error !== null) {
+      throw new Error(error);
+    }
   }
 
   async applyState(state: string[]): Promise<void>;
