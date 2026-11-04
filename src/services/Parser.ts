@@ -254,10 +254,7 @@ export class Parser {
           const matches = line.match(/^[ \t]+/);
 
           if (!matches || matches[0].length <= currentIndent.length) {
-            if (/^\s+$/.test(line)) {
-              continue;
-            }
-
+            // Skipping a line would desynchronize the model and editor ranges.
             return error(
               `Unable to parse list: expected some indent, got no indent`,
             );
