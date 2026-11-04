@@ -29,7 +29,7 @@ async function main() {
 
   const { releaseType, minAppVersion } = await inquirer.prompt([
     {
-      type: "list",
+      type: "select",
       name: "releaseType",
       message: "Release type:",
       choices: [

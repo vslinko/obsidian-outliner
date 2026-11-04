@@ -1,8 +1,6 @@
 export type VerticalLinesAction = "none" | "zoom-in" | "toggle-folding";
 export type KeepCursorWithinContent =
-  | "never"
-  | "bullet-only"
-  | "bullet-and-checkbox";
+  "never" | "bullet-only" | "bullet-and-checkbox";
 
 interface SettingsObject {
   styleLists: boolean;
