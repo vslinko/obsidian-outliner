@@ -38,7 +38,35 @@ declare function move(opts: {
   to: { line: number; ch: number };
   offsetX: number;
   offsetY: number;
+  buttons?: number;
 }): Promise<void>;
 declare function drop(): Promise<void>;
 declare function openPopoutEditor(): Promise<boolean>;
 declare function closePopoutEditor(): Promise<void>;
+declare function selectTestEditor(opts: {
+  window: "main" | "popout";
+  focus?: boolean;
+}): Promise<void>;
+declare function simulateWindowBlur(): Promise<void>;
+
+interface DragAndDropDocumentSnapshot {
+  window: "main" | "popout";
+  registered: boolean;
+  enabled: boolean;
+  dragging: boolean;
+  dropZones: number;
+  visibleDropZones: number;
+  draggingLines: number;
+  droppingLines: number;
+}
+
+interface DragAndDropSnapshot {
+  active: boolean;
+  pending: boolean;
+  source: "main" | "popout" | null;
+  contextCount: number;
+  distinctDocuments: boolean;
+  documents: DragAndDropDocumentSnapshot[];
+}
+
+declare function getDragAndDropSnapshot(): Promise<DragAndDropSnapshot>;

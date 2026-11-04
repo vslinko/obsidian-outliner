@@ -10,6 +10,7 @@ const keysMap: { [key: string]: number } = {
   Backspace: 8,
   Tab: 9,
   Enter: 13,
+  Escape: 27,
   Home: 36,
   ArrowLeft: 37,
   ArrowUp: 38,
@@ -17,6 +18,7 @@ const keysMap: { [key: string]: number } = {
   ArrowDown: 40,
   Delete: 46,
   KeyA: 65,
+  KeyO: 79,
 };
 
 export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlugin {
@@ -24,6 +26,8 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
   private mainEditor: MyEditor | null = null;
   private mainLeaf: WorkspaceLeaf | null = null;
   private popoutLeaf: WorkspaceLeaf | null = null;
+  // Keep the last document available for cleanup assertions after window-close.
+  private popoutDocument: Document | null = null;
 
   wait(time: number) {
     return new Promise((resolve) => setTimeout(resolve, time));
@@ -54,6 +58,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       defaultPrevented: false,
       returnValue: true,
       cancelBubble: false,
+      key: "",
       preventDefault: function () {
         e.defaultPrevented = true;
         e.returnValue = true;
@@ -91,7 +96,40 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       throw new Error("Unknown key: " + e.code);
     }
 
+    if (e.code === "Escape" || e.code === "KeyO") {
+      e.key = this.getKeyName(e.code, e.shiftKey);
+      this.dispatchKeydown(e as KeyboardEvent);
+      return;
+    }
+
     this.editor.triggerOnKeyDown(e as KeyboardEvent);
+  }
+
+  private getKeyName(code: string, shiftKey: boolean) {
+    if (code.startsWith("Key")) {
+      const key = code.slice(3);
+      return shiftKey ? key : key.toLowerCase();
+    }
+
+    return code;
+  }
+
+  private dispatchKeydown(e: KeyboardEvent) {
+    const view: EditorView = (this.editor as any).view;
+    const win = view.dom.ownerDocument.defaultView as any;
+    const event = new win.KeyboardEvent("keydown", {
+      key: e.key,
+      code: e.code,
+      shiftKey: e.shiftKey,
+      metaKey: e.metaKey,
+      altKey: e.altKey,
+      ctrlKey: e.ctrlKey,
+      bubbles: true,
+      cancelable: true,
+    });
+
+    Object.defineProperty(event, "keyCode", { get: () => e.keyCode });
+    view.contentDOM.dispatchEvent(event);
   }
 
   insertText(text: string) {
@@ -170,6 +208,15 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
           case "closePopoutEditor":
             await this.closePopoutEditor();
             break;
+          case "selectTestEditor":
+            this.selectTestEditor(data);
+            break;
+          case "getDragAndDropSnapshot":
+            result = await this.getDragAndDropSnapshot();
+            break;
+          case "simulateWindowBlur":
+            this.simulateWindowBlur();
+            break;
           case "simulateKeydown":
             this.simulateKeydown(data);
             break;
@@ -243,6 +290,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
         view.dom.getBoundingClientRect().width > 0
       ) {
         this.editor = new MyEditor(markdownView.editor);
+        this.popoutDocument = view.dom.ownerDocument;
         view.focus();
         return true;
       }
@@ -275,6 +323,78 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     }
   }
 
+  private selectTestEditor(opts: {
+    window: "main" | "popout";
+    focus?: boolean;
+  }) {
+    if (opts.window === "popout") {
+      if (!this.popoutLeaf) {
+        throw new Error("No test pop-out is open");
+      }
+      this.editor = new MyEditor((this.popoutLeaf.view as MarkdownView).editor);
+    } else if (this.mainEditor) {
+      this.editor = this.mainEditor;
+    }
+
+    // Ownership tests must be able to change only the bridge reference:
+    // focusing another window would itself cancel the source drag on blur.
+    if (opts.focus !== false) {
+      const leaf = opts.window === "popout" ? this.popoutLeaf : this.mainLeaf;
+      if (leaf) {
+        this.app.workspace.setActiveLeaf(leaf, { focus: true });
+      }
+      ((this.editor as any).view as EditorView).focus();
+    }
+  }
+
+  private async getDragAndDropSnapshot(): Promise<DragAndDropSnapshot> {
+    // Let CodeMirror render decoration changes before observing the DOM.
+    await this.wait(20);
+    // Read-only introspection is deliberately confined to the test bridge.
+    const feature = (this as any).features.find(
+      (candidate: any) => candidate.contextsByDocument instanceof Map,
+    );
+    if (!feature) {
+      throw new Error("Drag-and-drop feature not loaded");
+    }
+    const mainView: EditorView = ((this.mainEditor || this.editor) as any).view;
+    const mainDocument = mainView.dom.ownerDocument;
+    const nameOf = (doc: Document): "main" | "popout" =>
+      doc === mainDocument ? "main" : "popout";
+    const documents = [mainDocument];
+    if (this.popoutDocument && this.popoutDocument !== mainDocument) {
+      documents.push(this.popoutDocument);
+    }
+    return {
+      active: !!feature.state,
+      pending: !!feature.preStart,
+      source: feature.state ? nameOf(feature.state.context.document) : null,
+      contextCount: feature.contextsByDocument.size,
+      distinctDocuments:
+        !!this.popoutLeaf && this.popoutDocument !== mainDocument,
+      documents: documents.map((doc) => ({
+        window: nameOf(doc),
+        registered: feature.contextsByDocument.has(doc),
+        enabled: doc.body.classList.contains("outliner-plugin-dnd"),
+        dragging: doc.body.classList.contains("outliner-plugin-dragging"),
+        dropZones: doc.querySelectorAll(".outliner-plugin-drop-zone").length,
+        visibleDropZones: Array.from(
+          doc.querySelectorAll<HTMLElement>(".outliner-plugin-drop-zone"),
+        ).filter((zone) => zone.style.display !== "none").length,
+        draggingLines: doc.querySelectorAll(".outliner-plugin-dragging-line")
+          .length,
+        droppingLines: doc.querySelectorAll(".outliner-plugin-dropping-line")
+          .length,
+      })),
+    };
+  }
+
+  private simulateWindowBlur() {
+    const view: EditorView = (this.editor as any).view;
+    const win = view.dom.ownerDocument.defaultView as any;
+    win.dispatchEvent(new win.Event("blur"));
+  }
+
   private drag(opts: { from: { line: number; ch: number } }) {
     const view: EditorView = (this.editor as any).view;
     const coords = view.coordsAtPos(this.editor.posToOffset(opts.from));
@@ -286,6 +406,10 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       screenY: y,
       clientX: x,
       clientY: y,
+      button: 0,
+      buttons: 1,
+      bubbles: true,
+      cancelable: true,
     });
     const { node } = view.domAtPos(this.editor.posToOffset(opts.from));
     let el = node.nodeType === 1 ? (node as HTMLElement) : node.parentElement;
@@ -302,6 +426,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     to: { line: number; ch: number };
     offsetX: number;
     offsetY: number;
+    buttons?: number;
   }) {
     const view: EditorView = (this.editor as any).view;
     const coords = view.coordsAtPos(this.editor.posToOffset(opts.to));
@@ -314,16 +439,24 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
       screenY: y,
       clientX: x,
       clientY: y,
+      buttons: opts.buttons ?? 1,
+      bubbles: true,
+      cancelable: true,
     });
-    doc.dispatchEvent(e);
+    const target = doc.elementFromPoint(x, y) || view.contentDOM;
+    target.dispatchEvent(e);
   }
 
   private drop() {
     const view: EditorView = (this.editor as any).view;
-    const doc = view.dom.ownerDocument;
-    const win = doc.defaultView as any;
-    const e = new win.MouseEvent("mouseup");
-    doc.dispatchEvent(e);
+    const win = view.dom.ownerDocument.defaultView as any;
+    const e = new win.MouseEvent("mouseup", {
+      button: 0,
+      buttons: 0,
+      bubbles: true,
+      cancelable: true,
+    });
+    view.contentDOM.dispatchEvent(e);
   }
 
   async applyState(state: string[]): Promise<void>;

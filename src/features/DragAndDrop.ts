@@ -52,10 +52,14 @@ export class DragAndDrop implements Feature {
   }
 
   async unload() {
-    for (const doc of Array.from(this.contextsByDocument.keys())) {
-      this.unregisterDocument(doc);
+    try {
+      this.cancelDragging();
+    } finally {
+      for (const doc of Array.from(this.contextsByDocument.keys())) {
+        this.unregisterDocument(doc);
+      }
+      this.disableFeatureToggle();
     }
-    this.disableFeatureToggle();
   }
 
   private enableFeatureToggle() {
@@ -65,10 +69,6 @@ export class DragAndDrop implements Feature {
 
   private disableFeatureToggle() {
     this.settings.removeCallback(this.handleSettingsChange);
-    for (const context of this.contextsByDocument.values()) {
-      context.document.body.classList.remove(BODY_CLASS);
-      context.document.body.classList.remove("outliner-plugin-dragging");
-    }
   }
 
   private registerExistingDocuments() {
@@ -102,6 +102,8 @@ export class DragAndDrop implements Feature {
       dropZonePadding,
     };
     this.contextsByDocument.set(doc, context);
+    // Obsidian may copy body classes when creating a new window.
+    doc.body.classList.remove("outliner-plugin-dragging");
     this.updateBodyClass(context);
 
     doc.addEventListener("mousedown", this.handleMouseDown, {
@@ -110,6 +112,7 @@ export class DragAndDrop implements Feature {
     doc.addEventListener("mousemove", this.handleMouseMove);
     doc.addEventListener("mouseup", this.handleMouseUp);
     doc.addEventListener("keydown", this.handleKeyDown);
+    doc.defaultView?.addEventListener("blur", this.handleWindowBlur);
   }
 
   private unregisterDocument(doc: Document | null | undefined) {
@@ -122,27 +125,27 @@ export class DragAndDrop implements Feature {
       return;
     }
 
-    if (this.preStart?.document === doc) {
-      this.preStart = null;
-    }
-    if (this.state?.context.document === doc) {
-      this.cancelDragging();
-    }
+    try {
+      if (
+        this.preStart?.document === doc ||
+        this.state?.context.document === doc
+      ) {
+        this.cancelDragging();
+      }
+    } finally {
+      doc.removeEventListener("mousedown", this.handleMouseDown, {
+        capture: true,
+      });
+      doc.removeEventListener("mousemove", this.handleMouseMove);
+      doc.removeEventListener("mouseup", this.handleMouseUp);
+      doc.removeEventListener("keydown", this.handleKeyDown);
+      doc.defaultView?.removeEventListener("blur", this.handleWindowBlur);
 
-    doc.removeEventListener("mousedown", this.handleMouseDown, {
-      capture: true,
-    });
-    doc.removeEventListener("mousemove", this.handleMouseMove);
-    doc.removeEventListener("mouseup", this.handleMouseUp);
-    doc.removeEventListener("keydown", this.handleKeyDown);
-
-    doc.body.classList.remove(BODY_CLASS);
-    doc.body.classList.remove("outliner-plugin-dragging");
-    if (context.dropZone.parentElement) {
-      context.dropZone.parentElement.removeChild(context.dropZone);
+      doc.body.classList.remove(BODY_CLASS);
+      doc.body.classList.remove("outliner-plugin-dragging");
+      context.dropZone.remove();
+      this.contextsByDocument.delete(doc);
     }
-
-    this.contextsByDocument.delete(doc);
   }
 
   private getContextByView(view: EditorView) {
@@ -163,15 +166,24 @@ export class DragAndDrop implements Feature {
   }
 
   private handleSettingsChange = () => {
-    for (const context of this.contextsByDocument.values()) {
-      this.updateBodyClass(context);
+    try {
+      if (!this.settings.dragAndDrop) {
+        this.cancelDragging();
+      }
+    } finally {
+      for (const context of this.contextsByDocument.values()) {
+        this.updateBodyClass(context);
+      }
     }
   };
 
   private handleMouseDown = (e: MouseEvent) => {
+    // A new gesture must never overwrite another document's drag owner.
+    this.cancelDragging();
     if (
       !isFeatureSupported() ||
       !this.settings.dragAndDrop ||
+      e.button !== 0 ||
       !isClickOnBullet(e)
     ) {
       return;
@@ -201,6 +213,10 @@ export class DragAndDrop implements Feature {
   private handleMouseMove = (e: MouseEvent) => {
     const eventDocument = getEventDocument(e);
 
+    if ((e.buttons & 1) === 0) {
+      this.cancelDragging();
+      return;
+    }
     if (this.preStart && eventDocument === this.preStart.document) {
       this.startDragging();
     }
@@ -210,22 +226,24 @@ export class DragAndDrop implements Feature {
   };
 
   private handleMouseUp = (e: MouseEvent) => {
-    const eventDocument = getEventDocument(e);
-
-    if (this.preStart && eventDocument === this.preStart.document) {
-      this.preStart = null;
-    }
-    if (this.state && eventDocument === this.state.context.document) {
+    this.preStart = null;
+    if (this.state && getEventDocument(e) === this.state.context.document) {
       this.stopDragging();
+    } else {
+      // Releasing in another window cancels; it is not a cross-window drop.
+      this.cancelDragging();
     }
   };
 
   private handleKeyDown = (e: KeyboardEvent) => {
-    if (
-      this.state &&
-      e.code === "Escape" &&
-      getEventDocument(e) === this.state.context.document
-    ) {
+    if (e.code === "Escape") {
+      this.cancelDragging();
+    }
+  };
+
+  private handleWindowBlur = (e: Event) => {
+    const owner = this.state?.context.document || this.preStart?.document;
+    if (owner?.defaultView === e.currentTarget) {
       this.cancelDragging();
     }
   };
@@ -270,24 +288,31 @@ export class DragAndDrop implements Feature {
   }
 
   private cancelDragging() {
-    this.state.dropVariant = null;
-    this.stopDragging();
+    this.stopDragging(false);
   }
 
-  private stopDragging() {
-    this.unhightlightDraggingLines();
-    this.hideDropZone();
-    this.applyChanges();
+  private stopDragging(applyChanges = true) {
+    const state = this.state;
+    this.preStart = null;
     this.state = null;
-  }
-
-  private applyChanges() {
-    if (!this.state.dropVariant) {
+    if (!state) {
       return;
     }
 
-    const { state } = this;
+    // Release ownership and DOM even if dispatch fails on a closing editor.
+    state.context.document.body.classList.remove("outliner-plugin-dragging");
+    state.context.dropZone.style.display = "none";
+    state.view.dispatch({ effects: [dndEnded.of()] });
+    if (applyChanges) {
+      this.applyChanges(state);
+    }
+  }
+
+  private applyChanges(state: DragAndDropState) {
     const { dropVariant, editor, root, list } = state;
+    if (!dropVariant) {
+      return;
+    }
 
     const newRoot = this.parser.parse(editor, root.getContentStart());
     if (!isSameRoots(root, newRoot)) {
@@ -326,16 +351,6 @@ export class DragAndDrop implements Feature {
     });
 
     state.context.document.body.classList.add("outliner-plugin-dragging");
-  }
-
-  private unhightlightDraggingLines() {
-    this.state.context.document.body.classList.remove(
-      "outliner-plugin-dragging",
-    );
-
-    this.state.view.dispatch({
-      effects: [dndEnded.of()],
-    });
   }
 
   private drawDropZone() {
@@ -388,10 +403,6 @@ export class DragAndDrop implements Feature {
         ),
       ],
     });
-  }
-
-  private hideDropZone() {
-    this.state.context.dropZone.style.display = "none";
   }
 }
 
