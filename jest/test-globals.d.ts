@@ -63,6 +63,7 @@ interface DragAndDropDocumentSnapshot {
 interface DragAndDropSnapshot {
   active: boolean;
   pending: boolean;
+  destinationSelected: boolean;
   source: "main" | "popout" | null;
   contextCount: number;
   distinctDocuments: boolean;
@@ -70,3 +71,15 @@ interface DragAndDropSnapshot {
 }
 
 declare function getDragAndDropSnapshot(): Promise<DragAndDropSnapshot>;
+
+declare function openDropInvalidationEditor(): Promise<boolean>;
+declare function replaceFromDropInvalidationEditor(value: string): Promise<{
+  value: string;
+  rootStart: StatePosition;
+  parsed: boolean;
+}>;
+declare function getDropInvalidationObservations(): Promise<{
+  errors: string[];
+  notices: string[];
+}>;
+declare function closeDropInvalidationEditor(): Promise<void>;
