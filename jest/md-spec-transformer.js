@@ -233,7 +233,7 @@ class LinesIterator {
   }
 }
 
-module.exports.process = function process(sourceText, sourcePath, options) {
+module.exports.process = function transform(sourceText, sourcePath, options) {
   const l = new LinesIterator(sourceText.split("\n"));
   const s = (v) => JSON.stringify(v);
 
