@@ -29,6 +29,10 @@ module.exports = class CustomEnvironment extends TestEnvironment {
     this.createCommand("getDragAndDropSnapshot");
     this.createCommand("simulateWindowBlur");
     this.createCommand("testHandle");
+    this.createCommand("openDropInvalidationEditor");
+    this.createCommand("replaceFromDropInvalidationEditor");
+    this.createCommand("getDropInvalidationObservations");
+    this.createCommand("closeDropInvalidationEditor");
   }
 
   createCommand(type) {

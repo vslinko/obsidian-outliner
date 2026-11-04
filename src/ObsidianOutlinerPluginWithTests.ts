@@ -35,6 +35,14 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
   // Keep the last document available for cleanup assertions after window-close.
   private popoutDocument: Document | null = null;
   private handleFixtures = new Map<EditorView, TestHandleFixture>();
+  private dropInvalidation: {
+    source: MyEditor;
+    leaf: WorkspaceLeaf;
+    existingNotices: Set<Element>;
+    notices: Map<Element, string>;
+    errors: string[];
+    removeListeners: (() => void)[];
+  } | null = null;
 
   wait(time: number) {
     return new Promise((resolve) => setTimeout(resolve, time));
@@ -228,6 +236,18 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
           case "simulateWindowBlur":
             this.simulateWindowBlur();
             break;
+          case "openDropInvalidationEditor":
+            result = await this.openDropInvalidationEditor();
+            break;
+          case "replaceFromDropInvalidationEditor":
+            result = await this.replaceFromDropInvalidationEditor(data);
+            break;
+          case "getDropInvalidationObservations":
+            result = await this.getDropInvalidationObservations();
+            break;
+          case "closeDropInvalidationEditor":
+            this.closeDropInvalidationEditor();
+            break;
           case "simulateKeydown":
             this.simulateKeydown(data);
             break;
@@ -363,9 +383,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     }
   }
 
-  private async getDragAndDropSnapshot(): Promise<DragAndDropSnapshot> {
-    // Let CodeMirror render decoration changes before observing the DOM.
-    await this.wait(20);
+  private getDragAndDropFeature() {
     // Read-only introspection is deliberately confined to the test bridge.
     const feature = (this as any).features.find(
       (candidate: any) => candidate.contextsByDocument instanceof Map,
@@ -373,6 +391,165 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     if (!feature) {
       throw new Error("Drag-and-drop feature not loaded");
     }
+    return feature;
+  }
+
+  private async openDropInvalidationEditor() {
+    if (this.dropInvalidation) {
+      throw new Error("A drop-invalidation editor is already open");
+    }
+    const sourceView: EditorView = (this.editor as any).view;
+    let sourceLeaf: WorkspaceLeaf | null = null;
+    this.app.workspace.iterateAllLeaves((leaf) => {
+      if (((leaf.view as MarkdownView).editor as any)?.cm === sourceView) {
+        sourceLeaf = leaf;
+      }
+    });
+    const file = (sourceLeaf?.view as MarkdownView)?.file;
+    if (!file) {
+      throw new Error("No source Markdown file for drop invalidation");
+    }
+
+    // Open the same file BEFORE dragging. Later edits must not focus this leaf
+    // or switch windows, since blur would cancel the gesture before mouseup.
+    this.app.workspace.setActiveLeaf(sourceLeaf, { focus: true });
+    const leaf = this.app.workspace.getLeaf("split");
+    const documents: Document[] = Array.from(
+      this.getDragAndDropFeature().contextsByDocument.keys(),
+    );
+    const session = (this.dropInvalidation = {
+      source: this.editor,
+      leaf,
+      existingNotices: new Set<Element>(),
+      notices: new Map<Element, string>(),
+      errors: [] as string[],
+      removeListeners: [] as (() => void)[],
+    });
+    await leaf.openFile(file, { active: false });
+    const deadline = Date.now() + 5000;
+    while (Date.now() < deadline) {
+      const secondaryView: EditorView | undefined = (
+        (leaf.view as MarkdownView).editor as any
+      )?.cm;
+      if (
+        secondaryView?.dom.isConnected &&
+        secondaryView !== sourceView &&
+        secondaryView.dom.getBoundingClientRect().width > 0
+      ) {
+        this.app.workspace.setActiveLeaf(sourceLeaf, { focus: true });
+        sourceView.focus();
+        await this.wait(100);
+        for (const doc of documents) {
+          for (const notice of Array.from(doc.querySelectorAll(".notice"))) {
+            session.existingNotices.add(notice);
+          }
+          const win = doc.defaultView;
+          // Notices expire, so keep their history through the recovery gesture.
+          const observer = new (win as any).MutationObserver(() => {
+            for (const notice of Array.from(doc.querySelectorAll(".notice"))) {
+              const text = notice.textContent.trim();
+              if (!session.existingNotices.has(notice) && text) {
+                session.notices.set(notice, text);
+              }
+            }
+          });
+          observer.observe(doc.body, {
+            childList: true,
+            subtree: true,
+            characterData: true,
+          });
+          session.removeListeners.push(() => observer.disconnect());
+          // dispatchEvent does NOT throw exceptions from DOM event listeners.
+          // Listen on the owning windows instead of trusting the RPC response.
+          const onError = (event: ErrorEvent) => {
+            // Chromium reports deferred ResizeObserver delivery as an error
+            // event without an exception. It is not a failed DnD handler.
+            if (
+              event.error == null &&
+              event.message ===
+                "ResizeObserver loop completed with undelivered notifications."
+            ) {
+              return;
+            }
+            session.errors.push(event.error?.stack || event.message);
+          };
+          const onRejection = (event: PromiseRejectionEvent) => {
+            session.errors.push(String(event.reason?.stack || event.reason));
+          };
+          win.addEventListener("error", onError);
+          win.addEventListener("unhandledrejection", onRejection);
+          session.removeListeners.push(() => {
+            win.removeEventListener("error", onError);
+            win.removeEventListener("unhandledrejection", onRejection);
+          });
+        }
+        return true;
+      }
+      await this.wait(50);
+    }
+    throw new Error("The second editor of the source file did not render");
+  }
+
+  private async replaceFromDropInvalidationEditor(value: string) {
+    const session = this.dropInvalidation;
+    const feature = this.getDragAndDropFeature();
+    const state = feature.state;
+    if (!session || !state?.dropVariant) {
+      throw new Error("Expected an active drag with a selected destination");
+    }
+    const rootStart = state.root.getContentStart();
+    const secondary = new MyEditor((session.leaf.view as MarkdownView).editor);
+    secondary.setValue(value);
+    const deadline = Date.now() + 5000;
+    while (session.source.getValue() !== value && Date.now() < deadline) {
+      await this.wait(20);
+    }
+    if (session.source.getValue() !== value) {
+      throw new Error(
+        "The source editor did not synchronize the external edit",
+      );
+    }
+    if (feature.state !== state) {
+      throw new Error("The gesture was cancelled before the drop");
+    }
+    // Use precisely the editor and position that applyChanges will reparse.
+    return {
+      value: session.source.getValue(),
+      rootStart,
+      parsed: feature.parser.parse(state.editor, rootStart) !== null,
+    };
+  }
+
+  private async getDropInvalidationObservations() {
+    await this.wait(20);
+    const session = this.dropInvalidation;
+    if (!session) {
+      throw new Error("No drop-invalidation observation is active");
+    }
+    return {
+      errors: [...session.errors],
+      notices: Array.from(session.notices.values()),
+    };
+  }
+
+  private closeDropInvalidationEditor() {
+    const session = this.dropInvalidation;
+    this.dropInvalidation = null;
+    if (session) {
+      try {
+        for (const remove of session.removeListeners) {
+          remove();
+        }
+      } finally {
+        session.leaf.detach();
+      }
+    }
+  }
+
+  private async getDragAndDropSnapshot(): Promise<DragAndDropSnapshot> {
+    // Let CodeMirror render decoration changes before observing the DOM.
+    await this.wait(20);
+    const feature = this.getDragAndDropFeature();
     const mainView: EditorView = ((this.mainEditor || this.editor) as any).view;
     const mainDocument = mainView.dom.ownerDocument;
     const nameOf = (doc: Document): "main" | "popout" =>
@@ -384,6 +561,7 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     return {
       active: !!feature.state,
       pending: !!feature.preStart,
+      destinationSelected: !!feature.state?.dropVariant,
       source: feature.state ? nameOf(feature.state.context.document) : null,
       contextCount: feature.contextsByDocument.size,
       distinctDocuments:

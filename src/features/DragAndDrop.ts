@@ -374,7 +374,7 @@ export class DragAndDrop implements Feature {
     }
 
     const newRoot = this.parser.parse(editor, root.getContentStart());
-    if (!isSameRoots(root, newRoot)) {
+    if (!newRoot || !isSameRoots(root, newRoot)) {
       new Notice(
         `The item cannot be moved. The page content changed during the move.`,
         5000,
