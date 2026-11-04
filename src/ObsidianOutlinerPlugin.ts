@@ -34,7 +34,7 @@ declare global {
 
 export default class ObsidianOutlinerPlugin extends Plugin {
   private features: Feature[];
-  protected settings: Settings;
+  settings: Settings;
   private logger: Logger;
   private obsidianSettings: ObsidianSettings;
   private parser: Parser;

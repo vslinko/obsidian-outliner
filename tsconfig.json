@@ -1,13 +1,15 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
+    "rootDir": ".",
     "inlineSourceMap": true,
     "inlineSources": true,
     "module": "ESNext",
     "target": "es6",
     "allowJs": true,
+    "strict": false,
     "noImplicitAny": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+    "types": ["node", "jest"],
     "importHelpers": true,
     "lib": ["dom", "es5", "scripthost", "es2015"],
     "outDir": "dist",
