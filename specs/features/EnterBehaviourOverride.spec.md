@@ -424,3 +424,163 @@
 |three
 - four
 ```
+
+# enter should delete last empty bullet left over when closing a list
+
+- applyState:
+
+```md
+- Item 1
+- Item 2
+- |
+```
+
+- keydown: `Enter`
+- assertState:
+
+```md
+- Item 1
+- Item 2
+|
+```
+
+# enter should preserve existing numbers when closing an ordered list
+
+- applyState:
+
+```md
+7. seven
+8. |
+```
+
+- keydown: `Enter`
+- assertState:
+
+```md
+7. seven
+|
+```
+
+# enter should preserve existing numbers when closing an unordered item
+
+- applyState:
+
+```md
+7. seven
+- |
+```
+
+- keydown: `Enter`
+- assertState:
+
+```md
+7. seven
+|
+```
+
+# enter should preserve unrelated nested numbers when closing a list
+
+- applyState:
+
+```md
+- parent
+  5. five
+  6. six
+- |
+```
+
+- keydown: `Enter`
+- assertState:
+
+```md
+- parent
+  5. five
+  6. six
+|
+```
+
+# enter before an empty final marker should preserve native behavior
+
+- setting: `stickCursor="never"`
+- applyState:
+
+```md
+- one
+|- 
+```
+
+- keydown: `Enter`
+- assertState:
+
+```md
+- one
+
+|- 
+```
+
+# enter inside an empty final marker should preserve native behavior
+
+- setting: `stickCursor="never"`
+- applyState:
+
+```md
+-| 
+```
+
+- keydown: `Enter`
+- assertState:
+
+```md
+-
+|
+```
+
+# enter inside an empty checkbox should preserve native behavior
+
+- setting: `stickCursor="never"`
+- applyState:
+
+```md
+- [| ] 
+```
+
+- keydown: `Enter`
+- assertState:
+
+```md
+- [
+|] 
+```
+
+# repeated enter should create an empty item then close the list then insert a newline
+
+- applyState:
+
+```md
+- Item 1|
+```
+
+- keydown: `Enter`
+- assertState:
+
+```md
+- Item 1
+- |
+```
+
+- keydown: `Enter`
+- assertState:
+
+```md
+- Item 1
+|
+```
+
+- keydown: `Enter`
+- assertState:
+
+```md
+- Item 1
+
+|
+```
