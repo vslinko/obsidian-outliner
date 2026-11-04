@@ -17,7 +17,7 @@ env:
 
 jobs:
   lint:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout
         uses: actions/checkout@v7.0.1
@@ -31,7 +31,7 @@ jobs:
         run: |
           npm run lint
   test-on-linux:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Install Obsidian
         run: |
@@ -55,7 +55,7 @@ jobs:
           export $(dbus-launch)
           npm test
   test-on-osx:
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - name: Install Obsidian
         run: |
@@ -77,7 +77,7 @@ jobs:
           npm test
   release:
     if: ${{ github.event_name == 'release' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: [lint, test-on-linux, test-on-osx]
     permissions:
       contents: write
