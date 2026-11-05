@@ -26,6 +26,11 @@ export class OutdentList implements Operation {
     this.stopPropagation = true;
 
     const list = root.getListUnderCursor();
+
+    if (!list) {
+      return;
+    }
+
     const parent = list.getParent();
     const grandParent = parent.getParent();
 
