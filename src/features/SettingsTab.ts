@@ -60,8 +60,26 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.settings.overrideEnterBehaviour = value;
             await this.settings.save();
+            this.display(); // Refresh to show/hide the outdent setting
           });
       });
+
+    // Only show the outdent setting if Enter enhancement is enabled
+    if (this.settings.overrideEnterBehaviour) {
+      new Setting(containerEl)
+        .setName("Outdent empty items with Enter")
+        .setDesc(
+          "When enabled, Enter outdents empty items or exits the list at the top level. When disabled, Enter keeps empty bullets and checkboxes and continues the list.",
+        )
+        .addToggle((toggle) => {
+          toggle
+            .setValue(this.settings.enterOutdentsEmptyListItem)
+            .onChange(async (value) => {
+              this.settings.enterOutdentsEmptyListItem = value;
+              await this.settings.save();
+            });
+        });
+    }
 
     new Setting(containerEl)
       .setName("Vim-mode o/O inserts bullets")

@@ -92,34 +92,132 @@ describe("CreateNewItem operation", () => {
     expect(root.getCursor().ch).toBe(6);
   });
 
-  test("should do nothing for an empty list item", () => {
-    const root = makeRoot({
-      editor: makeEditor({
-        text: "- item 1\n- \n- item 3\n",
-        cursor: { line: 1, ch: 2 },
-      }),
-      settings: makeSettings(),
+  describe.each([
+    { kind: "bullet", content: "", separator: " ", name: "SPACE" },
+    { kind: "checkbox", content: "[ ] ", separator: " ", name: "SPACE" },
+    { kind: "bullet", content: "", separator: "\t", name: "TAB" },
+    { kind: "checkbox", content: "[ ] ", separator: "\t", name: "TAB" },
+  ])("empty $kind with $name separator", ({ content, separator }) => {
+    describe.each([
+      { mode: "default", outdent: undefined },
+      { mode: "explicit true", outdent: true },
+      { mode: "explicit false", outdent: false },
+    ])("outdent: $mode", ({ outdent }) => {
+      test.each([
+        { position: "root middle", indent: "", following: ["- after"] },
+        { position: "root end", indent: "", following: [] },
+        {
+          position: "nested middle",
+          indent: "  ",
+          following: ["  - after", "- tail"],
+        },
+        { position: "nested end", indent: "  ", following: [] },
+      ])("$position", ({ indent, following }) => {
+        const emptyItem = `${indent}-${separator}${content}`;
+        const lines = ["- before", emptyItem, ...following];
+        const cursor = { line: 1, ch: emptyItem.length };
+        const root = makeRoot({
+          editor: makeEditor({ text: lines.join("\n"), cursor }),
+          settings: makeSettings(),
+        });
+        const op =
+          outdent === undefined
+            ? new CreateNewItem(root, "  ", getZoomRange)
+            : new CreateNewItem(root, "  ", getZoomRange, true, outdent);
+
+        op.perform();
+
+        const createsItem = outdent === false;
+        expect(root.print()).toBe(
+          (createsItem
+            ? ["- before", emptyItem, emptyItem, ...following]
+            : lines
+          ).join("\n"),
+        );
+        expect(root.getCursor()).toEqual({
+          line: createsItem ? 2 : 1,
+          ch: emptyItem.length,
+        });
+        expect(op.shouldUpdate()).toBe(createsItem);
+        expect(op.shouldStopPropagation()).toBe(createsItem);
+      });
     });
-
-    const op = new CreateNewItem(root, "  ", getZoomRange);
-    op.perform();
-
-    expect(root.print()).toBe("- item 1\n- \n- item 3");
   });
 
-  test("should do nothing for an empty checkbox", () => {
-    const root = makeRoot({
-      editor: makeEditor({
-        text: "- item 1\n- [ ] \n- item 3\n",
-        cursor: { line: 1, ch: 6 },
-      }),
-      settings: makeSettings(),
+  describe.each([
+    { kind: "bullet", content: "" },
+    { kind: "checkbox", content: "[ ] " },
+  ])("empty $kind parent with outdent disabled", ({ content }) => {
+    test.each([
+      {
+        scenario: "unfolded children receive a new first child",
+        hasChildren: true,
+        folded: false,
+        zoomed: false,
+        childLevel: true,
+      },
+      {
+        scenario: "folded children stay with the parent and create a sibling",
+        hasChildren: true,
+        folded: true,
+        zoomed: false,
+        childLevel: false,
+      },
+      {
+        scenario: "zoom root without children receives a child",
+        hasChildren: false,
+        folded: false,
+        zoomed: true,
+        childLevel: true,
+      },
+      {
+        scenario: "zoom root with folded children still receives a child",
+        hasChildren: true,
+        folded: true,
+        zoomed: true,
+        childLevel: true,
+      },
+    ])("$scenario", ({ hasChildren, folded, zoomed, childLevel }) => {
+      const emptyItem = `- ${content}`;
+      const children = hasChildren ? ["  - child"] : [];
+      const root = makeRoot({
+        editor: makeEditor({
+          text: [emptyItem, ...children, "- tail"].join("\n"),
+          cursor: { line: 0, ch: emptyItem.length },
+          getAllFoldedLines: () => (folded ? [0] : []),
+        }),
+        settings: makeSettings(),
+      });
+      const zoomRange = {
+        getZoomRange: () =>
+          zoomed
+            ? {
+                from: { line: 0, ch: 0 },
+                to: {
+                  line: hasChildren ? 1 : 0,
+                  ch: hasChildren ? children[0].length : emptyItem.length,
+                },
+              }
+            : null,
+      };
+      const op = new CreateNewItem(root, "  ", zoomRange, true, false);
+
+      op.perform();
+
+      expect(root.print()).toBe(
+        (childLevel
+          ? [emptyItem, `  ${emptyItem}`, ...children, "- tail"]
+          : [emptyItem, ...children, emptyItem, "- tail"]
+        ).join("\n"),
+      );
+      expect(root.getCursor()).toEqual({
+        line: childLevel ? 1 : 2,
+        ch: emptyItem.length + (childLevel ? 2 : 0),
+      });
+      expect(root.getChildren()[0].isFoldRoot()).toBe(folded);
+      expect(op.shouldUpdate()).toBe(true);
+      expect(op.shouldStopPropagation()).toBe(true);
     });
-
-    const op = new CreateNewItem(root, "  ", getZoomRange);
-    op.perform();
-
-    expect(root.print()).toBe("- item 1\n- [ ] \n- item 3");
   });
 
   test("should do nothing when cursor is before the bullet", () => {
