@@ -67,9 +67,9 @@ class ObsidianOutlinerPluginSettingTab extends PluginSettingTab {
     // Only show the outdent setting if Enter enhancement is enabled
     if (this.settings.overrideEnterBehaviour) {
       new Setting(containerEl)
-        .setName("Enter outdents list item if it's empty")
+        .setName("Outdent empty items with Enter")
         .setDesc(
-          "When pressing Enter on an empty list item, outdent it to the parent level.",
+          "When enabled, Enter outdents empty items or exits the list at the top level. When disabled, Enter keeps empty bullets and checkboxes and continues the list.",
         )
         .addToggle((toggle) => {
           toggle
