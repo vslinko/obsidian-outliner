@@ -114,4 +114,29 @@ describe("OutdentList operation", () => {
     expect(op.shouldStopPropagation()).toBe(true);
     expect(op.shouldUpdate()).toBe(true);
   });
+
+  test("should stop propagation without changes if the list under the cursor cannot be resolved (#608)", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: "- item 1\n- item 2\n",
+        cursor: { line: 1, ch: 5 },
+      }),
+      settings: makeSettings(),
+    });
+
+    // The parsed model does not cover the cursor line, as happened in
+    // #608 where the last bullet of a note was missing from the model:
+    // getListUnderCursor() returns null and the operation must not
+    // throw, otherwise the Shift-Tab keypress falls through to the UI.
+    root.replaceSelections([
+      { anchor: { line: 2, ch: 0 }, head: { line: 2, ch: 0 } },
+    ]);
+
+    const op = new OutdentList(root);
+
+    expect(() => op.perform()).not.toThrow();
+    expect(op.shouldStopPropagation()).toBe(true);
+    expect(op.shouldUpdate()).toBe(false);
+    expect(root.print()).toBe("- item 1\n- item 2");
+  });
 });

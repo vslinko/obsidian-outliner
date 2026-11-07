@@ -130,3 +130,26 @@ test("should not do anything if there are multiple cursors", () => {
   expect(op.shouldStopPropagation()).toBe(false);
   expect(op.shouldUpdate()).toBe(false);
 });
+
+test("should not do anything if the list under the cursor cannot be resolved (#608)", () => {
+  const root = makeRoot({
+    editor: makeEditor({
+      text: "- item 1\n- item 2",
+      cursor: { line: 1, ch: 5 },
+    }),
+    settings: makeSettings(),
+  });
+
+  // The parsed model does not cover the cursor line, as happened in
+  // #608 where the last bullet of a note was missing from the model:
+  // getListUnderCursor() returns null and the operation must not throw.
+  root.replaceSelections([
+    { anchor: { line: 2, ch: 0 }, head: { line: 2, ch: 0 } },
+  ]);
+
+  const op = new KeepCursorWithinListContent(root);
+
+  expect(() => op.perform()).not.toThrow();
+  expect(op.shouldStopPropagation()).toBe(false);
+  expect(op.shouldUpdate()).toBe(false);
+});
