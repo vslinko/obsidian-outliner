@@ -25,6 +25,7 @@ const keysMap: { [key: string]: number } = {
   Delete: 46,
   KeyA: 65,
   KeyO: 79,
+  KeyZ: 90,
 };
 
 export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlugin {

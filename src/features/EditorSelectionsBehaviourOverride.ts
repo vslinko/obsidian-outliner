@@ -5,6 +5,7 @@ import { EditorState, Transaction } from "@codemirror/state";
 import { Feature } from "./Feature";
 
 import { MyEditor, getEditorFromState } from "../editor";
+import { ExpandSelectionToFullItems } from "../operations/ExpandSelectionToFullItems";
 import { KeepCursorOutsideFoldedLines } from "../operations/KeepCursorOutsideFoldedLines";
 import { KeepCursorWithinListContent } from "../operations/KeepCursorWithinListContent";
 import { OperationPerformer } from "../services/OperationPerformer";
@@ -28,7 +29,11 @@ export class EditorSelectionsBehaviourOverride implements Feature {
   async unload() {}
 
   private transactionExtender = (tr: Transaction): null => {
-    if (this.settings.keepCursorWithinContent === "never" || !tr.selection) {
+    if (
+      !tr.selection ||
+      (!this.settings.expandSelection &&
+        this.settings.keepCursorWithinContent === "never")
+    ) {
       return null;
     }
 
@@ -45,6 +50,22 @@ export class EditorSelectionsBehaviourOverride implements Feature {
     const root = this.parser.parse(editor);
 
     if (!root) {
+      return;
+    }
+
+    if (this.settings.expandSelection) {
+      const { shouldStopPropagation } = this.operationPerformer.eval(
+        root,
+        new ExpandSelectionToFullItems(root),
+        editor,
+      );
+
+      if (shouldStopPropagation) {
+        return;
+      }
+    }
+
+    if (this.settings.keepCursorWithinContent === "never") {
       return;
     }
 

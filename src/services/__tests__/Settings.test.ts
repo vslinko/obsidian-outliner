@@ -90,3 +90,126 @@ describe("Settings empty-item outdent preference", () => {
     expect(reloaded.enterOutdentsEmptyListItem).toBe(false);
   });
 });
+
+describe("Settings automatic selection expansion preference", () => {
+  test.each([
+    {},
+    { stickCursor: "never" as const },
+    { stickCursor: "bullet-only" as const },
+    { stickCursor: "bullet-and-checkbox" as const },
+    { stickCursor: false },
+    { stickCursor: true },
+  ])("new and old saved data default expansion off: %j", async (saved) => {
+    const storage = makeStorage(saved);
+    const settings = new Settings(storage);
+    await settings.load();
+
+    expect(settings.expandSelection).toBe(false);
+    expect(settings.getValues().expandSelection).toBe(false);
+    expect(storage.saveData).not.toHaveBeenCalled();
+    if (saved.stickCursor === false || saved.stickCursor === "never") {
+      expect(settings.keepCursorWithinContent).toBe("never");
+    }
+  });
+
+  test.each([false, true])(
+    "persists and restores explicit expandSelection=%s",
+    async (expandSelection) => {
+      const storage = makeStorage({ stickCursor: false });
+      const settings = new Settings(storage);
+      await settings.load();
+      settings.expandSelection = expandSelection;
+      await settings.save();
+
+      expect(storage.saveData).toHaveBeenCalledWith(
+        expect.objectContaining({ expandSelection, stickCursor: false }),
+      );
+      const reloaded = new Settings(storage);
+      await reloaded.load();
+      expect(reloaded.expandSelection).toBe(expandSelection);
+      expect(reloaded.keepCursorWithinContent).toBe("never");
+      expect(reloaded.getValues().stickCursor).toBe(false);
+    },
+  );
+
+  test.each(["never", "bullet-only", "bullet-and-checkbox"] as const)(
+    "toggle is independent of cursor mode %s, select-all and Enter preferences",
+    async (stickCursor) => {
+      const storage = makeStorage({
+        stickCursor,
+        selectAll: false,
+        betterEnter: false,
+      });
+      const settings = new Settings(storage);
+      await settings.load();
+      const original = settings.getValues();
+      const onChange = jest.fn();
+      settings.onChange(onChange);
+
+      settings.expandSelection = true;
+      expect(settings.getValues()).toEqual({
+        ...original,
+        expandSelection: true,
+      });
+      expect(settings.keepCursorWithinContent).toBe(stickCursor);
+      expect(onChange).toHaveBeenCalledTimes(1);
+      for (const mode of [
+        "never",
+        "bullet-only",
+        "bullet-and-checkbox",
+      ] as const) {
+        settings.keepCursorWithinContent = mode;
+        expect(settings.expandSelection).toBe(true);
+      }
+      settings.overrideSelectAllBehaviour = true;
+      settings.overrideEnterBehaviour = true;
+      expect(settings.expandSelection).toBe(true);
+      settings.expandSelection = false;
+      expect(settings.keepCursorWithinContent).toBe("bullet-and-checkbox");
+      expect(settings.overrideSelectAllBehaviour).toBe(true);
+      expect(settings.overrideEnterBehaviour).toBe(true);
+      await settings.save();
+
+      const reloaded = new Settings(storage);
+      await reloaded.load();
+      expect(reloaded.expandSelection).toBe(false);
+      expect(reloaded.keepCursorWithinContent).toBe("bullet-and-checkbox");
+    },
+  );
+
+  test("loads explicit opt-in without enabling legacy cursor protection", async () => {
+    const storage = makeStorage({ expandSelection: true, stickCursor: false });
+    const settings = new Settings(storage);
+    await settings.load();
+    expect(settings.expandSelection).toBe(true);
+    expect(settings.keepCursorWithinContent).toBe("never");
+    settings.expandSelection = false;
+    expect(settings.getValues().stickCursor).toBe(false);
+  });
+
+  test("reset restores expansion off, saves it and restores existing defaults", async () => {
+    const storage = makeStorage({
+      expandSelection: true,
+      stickCursor: "never",
+      selectAll: false,
+    });
+    const settings = new Settings(storage);
+    await settings.load();
+    settings.reset();
+    expect(settings.expandSelection).toBe(false);
+    expect(settings.keepCursorWithinContent).toBe("bullet-and-checkbox");
+    expect(settings.overrideSelectAllBehaviour).toBe(true);
+    await settings.save();
+    expect(storage.saveData).toHaveBeenCalledWith(
+      expect.objectContaining({
+        expandSelection: false,
+        stickCursor: "bullet-and-checkbox",
+      }),
+    );
+
+    const reloaded = new Settings(storage);
+    await reloaded.load();
+    expect(reloaded.expandSelection).toBe(false);
+    expect(reloaded.keepCursorWithinContent).toBe("bullet-and-checkbox");
+  });
+});
