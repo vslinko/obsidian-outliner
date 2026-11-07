@@ -1,6 +1,6 @@
 import { Operation } from "./Operation";
 
-import { Root, maxPos, minPos } from "../root";
+import { Position, Root, cmpPos, maxPos, minPos } from "../root";
 
 export class SelectAllContent implements Operation {
   private stopPropagation = false;
@@ -16,84 +16,62 @@ export class SelectAllContent implements Operation {
     return this.updated;
   }
 
-  perform() {
-    const { root } = this;
+  perform(): boolean {
+    this.stopPropagation = false;
+    this.updated = false;
 
+    const { root } = this;
     if (!root.hasSingleSelection()) {
-      return;
+      return false;
     }
 
-    const selection = root.getSelections()[0];
+    const { anchor, head } = root.getSelection();
+    const from = minPos(anchor, head);
+    const to = maxPos(anchor, head);
     const [rootStart, rootEnd] = root.getContentRange();
 
-    const selectionFrom = minPos(selection.anchor, selection.head);
-    const selectionTo = maxPos(selection.anchor, selection.head);
-
-    if (
-      selectionFrom.line < rootStart.line ||
-      selectionTo.line > rootEnd.line
-    ) {
+    if (cmpPos(from, rootStart) < 0 || cmpPos(to, rootEnd) > 0) {
       return false;
     }
 
-    if (
-      selectionFrom.line === rootStart.line &&
-      selectionFrom.ch === rootStart.ch &&
-      selectionTo.line === rootEnd.line &&
-      selectionTo.ch === rootEnd.ch
-    ) {
+    let list = root.getListUnderLine(from.line);
+    if (!list) {
       return false;
     }
 
-    const list = root.getListUnderCursor();
-    const contentStart = list.getFirstLineContentStartAfterCheckbox();
-    const contentEnd = list.getLastLineContentEnd();
-    const listUnderSelectionFrom = root.getListUnderLine(selectionFrom.line);
-    const listStart =
-      listUnderSelectionFrom.getFirstLineContentStartAfterCheckbox();
-    const listEnd = listUnderSelectionFrom.getContentEndIncludingChildren();
+    const ranges: [Position, Position][] = [
+      [
+        list.getFirstLineContentStartAfterCheckbox(),
+        list.getLastLineContentEnd(),
+      ],
+    ];
 
+    // Ancestors also cover selections spanning several items. The synthetic
+    // root has no List coordinates; its range comes from Root instead.
+    while (list && list !== root.getRootList()) {
+      ranges.push([
+        list.getFirstLineContentStartAfterCheckbox(),
+        list.getContentEndIncludingChildren(),
+      ]);
+      list = list.getParent();
+    }
+    ranges.push([rootStart, rootEnd]);
+
+    // Skip equal or non-containing ranges, including those that would discard
+    // an already selected bullet, indentation or checkbox.
+    const nextRange = ranges.find(
+      ([start, end]) =>
+        cmpPos(start, from) <= 0 &&
+        cmpPos(to, end) <= 0 &&
+        (cmpPos(start, from) < 0 || cmpPos(to, end) < 0),
+    );
+    if (!nextRange) {
+      return false;
+    }
+
+    root.replaceSelections([{ anchor: nextRange[0], head: nextRange[1] }]);
     this.stopPropagation = true;
     this.updated = true;
-
-    if (
-      selectionFrom.line === contentStart.line &&
-      selectionFrom.ch === contentStart.ch &&
-      selectionTo.line === contentEnd.line &&
-      selectionTo.ch === contentEnd.ch
-    ) {
-      if (list.getChildren().length) {
-        // select sub lists
-        root.replaceSelections([
-          { anchor: contentStart, head: list.getContentEndIncludingChildren() },
-        ]);
-      } else {
-        // select whole list
-        root.replaceSelections([{ anchor: rootStart, head: rootEnd }]);
-      }
-    } else if (
-      listStart.ch == selectionFrom.ch &&
-      listEnd.line == selectionTo.line &&
-      listEnd.ch == selectionTo.ch
-    ) {
-      // select whole list
-      root.replaceSelections([{ anchor: rootStart, head: rootEnd }]);
-    } else if (
-      (selectionFrom.line > contentStart.line ||
-        (selectionFrom.line == contentStart.line &&
-          selectionFrom.ch >= contentStart.ch)) &&
-      (selectionTo.line < contentEnd.line ||
-        (selectionTo.line == contentEnd.line &&
-          selectionTo.ch <= contentEnd.ch))
-    ) {
-      // select whole line
-      root.replaceSelections([{ anchor: contentStart, head: contentEnd }]);
-    } else {
-      this.stopPropagation = false;
-      this.updated = false;
-      return false;
-    }
-
     return true;
   }
 }

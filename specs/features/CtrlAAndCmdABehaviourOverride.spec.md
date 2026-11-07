@@ -146,7 +146,7 @@
     notes|
 ```
 
-# cmd-a should select list whole list after second invoke
+# cmd-a should select parent subtree, whole list, then document
 
 - platform: `darwin`
 - applyState:
@@ -159,6 +159,25 @@ b
 ```
 
 - keydown: `Cmd-KeyA`
+- assertState:
+
+```md
+a
+- one
+  - |two|
+b
+```
+
+- keydown: `Cmd-KeyA`
+- assertState:
+
+```md
+a
+- |one
+  - two|
+b
+```
+
 - keydown: `Cmd-KeyA`
 - assertState:
 
@@ -169,7 +188,17 @@ a
 b
 ```
 
-# ctrl-a should select list whole list after second invoke
+- keydown: `Cmd-KeyA`
+- assertState:
+
+```md
+|a
+- one
+  - two
+b|
+```
+
+# ctrl-a should select parent subtree, whole list, then document
 
 - platform: `linux`
 - applyState:
@@ -182,6 +211,25 @@ b
 ```
 
 - keydown: `Ctrl-KeyA`
+- assertState:
+
+```md
+a
+- one
+  - |two|
+b
+```
+
+- keydown: `Ctrl-KeyA`
+- assertState:
+
+```md
+a
+- |one
+  - two|
+b
+```
+
 - keydown: `Ctrl-KeyA`
 - assertState:
 
@@ -190,4 +238,14 @@ a
 |- one
   - two|
 b
+```
+
+- keydown: `Ctrl-KeyA`
+- assertState:
+
+```md
+|a
+- one
+  - two
+b|
 ```
