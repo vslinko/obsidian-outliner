@@ -146,4 +146,81 @@ describe("VimOBehaviourOverride", () => {
       expect(editor.getCursor()).toEqual(expectedCursor);
     },
   );
+
+  test.each([
+    {
+      key: "o",
+      expectedText: "- item\n  ```\n  code\n  \n  ```",
+      expectedCursor: { line: 3, ch: 2 },
+    },
+    {
+      key: "O",
+      expectedText: "- item\n  ```\n  \n  code\n  ```",
+      expectedCursor: { line: 2, ch: 2 },
+    },
+  ])(
+    "$key opens a plain line when the list operation makes no change (e.g. inside a code block)",
+    async ({ key, expectedText, expectedCursor }) => {
+      const cm = {};
+      const actions: Record<
+        string,
+        (cm: object, args: { after: boolean }) => void
+      > = {};
+      const vim = {
+        defineAction: jest.fn((name: string, fn: any) => {
+          actions[name] = fn;
+        }),
+        handleEx: jest.fn(),
+        enterInsertMode: jest.fn(),
+        mapCommand: jest.fn(),
+      };
+      (globalThis as any).window = {
+        CodeMirrorAdapter: { Vim: vim },
+      };
+
+      const editor = makePlainTextEditor("- item\n  ```\n  code\n  ```", {
+        line: 2,
+        ch: 3,
+      });
+      const plugin = {
+        app: {
+          workspace: {
+            getActiveViewOfType: jest.fn(() => ({ editor })),
+          },
+        },
+      };
+      const settings = {
+        overrideVimOBehaviour: true,
+        onChange: jest.fn(),
+      };
+      const obsidianSettings = { getDefaultIndentChars: jest.fn(() => "  ") };
+      const parser = { parse: jest.fn(() => ({})) };
+      const operationPerformer = {
+        eval: jest.fn(() => ({
+          shouldUpdate: false,
+          shouldStopPropagation: false,
+        })),
+      };
+
+      const feature = new VimOBehaviourOverride(
+        plugin as any,
+        settings as any,
+        obsidianSettings as any,
+        parser as any,
+        operationPerformer as any,
+      );
+
+      await feature.load();
+
+      const [, , actionName, , extra] = vim.mapCommand.mock.calls.find(
+        ([mappedKey]) => mappedKey === key,
+      ) as any;
+      actions[actionName](cm, extra.actionArgs);
+
+      expect(operationPerformer.eval).toHaveBeenCalled();
+      expect(vim.enterInsertMode).toHaveBeenCalledWith(cm);
+      expect(editor.getValue()).toBe(expectedText);
+      expect(editor.getCursor()).toEqual(expectedCursor);
+    },
+  );
 });

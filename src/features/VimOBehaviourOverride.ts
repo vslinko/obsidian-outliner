@@ -142,7 +142,11 @@ export class VimOBehaviourOverride implements Feature {
           editor,
         );
 
-        if (res.shouldUpdate && zoomRange) {
+        if (!res.shouldUpdate) {
+          // CreateNewItem bailed out (e.g. cursor inside a code block),
+          // so fall back to Vim's plain line opening
+          this.openPlainLine(obsidianEditor, operatorArgs.after);
+        } else if (zoomRange) {
           editor.tryRefreshZoom(zoomRange.from.line);
         }
 
