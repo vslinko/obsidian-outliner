@@ -1,3 +1,6 @@
+import { makeLogger, makeSettings } from "../../__mocks__";
+import { Operation } from "../../operations/Operation";
+import { Parser } from "../../services/Parser";
 import { VimOBehaviourOverride } from "../VimOBehaviourOverride";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -149,18 +152,40 @@ describe("VimOBehaviourOverride", () => {
 
   test.each([
     {
+      name: "o inside a code block opens a plain line below",
       key: "o",
+      text: "- item\n  ```\n  code\n  ```",
+      cursor: { line: 2, ch: 3 },
       expectedText: "- item\n  ```\n  code\n  \n  ```",
       expectedCursor: { line: 3, ch: 2 },
     },
     {
+      name: "O inside a code block opens a plain line above",
       key: "O",
+      text: "- item\n  ```\n  code\n  ```",
+      cursor: { line: 2, ch: 3 },
       expectedText: "- item\n  ```\n  \n  code\n  ```",
       expectedCursor: { line: 2, ch: 2 },
     },
+    {
+      name: "o on an empty item leaves the text unchanged",
+      key: "o",
+      text: "- one\n- ",
+      cursor: { line: 1, ch: 2 },
+      expectedText: "- one\n- ",
+      expectedCursor: { line: 1, ch: 2 },
+    },
+    {
+      name: "O on an empty checkbox leaves the text unchanged",
+      key: "O",
+      text: "- [ ] one\n- [ ] ",
+      cursor: { line: 1, ch: 6 },
+      expectedText: "- [ ] one\n- [ ] ",
+      expectedCursor: { line: 1, ch: 6 },
+    },
   ])(
-    "$key opens a plain line when the list operation makes no change (e.g. inside a code block)",
-    async ({ key, expectedText, expectedCursor }) => {
+    "$name when the list operation makes no change",
+    async ({ key, text, cursor, expectedText, expectedCursor }) => {
       const cm = {};
       const actions: Record<
         string,
@@ -178,10 +203,7 @@ describe("VimOBehaviourOverride", () => {
         CodeMirrorAdapter: { Vim: vim },
       };
 
-      const editor = makePlainTextEditor("- item\n  ```\n  code\n  ```", {
-        line: 2,
-        ch: 3,
-      });
+      const editor = makePlainTextEditor(text, cursor);
       const plugin = {
         app: {
           workspace: {
@@ -194,12 +216,20 @@ describe("VimOBehaviourOverride", () => {
         onChange: jest.fn(),
       };
       const obsidianSettings = { getDefaultIndentChars: jest.fn(() => "  ") };
-      const parser = { parse: jest.fn(() => ({})) };
+      // Parse the plain editor directly: MyEditor needs CodeMirror for folds
+      const parser = {
+        parse: jest.fn(() =>
+          new Parser(makeLogger(), makeSettings()).parse(editor),
+        ),
+      };
       const operationPerformer = {
-        eval: jest.fn(() => ({
-          shouldUpdate: false,
-          shouldStopPropagation: false,
-        })),
+        eval: jest.fn((root: any, op: Operation) => {
+          op.perform();
+          return {
+            shouldUpdate: op.shouldUpdate(),
+            shouldStopPropagation: op.shouldStopPropagation(),
+          };
+        }),
       };
 
       const feature = new VimOBehaviourOverride(
@@ -218,6 +248,9 @@ describe("VimOBehaviourOverride", () => {
       actions[actionName](cm, extra.actionArgs);
 
       expect(operationPerformer.eval).toHaveBeenCalled();
+      expect(operationPerformer.eval.mock.results[0].value.shouldUpdate).toBe(
+        false,
+      );
       expect(vim.enterInsertMode).toHaveBeenCalledWith(cm);
       expect(editor.getValue()).toBe(expectedText);
       expect(editor.getCursor()).toEqual(expectedCursor);

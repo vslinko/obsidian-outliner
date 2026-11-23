@@ -130,23 +130,21 @@ export class VimOBehaviourOverride implements Feature {
           getZoomRange: () => zoomRange,
         };
 
-        const res = operationPerformer.eval(
+        const op = new CreateNewItem(
           root,
-          new CreateNewItem(
-            root,
-            defaultIndentChars,
-            getZoomRange,
-            operatorArgs.after,
-            true, // For Vim mode, always use the default behavior (outdent enabled)
-          ),
-          editor,
+          defaultIndentChars,
+          getZoomRange,
+          operatorArgs.after,
+          true, // For Vim mode, always use the default behavior (outdent enabled)
         );
+        const res = operationPerformer.eval(root, op, editor);
 
-        if (!res.shouldUpdate) {
-          // CreateNewItem bailed out (e.g. cursor inside a code block),
-          // so fall back to Vim's plain line opening
+        if (op.wasSkippedInsideCodeblock()) {
+          // Code blocks inside list items get no new bullet; open a plain
+          // line instead, as Vim would. Other no-op cases (e.g. an empty
+          // item) intentionally leave the text unchanged.
           this.openPlainLine(obsidianEditor, operatorArgs.after);
-        } else if (zoomRange) {
+        } else if (res.shouldUpdate && zoomRange) {
           editor.tryRefreshZoom(zoomRange.from.line);
         }
 
