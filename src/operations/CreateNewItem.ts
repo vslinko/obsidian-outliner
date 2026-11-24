@@ -11,6 +11,7 @@ export interface GetZoomRange {
 export class CreateNewItem implements Operation {
   private stopPropagation = false;
   private updated = false;
+  private skippedInsideCodeblock = false;
 
   constructor(
     private root: Root,
@@ -26,6 +27,10 @@ export class CreateNewItem implements Operation {
 
   shouldUpdate() {
     return this.updated;
+  }
+
+  wasSkippedInsideCodeblock() {
+    return this.skippedInsideCodeblock;
   }
 
   perform() {
@@ -86,6 +91,7 @@ export class CreateNewItem implements Operation {
       codeBlockBacticks > 0 && codeBlockBacticks % 2 !== 0;
 
     if (isInsideCodeblock) {
+      this.skippedInsideCodeblock = true;
       return;
     }
 
