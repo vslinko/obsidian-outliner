@@ -8,6 +8,9 @@ module.exports = () => {
   }
 
   if (global.wss) {
+    for (const client of global.wss.clients) {
+      client.terminate();
+    }
     global.wss.close();
   }
 

@@ -30,6 +30,7 @@
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/jest": "^30.0.0",
     "@types/node": "^26.6.6",
+    "@types/ws": "^8.18.2",
     "babel-jest": "^30.5.2",
     "classic-level": "^3.0.0",
     "debug": "^4.4.3",
