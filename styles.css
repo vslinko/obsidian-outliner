@@ -3,10 +3,7 @@
   /* padding-top: 0.4em; */
 }
 
-.outliner-plugin-better-lists .cm-formatting-list-ul {
-  margin-right: 0.3em;
-}
-
+/* Keep Obsidian's marker spacing so the native caret meets the content. */
 .outliner-plugin-better-lists .list-bullet::after {
   width: 0.4em;
   height: 0.4em;
