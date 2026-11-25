@@ -30,6 +30,8 @@ const OBSIDIAN_LOCAL_STORAGE_PATH =
       "/.var/app/md.obsidian.Obsidian/config/obsidian/Local Storage/leveldb";
 const OBISDIAN_TEST_VAULT_ID = "5a15473126091111";
 const VAULT_DIR = process.cwd() + "/vault";
+const STARTUP_TIMEOUT_MS =
+  Number(process.env.OBSIDIAN_STARTUP_TIMEOUT_MS) || 120000;
 
 global.originalObsidianConfig = null;
 global.OBSIDIAN_CONFIG_PATH = OBSIDIAN_CONFIG_PATH;
@@ -168,6 +170,8 @@ module.exports = async () => {
     return;
   }
 
+  const { waitForReady } = require("./wait-for-ready");
+
   cp.spawnSync(KILL_CMD[0], KILL_CMD.slice(1));
   await wait(2000);
 
@@ -190,16 +194,17 @@ module.exports = async () => {
   });
 
   debug("Waiting for Obsidian WebSocket connection");
-  const obsidianWs = await new Promise((resolve) => {
-    wss.once("connection", (ws) => {
-      debug("Waiting for Obsidian ready message");
-      ws.once("message", (msg) => {
-        if (msg.toString() === "ready") {
-          resolve(ws);
-        }
-      });
+  let obsidianWs;
+  try {
+    obsidianWs = await waitForReady({
+      wss,
+      child: obsidian,
+      timeoutMs: STARTUP_TIMEOUT_MS,
     });
-  });
+  } catch (error) {
+    require("./global-teardown")();
+    throw error;
+  }
   debug("Obsidian WebSocket ready");
 
   const callbacks = new Map();
