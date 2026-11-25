@@ -90,10 +90,7 @@
   height: 4px;
 }
 
-body.outliner-plugin-dnd:not(.outliner-plugin-dragging) .cm-formatting-list,
-body.outliner-plugin-dnd:not(.outliner-plugin-dragging)
-  .cm-fold-indicator
-  .collapse-indicator {
+body.outliner-plugin-dnd:not(.outliner-plugin-dragging) .cm-formatting-list {
   cursor: grab !important;
 }
 

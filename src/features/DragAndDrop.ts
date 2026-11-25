@@ -736,20 +736,24 @@ function getEditorViewFromHTMLElement(e: HTMLElement) {
 function isClickOnBullet(e: MouseEvent) {
   let el = e.target as HTMLElement;
 
+  let onHandle = false;
   while (el) {
+    // Native folding is a separate action, including its SVG children.
+    if (el.classList.contains("cm-fold-indicator")) {
+      return false;
+    }
     if (
       el.classList.contains("cm-formatting-list") ||
-      el.classList.contains("cm-fold-indicator") ||
       el.classList.contains("task-list-item-checkbox") ||
       el.hasAttribute("data-outliner-drag-handle")
     ) {
-      return true;
+      onHandle = true;
     }
 
     el = el.parentElement;
   }
 
-  return false;
+  return onHandle;
 }
 
 function getEventDocument(e: Event) {

@@ -109,6 +109,15 @@ interface TestHandleSnapshot {
 declare function testHandle(
   opts: TestHandleCommand,
 ): Promise<TestHandleSnapshot>;
+declare function getNativeListTarget(opts: {
+  line: number;
+  kind: "fold" | "bullet";
+}): Promise<{
+  point: NativePoint;
+  hit: string;
+  matches: boolean;
+  livePreview: boolean;
+}>;
 declare function nativeInput(opts: {
   action: "down" | "move" | "up" | "escape" | "enter" | "reset";
   window?: "main" | "popout";
