@@ -29,6 +29,25 @@ function runGit(...args) {
   }
 }
 
+function ensureCleanIndex() {
+  const result = spawnSync("git", ["diff", "--cached", "--name-only"], {
+    encoding: "utf8",
+    stdio: ["inherit", "pipe", "inherit"],
+  });
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(`git diff failed: ${result.signal ?? result.status}`);
+  }
+  const stagedFiles = result.stdout
+    .split(/\r?\n/)
+    .filter((line) => line.length > 0);
+  if (stagedFiles.length > 0) {
+    throw new Error(
+      `Cannot release with staged changes in Git index: ${stagedFiles.join(", ")}`,
+    );
+  }
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const [releaseTypeArg, minAppVersionArg] = args;
@@ -44,6 +63,8 @@ async function main() {
   ) {
     throw new Error("releaseType must be major, minor or patch");
   }
+
+  ensureCleanIndex();
 
   const suppliedAnswers = {};
   if (releaseTypeArg !== undefined) {
