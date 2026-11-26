@@ -231,6 +231,9 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
           case "testHandle":
             result = await this.testHandle(data);
             break;
+          case "getNativeListTarget":
+            result = await this.getNativeListTarget(data);
+            break;
           case "getDragAndDropSnapshot":
             result = await this.getDragAndDropSnapshot();
             break;
@@ -618,6 +621,34 @@ export default class ObsidianOutlinerPluginWithTests extends ObsidianOutlinerPlu
     }
     await this.wait(30);
     return fixture.snapshot();
+  }
+
+  private async getNativeListTarget(opts: {
+    line: number;
+    kind: "fold" | "bullet";
+  }) {
+    await this.wait(50);
+    const view: EditorView = (this.editor as any).view;
+    const doc = view.dom.ownerDocument;
+    doc.documentElement.dataset.outlinerTestWindow = "main";
+    const node = view.domAtPos(view.state.doc.line(opts.line + 1).from).node;
+    const el = node.nodeType === 1 ? (node as Element) : node.parentElement;
+    const selector =
+      opts.kind === "fold" ? ".cm-fold-indicator svg" : ".cm-formatting-list";
+    const target = el.closest(".cm-line")?.querySelector(selector);
+    if (!target) throw new Error(`No rendered native ${opts.kind} target`);
+    const rect = target.getBoundingClientRect();
+    const point = {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+    };
+    const hit = doc.elementFromPoint(point.x, point.y);
+    return {
+      point,
+      hit: hit?.outerHTML.slice(0, 500),
+      matches: !!hit && (hit === target || target.contains(hit)),
+      livePreview: !!view.dom.closest(".is-live-preview"),
+    };
   }
 
   private simulateWindowBlur() {
