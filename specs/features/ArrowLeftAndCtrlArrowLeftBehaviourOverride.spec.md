@@ -67,3 +67,37 @@
 - [ ] one|
 - [ ] two
 ```
+
+# cursor should be moved from note line to checkbox item line
+
+- applyState:
+
+```md
+- [ ] one
+  |note
+```
+
+- keydown: `ArrowLeft`
+- assertState:
+
+```md
+- [ ] one|
+  note
+```
+
+# cursor should be moved from note line to checked item line
+
+- applyState:
+
+```md
+- [x] one
+  |note
+```
+
+- keydown: `ArrowLeft`
+- assertState:
+
+```md
+- [x] one|
+  note
+```

@@ -19,6 +19,29 @@ test("should move cursor to end of previous note line in the same list", () => {
   expect(root.getCursor().ch).toBe(17);
 });
 
+test.each(["[ ]", "[x]"])(
+  "should move cursor from note line to end of %s checkbox item",
+  (checkbox) => {
+    const settings = makeSettings();
+    settings.keepCursorWithinContent = "bullet-and-checkbox";
+    const root = makeRoot({
+      editor: makeEditor({
+        text: `- ${checkbox} task\n  note\n`,
+        cursor: { line: 1, ch: 2 },
+      }),
+      settings,
+    });
+    expect(root.getListUnderCursor().getCheckboxLength()).toBe(4);
+
+    const op = new MoveCursorToPreviousUnfoldedLine(root);
+    op.perform();
+
+    expect(op.shouldStopPropagation()).toBe(true);
+    expect(op.shouldUpdate()).toBe(true);
+    expect(root.getCursor()).toEqual({ line: 0, ch: 10 });
+  },
+);
+
 test("should move cursor to end of previous list item", () => {
   const root = makeRoot({
     editor: makeEditor({
