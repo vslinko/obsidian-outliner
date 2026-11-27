@@ -50,14 +50,17 @@ export class IndentList implements Operation {
         .slice(prev.getFirstLineIndent().length);
     }
 
-    if (indentChars === "") {
+    if (indentChars === "" && parent.getParent()) {
       indentChars = list
         .getFirstLineIndent()
         .slice(parent.getFirstLineIndent().length);
     }
 
     if (indentChars === "" && !list.isEmpty()) {
-      indentChars = list.getChildren()[0].getFirstLineIndent();
+      indentChars = list
+        .getChildren()[0]
+        .getFirstLineIndent()
+        .slice(list.getFirstLineIndent().length);
     }
 
     if (indentChars === "") {

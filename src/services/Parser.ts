@@ -8,6 +8,7 @@ const bulletSignRe = `(?:[-*+]|\\d+\\.)`;
 const optionalCheckboxRe = `(?:${checkboxRe})?`;
 
 const listItemWithoutSpacesRe = new RegExp(`^${bulletSignRe}( |\t)`);
+const topLevelListItemRe = new RegExp(`^ {0,3}${bulletSignRe}( |\t)`);
 const listItemRe = new RegExp(`^[ \t]*${bulletSignRe}( |\t)`);
 const stringWithSpacesRe = new RegExp(`^[ \t]+`);
 const parseListItemRe = new RegExp(
@@ -114,9 +115,12 @@ export class Parser {
       if (!this.isListItem(line) && !this.isLineWithIndent(line)) {
         break;
       }
-      if (this.isListItemWithoutSpaces(line)) {
+      if (this.isTopLevelListItem(line)) {
         listStartLine = listStartLineLookup;
-        if (listStartLineLookup <= limitFrom) {
+        if (
+          this.isListItemWithoutSpaces(line) &&
+          listStartLineLookup <= limitFrom
+        ) {
           break;
         }
       }
@@ -162,10 +166,15 @@ export class Parser {
       }
     }
 
+    const rootIndent = this.findRootIndent(editor, listStartLine, listEndLine);
+    if (rootIndent === null) {
+      return null;
+    }
+
     // A segment must start with a top-level item, not orphaned notes/children.
     while (
       listStartLine <= parsingStartLine &&
-      !this.isListItemWithoutSpaces(editor.getLine(listStartLine))
+      this.getListItemIndent(editor.getLine(listStartLine)) !== rootIndent
     ) {
       listStartLine++;
     }
@@ -185,7 +194,7 @@ export class Parser {
 
     let currentParent: ParseListList = root.getRootList();
     let currentList: ParseListList | null = null;
-    let currentIndent = "";
+    let currentIndent = rootIndent;
 
     const foldedLines = editor.getAllFoldedLines();
 
@@ -321,6 +330,36 @@ export class Parser {
     return boundaries;
   }
 
+  private findRootIndent(
+    editor: Reader,
+    fromLine: number,
+    toLine: number,
+  ): string | null {
+    let minIndent: string | null = null;
+
+    for (let l = fromLine; l <= toLine; l++) {
+      const line = editor.getLine(l);
+      if (!this.isTopLevelListItem(line)) {
+        continue;
+      }
+
+      const indent = this.getListItemIndent(line);
+      if (minIndent === null || indent.length < minIndent.length) {
+        minIndent = indent;
+        if (minIndent.length === 0) {
+          break;
+        }
+      }
+    }
+
+    return minIndent;
+  }
+
+  private getListItemIndent(line: string): string | null {
+    const match = parseListItemRe.exec(line);
+    return match ? match[1] : null;
+  }
+
   private isEmptyLine(line: string) {
     return line.length === 0;
   }
@@ -335,5 +374,9 @@ export class Parser {
 
   private isListItemWithoutSpaces(line: string) {
     return listItemWithoutSpacesRe.test(line);
+  }
+
+  private isTopLevelListItem(line: string) {
+    return topLevelListItemRe.test(line);
   }
 }
