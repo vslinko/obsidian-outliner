@@ -26,11 +26,10 @@ export class MoveCursorToPreviousUnfoldedLine implements Operation {
     const list = this.root.getListUnderCursor();
     const cursor = this.root.getCursor();
     const lines = list.getLinesInfo();
-    const lineNo = lines.findIndex((l) => {
-      return (
-        cursor.ch === l.from.ch + list.getCheckboxLength() &&
-        cursor.line === l.from.line
-      );
+    const lineNo = lines.findIndex((l, i) => {
+      // Only the item's first line has the checkbox; note lines start at their text
+      const contentStart = l.from.ch + (i === 0 ? list.getCheckboxLength() : 0);
+      return cursor.ch === contentStart && cursor.line === l.from.line;
     });
 
     if (lineNo === 0) {
