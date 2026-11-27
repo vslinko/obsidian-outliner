@@ -173,6 +173,7 @@ test("pre-staged new file is rejected without modifying version files or committ
   const fixture = makeFixture(t);
   writeFileSync(join(fixture.cwd, "unrelated.txt"), "secret\n");
   fixture.git("add", "unrelated.txt");
+  const indexBefore = fixture.git("ls-files", "--stage");
 
   const result = fixture.run("patch", "1.11.7");
   assert.equal(result.error, undefined);
@@ -184,6 +185,40 @@ test("pre-staged new file is rejected without modifying version files or committ
   }
   assert.equal(fixture.git("rev-list", "--count", "HEAD"), "1");
   assert.equal(fixture.git("diff", "--cached", "--name-only"), "unrelated.txt");
+  assert.equal(fixture.git("ls-files", "--stage"), indexBefore);
+});
+
+test("pre-staged changes are rejected before prompting when no CLI answers are supplied", (t) => {
+  const fixture = makeFixture(t);
+  writeFileSync(join(fixture.cwd, "unrelated.txt"), "keep staged\n");
+  fixture.git("add", "unrelated.txt");
+  const indexBefore = fixture.git("ls-files", "--stage");
+  const headBefore = fixture.git("rev-parse", "HEAD");
+  const versionFilesBefore = Object.fromEntries(
+    Object.keys(files).map((name) => [
+      name,
+      readFileSync(join(fixture.cwd, name), "utf8"),
+    ]),
+  );
+
+  const result = fixture.run();
+  assert.equal(result.error, undefined);
+  assert.equal(result.status, 1);
+  assert.match(
+    result.stderr,
+    /Cannot release with staged changes in Git index:/,
+  );
+  assert.equal(result.stdout, "");
+
+  for (const [name, contents] of Object.entries(versionFilesBefore)) {
+    assert.equal(readFileSync(join(fixture.cwd, name), "utf8"), contents);
+  }
+  assert.equal(fixture.git("rev-parse", "HEAD"), headBefore);
+  assert.equal(fixture.git("ls-files", "--stage"), indexBefore);
+  assert.equal(
+    readFileSync(join(fixture.cwd, "unrelated.txt"), "utf8"),
+    "keep staged\n",
+  );
 });
 
 test("pre-staged edit to existing file is rejected with staged and unstaged edits preserved", (t) => {
@@ -195,6 +230,7 @@ test("pre-staged edit to existing file is rejected with staged and unstaged edit
   writeFileSync(join(fixture.cwd, "notes.txt"), "base\nstaged\n");
   fixture.git("add", "notes.txt");
   writeFileSync(join(fixture.cwd, "notes.txt"), "base\nstaged\nunstaged\n");
+  const indexBefore = fixture.git("ls-files", "--stage");
 
   const result = fixture.run("patch", "1.11.7");
   assert.equal(result.error, undefined);
@@ -206,6 +242,8 @@ test("pre-staged edit to existing file is rejected with staged and unstaged edit
   }
   assert.equal(fixture.git("rev-list", "--count", "HEAD"), "2");
   assert.equal(fixture.git("diff", "--cached", "--name-only"), "notes.txt");
+  assert.equal(fixture.git("ls-files", "--stage"), indexBefore);
+  assert.equal(fixture.git("show", ":notes.txt"), "base\nstaged");
   assert.equal(
     readFileSync(join(fixture.cwd, "notes.txt"), "utf8"),
     "base\nstaged\nunstaged\n",
