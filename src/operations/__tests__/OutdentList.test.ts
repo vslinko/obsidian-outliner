@@ -114,4 +114,38 @@ describe("OutdentList operation", () => {
     expect(op.shouldStopPropagation()).toBe(true);
     expect(op.shouldUpdate()).toBe(true);
   });
+
+  test("should outdent a child to the leading-whitespace root level without stripping root indent", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: " - parent\n     - child\n",
+        cursor: { line: 1, ch: 9 },
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new OutdentList(root);
+    op.perform();
+
+    expect(root.print()).toBe(" - parent\n - child");
+    expect(root.getCursor()).toEqual({ line: 1, ch: 5 });
+    expect(op.shouldUpdate()).toBe(true);
+  });
+
+  test("should not outdent a leading-whitespace root item", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: " - item 1\n - item 2\n",
+        cursor: { line: 1, ch: 5 },
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new OutdentList(root);
+    op.perform();
+
+    expect(root.print()).toBe(" - item 1\n - item 2");
+    expect(root.getCursor()).toEqual({ line: 1, ch: 5 });
+    expect(op.shouldUpdate()).toBe(false);
+  });
 });

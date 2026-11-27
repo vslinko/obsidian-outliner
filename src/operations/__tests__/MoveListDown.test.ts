@@ -264,4 +264,45 @@ describe("MoveListDown operation", () => {
     expect(op.shouldStopPropagation()).toBe(true);
     expect(op.shouldUpdate()).toBe(true);
   });
+
+  test("should move a root item with children down when root items have leading whitespace (#591)", () => {
+    const root = makeMovementRoot(
+      [
+        " - [ ] Item 1",
+        " - [ ] Item 2|",
+        "     - [ ] Sub-item A",
+        " - [ ] Item 3",
+      ].join("\n"),
+    );
+
+    const op = new MoveListDown(root);
+    op.perform();
+
+    expectMovementState(
+      root,
+      [
+        " - [ ] Item 1",
+        " - [ ] Item 3",
+        " - [ ] Item 2|",
+        "     - [ ] Sub-item A",
+      ].join("\n"),
+    );
+    expect(op.shouldUpdate()).toBe(true);
+    expect(op.shouldStopPropagation()).toBe(true);
+  });
+
+  test("should move a child across parents in a list with leading whitespace", () => {
+    const root = makeMovementRoot(
+      [" - [ ] Item 1", "     - [ ] Sub-item A|", " - [ ] Item 2"].join("\n"),
+    );
+
+    const op = new MoveListDown(root);
+    op.perform();
+
+    expectMovementState(
+      root,
+      [" - [ ] Item 1", " - [ ] Item 2", "     - [ ] Sub-item A|"].join("\n"),
+    );
+    expect(op.shouldUpdate()).toBe(true);
+  });
 });

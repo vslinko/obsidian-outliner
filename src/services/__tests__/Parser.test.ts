@@ -302,4 +302,81 @@ describe("parseList", () => {
     expect(list.getContentEnd()).toEqual({ line: 1, ch: 6 });
     expect(parser.parse(editor, { line: 2, ch: 1 })).toBeNull();
   });
+
+  test.each([" ", "  ", "   "])(
+    "should parse lists whose root items have %j leading whitespace (#591)",
+    (baseIndent) => {
+      const lines = [
+        "### My List",
+        `${baseIndent}- [ ] Item 1`,
+        `${baseIndent}- [ ] Item 2`,
+        `${baseIndent}    - [ ] Sub-item A`,
+        `${baseIndent}- [ ] Item 3`,
+      ];
+      const text = lines.join("\n");
+      const parser = makeParser();
+      const editor = makeEditor({ text, cursor: { line: 2, ch: 10 } });
+
+      for (const line of [1, 2, 3, 4]) {
+        const root = parser.parse(editor, { line, ch: 0 });
+        expect(root).not.toBeNull();
+        expect(root.print()).toBe(lines.slice(1).join("\n"));
+        expect(root.getContentRange()).toEqual([
+          { line: 1, ch: 0 },
+          { line: 4, ch: lines[4].length },
+        ]);
+        expect(root.getChildren()).toHaveLength(3);
+        expect(root.getChildren()[1].getChildren()).toHaveLength(1);
+      }
+
+      expect(parser.parse(editor, { line: 0, ch: 0 })).toBeNull();
+      expect(parser.parseRange(editor).map((root) => root.print())).toEqual([
+        lines.slice(1).join("\n"),
+      ]);
+      expect(
+        parser.parseRange(editor, 3, 4).map((root) => root.print()),
+      ).toEqual([lines.slice(1).join("\n")]);
+    },
+  );
+
+  test("should preserve notes and whitespace boundaries in lists with leading whitespace", () => {
+    const lines = [" - parent", "   note", "   ", "   - child", " ", " - last"];
+    const parser = makeParser();
+    const editor = makeEditor({
+      text: lines.join("\n"),
+      cursor: { line: 0, ch: 0 },
+    });
+
+    expect(parser.parseRange(editor).map((root) => root.print())).toEqual([
+      lines.slice(0, 4).join("\n"),
+      " - last",
+    ]);
+    expect(parser.parse(editor, { line: 4, ch: 1 })).toBeNull();
+  });
+
+  test("should exclude leading orphaned items more indented than the list root", () => {
+    const text = "  - orphan\n - item 1\n - item 2";
+    const parser = makeParser();
+    const editor = makeEditor({ text, cursor: { line: 1, ch: 0 } });
+
+    expect(parser.parse(editor, { line: 0, ch: 0 })).toBeNull();
+    expect(parser.parse(editor, { line: 1, ch: 0 }).print()).toBe(
+      " - item 1\n - item 2",
+    );
+    expect(parser.parseRange(editor).map((root) => root.print())).toEqual([
+      " - item 1\n - item 2",
+    ]);
+  });
+
+  test.each([
+    "    - code line 1\n    - code line 2",
+    "\t- code line 1\n\t- code line 2",
+  ])("should not parse indented code blocks as root lists (%j)", (text) => {
+    const parser = makeParser();
+    const editor = makeEditor({ text, cursor: { line: 0, ch: 0 } });
+
+    expect(parser.parse(editor, { line: 0, ch: 0 })).toBeNull();
+    expect(parser.parse(editor, { line: 1, ch: 0 })).toBeNull();
+    expect(parser.parseRange(editor)).toEqual([]);
+  });
 });

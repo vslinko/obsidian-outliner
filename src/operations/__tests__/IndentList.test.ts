@@ -153,4 +153,36 @@ describe("IndentList operation", () => {
       "- item 1\n  - item 1.1\n  - item 1.2\n- item 2\n  - item 2.1\n  - item 3",
     );
   });
+
+  test("should use defaultIndentChars when indenting a leading-whitespace root item without children", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: " - item 1\n - item 2\n",
+        cursor: { line: 1, ch: 6 },
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new IndentList(root, "  ");
+    op.perform();
+
+    expect(root.print()).toBe(" - item 1\n   - item 2");
+    expect(root.getCursor()).toEqual({ line: 1, ch: 8 });
+  });
+
+  test("should use relative child indent step when indenting a leading-whitespace root item with children", () => {
+    const root = makeRoot({
+      editor: makeEditor({
+        text: " - item 1\n - item 2\n     - sub-item\n",
+        cursor: { line: 1, ch: 6 },
+      }),
+      settings: makeSettings(),
+    });
+
+    const op = new IndentList(root, "  ");
+    op.perform();
+
+    expect(root.print()).toBe(" - item 1\n     - item 2\n         - sub-item");
+    expect(root.getCursor()).toEqual({ line: 1, ch: 10 });
+  });
 });
