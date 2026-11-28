@@ -29,6 +29,11 @@ export class IndentList implements Operation {
     this.stopPropagation = true;
 
     const list = root.getListUnderCursor();
+
+    if (!list) {
+      return;
+    }
+
     const parent = list.getParent();
     const prev = parent.getPrevSiblingOf(list);
 

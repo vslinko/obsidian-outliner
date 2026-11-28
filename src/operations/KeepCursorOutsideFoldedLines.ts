@@ -26,6 +26,11 @@ export class KeepCursorOutsideFoldedLines implements Operation {
     const cursor = root.getCursor();
 
     const list = root.getListUnderCursor();
+
+    if (!list) {
+      return;
+    }
+
     if (!list.isFolded()) {
       return;
     }

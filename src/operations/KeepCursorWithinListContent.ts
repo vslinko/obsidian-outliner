@@ -25,6 +25,11 @@ export class KeepCursorWithinListContent implements Operation {
 
     const cursor = root.getCursor();
     const list = root.getListUnderCursor();
+
+    if (!list) {
+      return;
+    }
+
     const contentStart = list.getFirstLineContentStartAfterCheckbox();
     const linePrefix =
       contentStart.line === cursor.line
